@@ -1,0 +1,193 @@
+[package]
+
+publish = false
+
+edition = "2018"
+
+name = "tutorial"
+authors = ["Kyle Mayes <kyle@mayeses.com>"]
+
+version = "0.1.0"
+
+readme = "../README.md"
+license = "Apache-2.0"
+
+description = "Tutorial."
+
+[dependencies]
+
+anyhow = "1"
+lazy_static = "1"
+log = "0.4"
+nalgebra-glm = "0.18"
+png = "0.17"
+pretty_env_logger = "0.4"
+thiserror = "1"
+tobj = { version = "3", features = ["log"] }
+vulkanalia = { version = "=0.21.0", features = ["libloading", "provisional", "window"] }
+winit = "0.28"
+
+[[bin]]
+
+name = "00_base_code"
+path = "src/00_base_code.rs"
+
+[[bin]]
+
+name = "01_instance_creation"
+path = "src/01_instance_creation.rs"
+
+[[bin]]
+
+name = "02_validation_layers"
+path = "src/02_validation_layers.rs"
+
+[[bin]]
+
+name = "03_physical_device_selection"
+path = "src/03_physical_device_selection.rs"
+
+[[bin]]
+
+name = "04_logical_device"
+path = "src/04_logical_device.rs"
+
+[[bin]]
+
+name = "05_window_surface"
+path = "src/05_window_surface.rs"
+
+[[bin]]
+
+name = "06_swapchain_creation"
+path = "src/06_swapchain_creation.rs"
+
+[[bin]]
+
+name = "07_image_views"
+path = "src/07_image_views.rs"
+
+[[bin]]
+
+name = "08_graphics_pipeline"
+path = "src/08_graphics_pipeline.rs"
+
+[[bin]]
+
+name = "09_shader_modules"
+path = "src/09_shader_modules.rs"
+
+[[bin]]
+
+name = "10_fixed_functions"
+path = "src/10_fixed_functions.rs"
+
+[[bin]]
+
+name = "11_render_passes"
+path = "src/11_render_passes.rs"
+
+[[bin]]
+
+name = "12_graphics_pipeline_complete"
+path = "src/12_graphics_pipeline_complete.rs"
+
+[[bin]]
+
+name = "13_framebuffers"
+path = "src/13_framebuffers.rs"
+
+[[bin]]
+
+name = "14_command_buffers"
+path = "src/14_command_buffers.rs"
+
+[[bin]]
+
+name = "15_hello_triangle"
+path = "src/15_hello_triangle.rs"
+
+[[bin]]
+
+name = "16_swapchain_recreation"
+path = "src/16_swapchain_recreation.rs"
+
+[[bin]]
+
+name = "17_vertex_input"
+path = "src/17_vertex_input.rs"
+
+[[bin]]
+
+name = "18_vertex_buffer"
+path = "src/18_vertex_buffer.rs"
+
+[[bin]]
+
+name = "19_staging_buffer"
+path = "src/19_staging_buffer.rs"
+
+[[bin]]
+
+name = "20_index_buffer"
+path = "src/20_index_buffer.rs"
+
+[[bin]]
+
+name = "21_descriptor_layout"
+path = "src/21_descriptor_layout.rs"
+
+[[bin]]
+
+name = "22_descriptor_sets"
+path = "src/22_descriptor_sets.rs"
+
+[[bin]]
+
+name = "23_texture_image"
+path = "src/23_texture_image.rs"
+
+[[bin]]
+
+name = "24_sampler"
+path = "src/24_sampler.rs"
+
+[[bin]]
+
+name = "25_texture_mapping"
+path = "src/25_texture_mapping.rs"
+
+[[bin]]
+
+name = "26_depth_buffering"
+path = "src/26_depth_buffering.rs"
+
+[[bin]]
+
+name = "27_model_loading"
+path = "src/27_model_loading.rs"
+
+[[bin]]
+
+name = "28_mipmapping"
+path = "src/28_mipmapping.rs"
+
+[[bin]]
+
+name = "29_multisampling"
+path = "src/29_multisampling.rs"
+
+[[bin]]
+
+name = "30_push_constants"
+path = "src/30_push_constants.rs"
+
+[[bin]]
+
+name = "31_recycling_command_buffers"
+path = "src/31_recycling_command_buffers.rs"
+
+[[bin]]
+
+name = "32_secondary_command_buffers"
+path = "src/32_secondary_command_buffers.rs"

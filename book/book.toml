@@ -1,0 +1,22 @@
+[book]
+
+title = "Vulkan 教程 (Rust)"
+authors = ["Kyle Mayes", "Chuigda WhiteGive (translator)"]
+
+description = "A Vulkan tutorial for Rust."
+
+language = "zh"
+multilingual = false
+
+src = "src"
+
+edition = "edition2018"
+
+[output.html]
+
+git-repository-url = "https://github.com/KyleMayes/vulkanalia"
+
+[preprocessor.vk]
+
+command = "vk-preprocessor"
+renderer = ["html"]
