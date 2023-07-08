@@ -1,5 +1,7 @@
 # 概览
 
+> 原文链接：<https://kylemayes.github.io/vulkanalia/overview.html>
+
 本章会以介绍 Vulkan 和它所解决的问题开始。之后，我们会看到绘制第一个三角形所需的所有组件。这会给你一个总体的蓝图，以便你将每个后续章节放在正确的位置。我们会通过 `vulkanalia` 实现的 Vulkan API 结构来总结。
 
 ## Vulkan 的起源
