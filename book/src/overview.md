@@ -1,22 +1,22 @@
-# Overview
+# 概览
 
-This chapter will start off with an introduction of Vulkan and the problems it addresses. After that we're going to look at the ingredients that are required for the first triangle. This will give you a big picture to place each of the subsequent chapters in. We will conclude by covering the structure of the Vulkan API as implemented by `vulkanalia`.
+本章会以介绍 Vulkan 和它所解决的问题开始。之后，我们会看到绘制第一个三角形所需的所有组件。这会给你一个总体的蓝图，以便你将每个后续章节放在正确的位置。我们会通过 `vulkanalia` 实现的 Vulkan API 结构来总结。
 
-## Origin of Vulkan
+## Vulkan 的起源
 
-Just like the previous graphics APIs, Vulkan is designed as a cross-platform abstraction over [GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit). The problem with most of these APIs is that the era in which they were designed featured graphics hardware that was mostly limited to configurable fixed functionality. Programmers had to provide the vertex data in a standard format and were at the mercy of the GPU manufacturers with regards to lighting and shading options.
+和之前的图形 API 一样，Vulkan 也是为跨平台抽象 [GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit) 而设计的。大部分之前的 API 都有一个问题，那就是在它们诞生的年代，它们是根据图形硬件的特性来设计的，而此时的图形硬件大多都只有一些可配置的功能。程序员必须以标准的格式提供顶点数据，并且在光照和着色选项上受制于 GPU 制造商。
 
-As graphics card architectures matured, they started offering more and more programmable functionality. All this new functionality had to be integrated with the existing APIs somehow. This resulted in less than ideal abstractions and a lot of guesswork on the graphics driver side to map the programmer's intent to the modern graphics architectures. That's why there are so many driver updates for improving the performance in games, sometimes by significant margins. Because of the complexity of these drivers, application developers also need to deal with inconsistencies between vendors, like the syntax that is accepted for [shaders](https://en.wikipedia.org/wiki/Shader). Aside from these new features, the past decade also saw an influx of mobile devices with powerful graphics hardware. These mobile GPUs have different architectures based on their energy and space requirements. One such example is [tiled rendering](https://en.wikipedia.org/wiki/Tiled_rendering), which would benefit from improved performance by offering the programmer more control over this functionality. Another limitation originating from the age of these APIs is limited multi-threading support, which can result in a bottleneck on the CPU side.
+在显卡架构成熟之后，它们开始提供更多的可编程特性。所有这些新功能都必须以某种方式与现有的 API 集成。这就导致这些 API 不能提供理想的抽象，而显卡驱动需要猜测程序员的意图，以将其映射到现代图形架构。这就是为什么有这么多驱动更新来提高游戏性能，而有时候提升幅度很大。由于这些驱动的复杂性，应用程序开发人员还需要处理制造商之间的不一致性 例如 [着色器](https://en.wikipedia.org/wiki/Shader) 接受的语法。除了这些新功能之外，过去十年还涌入了具有强大图形硬件的移动设备。这些移动 GPU 出于空间和能耗上的考虑，采用了不同的架构。其中一个例子是 [tiled rendering](https://en.wikipedia.org/wiki/Tiled_rendering)，它可以给程序员提供对此功能的更多控制，从而提高性能。另一个起源于这些 API 时代的限制是有限的多线程支持，这可能会导致 CPU 成为性能瓶颈。
 
-Vulkan solves these problems by being designed from scratch for modern graphics architectures. It reduces driver overhead by allowing programmers to clearly specify their intent using a more verbose API, and allows multiple threads to create and submit commands in parallel. It reduces inconsistencies in shader compilation by switching to a standardized byte code format with a single compiler. Lastly, it acknowledges the general purpose processing capabilities of modern graphics cards by unifying the graphics and compute functionality into a single API.
+Vulkan 从头开始、针对现代图形架构而设计，从而解决了这些问题。Vulkan 要求程序员明确地指定他们的意图，从而减少驱动开销，并允许多个线程并行创建和提交命令。Vulkan 使用一种标准的字节码格式和一种编译器来减少着色器编译中的不一致性。最后，它将现代图形卡的通用处理能力纳入到单个 API 中，从而将图形和计算功能统一起来。
 
-## What it takes to draw a triangle
+## 画一个三角形需要什么
 
-We'll now look at an overview of all the steps it takes to render a triangle in a well-behaved Vulkan program. All of the concepts introduced here will be elaborated on in the next chapters. This is just to give you a big picture to relate all of the individual components to.
+接下来我们会总览一下在一个良好的 Vulkan 程序中绘制一个三角形所需的所有步骤。这里介绍的所有概念都会在后面的章节中详细介绍。这里只是给你一个大的蓝图，以便你将所有的单独组件联系起来。
 
-### Step 1 - Instance and physical device selection
+### 1. 创建实例并选择物理设备
 
-A Vulkan application starts by setting up the Vulkan API through a `VkInstance`. An instance is created by describing your application and any API extensions you will be using. After creating the instance, you can query for Vulkan supported hardware and select one or more `VkPhysicalDevice`s to use for operations. You can query for properties like VRAM size and device capabilities to select desired devices, for example to prefer using dedicated graphics cards.
+一个 Vulkan 应用首先通过创建一个 `VkInstance` 来设置 Vulkan API。实例的创建是通过描述你的应用程序和你将要使用的 API 扩展来完成的。创建实例之后，你可以查询支持 Vulkan 的硬件，并选择一个或多个 `VkPhysicalDevice` 来使用。你可以查询像 VRAM 大小和设备功能这样的属性来选择所需的设备，例如优先使用独立显卡。
 
 ### Step 2 - Logical device and queue families
 

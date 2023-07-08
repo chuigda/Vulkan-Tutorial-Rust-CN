@@ -6,7 +6,7 @@
 
 ## 关于
 
-本教程会教给你使用 [Vulkan](https://khronos.org/vulkan) 图形与计算 API 的基础知识。Vulkan 是一个由 [Knronos 组织](https://www.khronos.org/) （因 OpenGL 而为人所知）提出的新 API，针对现代显卡的特性提供了更好的抽象。新的接口可以让你更好地描述你的应用程序要做什么，从而带来相比于诸如 [OpenGL](https://en.wikipedia.org/wiki/OpenGL) 和 [Direct3D](https://en.wikipedia.org/wiki/Direct3D) 之类的现有的图形 API 更好的性能和更少的意外的驱动程序行为。这些 Vulkan 的设计思想与 [Direct3D 12](https://en.wikipedia.org/wiki/Direct3D#Direct3D_12) 和 [Metal](https://en.wikipedia.org/wiki/Metal_(API)) 的思路想死，但 Vulkan 在跨平台方面具有优势，可以让你同时开发 Windows，Linux 和 Android 应用程序（并借由 [MoltenVK](https://github.com/KhronosGroup/MoltenVK) 开发 iOS 与 MacOS 应用程序）。
+本教程会教给你使用 [Vulkan](https://khronos.org/vulkan) 图形与计算 API 的基础知识。Vulkan 是一个由 [Khronos 组织](https://www.khronos.org/) （因 OpenGL 而为人所知）提出的新 API，针对现代显卡的特性提供了更好的抽象。新的接口可以让你更好地描述你的应用程序要做什么，从而带来相比于诸如 [OpenGL](https://en.wikipedia.org/wiki/OpenGL) 和 [Direct3D](https://en.wikipedia.org/wiki/Direct3D) 之类的现有的图形 API 更好的性能和更少的意外的驱动程序行为。这些 Vulkan 的设计思想与 [Direct3D 12](https://en.wikipedia.org/wiki/Direct3D#Direct3D_12) 和 [Metal](https://en.wikipedia.org/wiki/Metal_(API)) 的思路相似，但 Vulkan 在跨平台方面具有优势，可以让你同时开发 Windows，Linux 和 Android 应用程序（并借由 [MoltenVK](https://github.com/KhronosGroup/MoltenVK) 开发 iOS 与 MacOS 应用程序）。
 
 然而，为了这些增益，你所付出的代价便是你要使用一个显著地更加冗长的 API。每个和图形 API 相关的细节都需要在你的应用程序中从头开始设置，包括最初的帧缓冲（framebuffer）创建以及缓冲区和纹理图像一类对象的内存管理。图形驱动程序会做更少手把手的指导，也就意味着你要在你的应用程序中做更多工作来确保正确的行为。
 
@@ -33,34 +33,24 @@
 
 ## 教程结构
 
-<!-- 下播曲ing 
+我们首先会速览一下 Vulkan 是如何工作的，以及要把第一个三角形画到屏幕上所需的工作。在你了解这些小的步骤在整个过程中的基本作用之后，这些步骤的目的会更加清晰。接下来，我们会使用 [Vulkan SDK](https://lunarg.com/vulkan-sdk/) 来设置开发环境。
 
-天之涯，海之角，知交半零落
-一壶浊酒尽余欢，今宵别梦寒
+在这之后，我们会实现渲染你第一个三角形的 Vulkan 程序所需的所有基本组件。每一章的结构大致如下：
 
-天之涯，海之角，知交半零落
-一壶浊酒尽余欢，今宵别梦寒
+* 引入一个新的概念及其目的
+* 使用所有相关的 API 调用，将其集成到你的程序中
+* 将其抽象为辅助函数
 
--->
+尽管每一章都是作为前一章的后续章节编写的，把每一章作为单独的介绍一个特定 Vulkan 特性的文章来阅读也是可以的。也就是说这个网站也可以作为一个 Vulkan 参考。所有 Vulkan 函数和类型都链接到了 Vulkan 规范或者 `vulkanalia` 的文档，你可以点击链接来了解更多。Vulkan 仍然是一个非常年轻的 API，所以 Vulkan 的规范本身可能有一些缺点。你可以提交反馈到 [这个 Khronos 仓库](https://github.com/KhronosGroup/Vulkan-Docs)。
 
-We'll start with an overview of how Vulkan works and the work we'll have to do to get the first triangle on the screen. The purpose of all the smaller steps will make more sense after you've understood their basic role in the whole picture. Next, we'll set up the development environment with the [Vulkan SDK](https://lunarg.com/vulkan-sdk/).
+如同前面所提到的，Vulkan API 是一个非常冗长的 API，提供了许多参数，能给你对图形硬件最大的控制。这就导致像创建纹理这种基本操作都要经过很多步骤，而且每次都要重复。因此，我们会在整个教程中会创建一系列我们自己的辅助函数。
 
-After that we'll implement all of the basic components of a Vulkan program that are necessary to render your first triangle. Each chapter will follow roughly the following structure:
+每一章也包含了一个链接，指向了该章节完成后的最终代码。如果你对代码的结构有任何疑问，或者你遇到了 bug，想要对比一下，你可以参考这些代码。
 
-* Introduce a new concept and its purpose
-* Use all of the relevant API calls to integrate it into your program
-* Abstract parts of it into helper functions
+本教程旨在成为社区的共同努力。 Vulkan 仍然是一个相当新的 API，而最佳实践已经完全建立。 如果您对教程或者网站本身有任何类型的反馈，请随时向 [GitHub 存储库](https://github.com/KyleMayes/vulkanalia) 提交问题或拉取请求。
 
-Although each chapter is written as a follow-up on the previous one, it is also possible to read the chapters as standalone articles introducing a certain Vulkan feature. That means that the site is also useful as a reference. All of the Vulkan functions and types are linked to the either the Vulkan specification or to the `vulkanalia` documentation, so you can click them to learn more. Vulkan is still a fairly young API, so there may be some shortcomings in the specification itself. You are encouraged to submit feedback to [this Khronos repository](https://github.com/KhronosGroup/Vulkan-Docs).
+在你完成了第一个 Vulkan 三角形的绘制之后，我们会开始扩展程序，包括线性变换、纹理和 3D 模型。
 
-As mentioned before, the Vulkan API has a rather verbose API with many parameters to give you maximum control over the graphics hardware. This causes basic operations like creating a texture to take a lot of steps that have to be repeated every time. Therefore we'll be creating our own collection of helper functions throughout the tutorial.
+如果你有使用其他图形 API 的经验，你会明白在第一个三角形在屏幕上显示出来之前，可能会有很多步骤。在 Vulkan 中也有很多这样的步骤，但是你会发现每个步骤都很容易理解，而且不会感觉冗余。同样重要的是，一旦你有了这个无聊的三角形，绘制完全贴图的 3D 模型并不需要太多额外的工作，而且在这之后的每一步都会给你更多回报。
 
-Every chapter will also start with a link to the final code for that chapter. You can refer to it if you have any doubts about the structure of the code, or if you're dealing with a bug and want to compare.
-
-This tutorial is intended to be a community effort. Vulkan is still a fairly new API and best practices have been fully established. If you have any type of feedback on the tutorial and site itself, then please don't hesitate to submit an issue or pull request to the [GitHub repository](https://github.com/KyleMayes/vulkanalia).
-
-After you've gone through the ritual of drawing your very first Vulkan powered triangle onscreen, we'll start expanding the program to include linear transformations, textures and 3D models.
-
-If you've played with graphics APIs before, then you'll know that there can be a lot of steps until the first geometry shows up on the screen. There are many of these initial steps in Vulkan, but you'll see that each of the individual steps is easy to understand and does not feel redundant. It's also important to keep in mind that once you have that boring looking triangle, drawing fully textured 3D models does not take that much extra work, and each step beyond that point is much more rewarding.
-
-If you encounter any problems while following the tutorial, check the FAQ to see if your problem and its solution is already listed there. Next, you might find someone who had the same problem (if it is not Rust-specific) in the comment section for the corresponding chapter in the [original tutorial](https://vulkan-tutorial.com/).
+如果你在阅读本教程时遇到了任何问题，请查阅 FAQ，看看你的问题和解决方案是否已经在里面列出。接下来，你可以在[原教程](https://vulkan-tutorial.com/)的对应章节的评论区中找到是否有人遇到了相同的问题（如果不是 Rust 特有的问题）。
