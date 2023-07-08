@@ -1,6 +1,8 @@
 # 介绍
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/introduction.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
 本教程是 <https://vulkan-tutorial.com> 用 Rust 的改写。本教程主要应归功于原教程的作者 ([Alexander Overvoorde](https://github.com/Overv)) 及[其他贡献者们](https://github.com/Overv/VulkanTutorial/graphs/contributors)。
 
