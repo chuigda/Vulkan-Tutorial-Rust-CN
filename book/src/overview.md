@@ -44,8 +44,6 @@ Vulkan 从头开始、针对现代图形架构而设计，从而解决了这些�
 
 Vulkan 中的渲染流程描述了渲染操作中使用的图像类型，图像的使用方式，以及如何处理它们的内容。在我们最初的三角形渲染程序中，我们会告诉 Vulkan 我们会使用一个图像作为颜色目标，并且我们希望在绘制操作之前将其清除为一个纯色。渲染流程只描述图像的类型，`VkFramebuffer` 则会将特定的图像绑定到这些槽中。
 
-Render passes in Vulkan describe the type of images that are used during rendering operations, how they will be used, and how their contents should be treated. In our initial triangle rendering application, we'll tell Vulkan that we will use a single image as color target and that we want it to be cleared to a solid color right before the drawing operation. Whereas a render pass only describes the type of images, a `VkFramebuffer` actually binds specific images to these slots.
-
 ### 6. 图形管线（graphics pipeline）
 
 Vulkan 的图形管线通过创建 `VkPipeline` 对象建立。它描述了显卡的可配置状态 —— 例如视口（viewport）的大小和深度缓冲操作，以及使用 `VkShaderModule 的可编程状态。`VkShaderModule` 对象是从着色器字节码创建的。驱动还需要知道在管线中将使用哪些渲染目标，我们通过引用渲染流程来指定。
@@ -56,102 +54,102 @@ Vulkan 与之前的图形 API 最大的不同是几乎所有图形管线的配�
 
 ### 7. 指令池和指令缓冲
 
-As mentioned earlier, many of the operations in Vulkan that we want to execute, like drawing operations, need to be submitted to a queue. These operations first need to be recorded into a `VkCommandBuffer` before they can be submitted. These command buffers are allocated from a `VkCommandPool` that is associated with a specific queue family. To draw a simple triangle, we need to record a command buffer with the following operations:
+之前提到，Vulkan 的许多操作 —— 例如绘制操作 —— 需要被提交到队列才能执行。这些操作首先要被记录到一个 `VkCommandBuffer` 中，然后提交给队列。这些指令缓冲由 `VkCommandPool` 分配，它与特定的队列族相关联。为了绘制一个简单的三角形，我们需要记录下列操作到 `VkCommandBuffer` 中：
 
-* Begin the render pass
-* Bind the graphics pipeline
-* Draw 3 vertices
-* End the render pass
+* 开始渲染
+* 绑定图形管线
+* 绘制三个顶点
+* 结束渲染
 
-Because the image in the framebuffer depends on which specific image the swapchain will give us, we need to record a command buffer for each possible image and select the right one at draw time. The alternative would be to record the command buffer again every frame, which is not as efficient.
+由于帧缓冲绑定的图像依赖于交换链给我们的图像，我们可以提前为每个图像创建指令缓冲，然后在绘制时直接选择对应的指令缓冲使用。当然，在每一帧都重新记录指令缓冲也是可以的，但这样做的效率很低。
 
 ### 8. 主循环
 
-Now that the drawing commands have been wrapped into a command buffer, the main loop is quite straightforward. We first acquire an image from the swapchain with `vkAcquireNextImageKHR`. We can then select the appropriate command buffer for that image and execute it with `vkQueueSubmit`. Finally, we return the image to the swapchain for presentation to the screen with `vkQueuePresentKHR`.
+将绘制指令包装进指令缓冲之后，主循环就很直截了当了。我们首先使用 `vkAcquireNextImageKHR` 从交换链获取一张图像，接着为图像选择正确的指令缓冲，然后用 `vkQueueSubmit` 执行它。最后，我们使用 `vkQueuePresentKHR` 将图像返回到交换链，从而使其呈现到屏幕上。
 
-Operations that are submitted to queues are executed asynchronously. Therefore we have to use synchronization objects like semaphores to ensure a correct order of execution. Execution of the draw command buffer must be set up to wait on image acquisition to finish, otherwise it may occur that we start rendering to an image that is still being read for presentation on the screen. The `vkQueuePresentKHR` call in turn needs to wait for rendering to be finished, for which we'll use a second semaphore that is signaled after rendering completes.
+提交给队列的操作会被异步执行。我们需要采取诸如信号量一类的同步措施来确保正确的执行顺序。绘制指令的执行必须是在获取图像完成后才能开始，否则可能会出现我们开始渲染到一个仍然在屏幕上显示的图像的情况。`vkQueuePresentKHR` 调用也需要等到渲染完成后才能执行，我们会使用第二个信号量来实现这一点。
 
 ### 总结
 
-This whirlwind tour should give you a basic understanding of the work ahead for drawing the first triangle. A real-world program contains more steps, like allocating vertex buffers, creating uniform buffers and uploading texture images that will be covered in subsequent chapters, but we'll start simple because Vulkan has enough of a steep learning curve as it is. Note that we'll cheat a bit by initially embedding the vertex coordinates in the vertex shader instead of using a vertex buffer. That's because managing vertex buffers requires some familiarity with command buffers first.
+这个快速的介绍应该能让你对绘制第一个三角形所需的工作有一个基本的了解。一个真实的程序包含更多的步骤，例如分配顶点缓冲区、创建统一缓冲区和上传纹理图像，这些都会在后续章节中介绍，但我们会从简单的开始，因为 Vulkan 本身的学习曲线就已经非常陡峭了。请注意，我们会通过将顶点坐标嵌入到顶点着色器中来作弊，而不是使用顶点缓冲区。这是因为管理顶点缓冲区需要对命令缓冲区有一定的了解。
 
-So in short, to draw the first triangle we need to:
+所以简单来说，要绘制第一个三角形，我们需要：
 
-* Create a `VkInstance`
-* Select a supported graphics card (`VkPhysicalDevice`)
-* Create a `VkDevice` and `VkQueue` for drawing and presentation
-* Create a window, window surface and swapchain
-* Wrap the swapchain images into `VkImageView`
-* Create a render pass that specifies the render targets and usage
-* Create framebuffers for the render pass
-* Set up the graphics pipeline
-* Allocate and record a command buffer with the draw commands for every possible swapchain image
-* Draw frames by acquiring images, submitting the right draw command buffer and returning the images back to the swapchain
+* 创建一个 `VkInstance`
+* 选择一个支持的显卡（`VkPhysicalDevice`）
+* 创建用于绘制和呈现的 `VkDevice` 和 `VkQueue`
+* 创建窗口、窗口表面和交换链
+* 将交换链图像包装进 `VkImageView`
+* 创建描述渲染目标和用途的渲染流程
+* 为渲染流程创建帧缓冲
+* 设置图形管线
+* 为每个可能的交换链图像分配并记录一个包含绘制指令的指令缓冲
+* 通过获取图像、提交正确的绘制指令缓冲，然后将图像返回到交换链来绘制帧
 
-It's a lot of steps, but the purpose of each individual step will be made very simple and clear in the upcoming chapters. If you're confused about the relation of a single step compared to the whole program, you should refer back to this chapter.
+步骤非常多，但其实每一步都非常简单。这些步骤中的每一个都会在后续章节中详细介绍。如果你对程序中的某一步感到困惑，可以回来参考一下本章节。
 
-## API concepts
+## API 概念
 
-The Vulkan API is defined in terms of the C programming language. The canonical version of the Vulkan API is defined in the Vulkan API Registry which is [an XML file](https://github.com/KhronosGroup/Vulkan-Docs/blob/main/xml/vk.xml) which serves as a machine readable definition of the Vulkan API.
+Vulkan API 是用 C 语言定义的。Vulkan API 的规范 —— Vulkan API 注册表 —— 是用 [一个 XML 文件](https://github.com/KhronosGroup/Vulkan-Docs/blob/main/xml/vk.xml) 来定义的，它提供了机器可读的 Vulkan API 定义。
 
-The [Vulkan headers](https://github.com/KhronosGroup/Vulkan-Headers) that are part of the Vulkan SDK you will be installing in the next chapter are generated from this Vulkan API Registry. However, we will not be using these headers, directly or indirectly, because `vulkanalia` includes a Rust interface to the Vulkan API generated from the Vulkan API registry that is independent of the C interface provided by the Vulkan SDK.
+[Vulkan 头文件](https://github.com/KhronosGroup/Vulkan-Headers) 是 Vulkan SDK 的一部分，它们是从 Vulkan API 注册表生成的。在下一章中我们将安装的 Vulkan SDK 包含了这些头文件。然而，我们不会直接或间接地使用这些头文件，因为 `vulkanalia` 包含了一个独立于 Vulkan SDK 提供的 C 接口的 Rust 接口，这个接口也是从 Vulkan API 注册表生成的。
 
-The foundation of `vulkanalia` is the [`vulkanalia-sys`](https://docs.rs/vulkanalia-sys) crate which defines the raw types (commands, enums, bitmasks, structs, etc.) defined by the Vulkan API Registry. These raw types are re-exported from the `vulkanalia` crate in the [`vk`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/index.html) module along with some other items generated from the Vulkan API Registry which serve as the thin wrapper around the Vulkan API previously mentioned in the introduction.
+`vulkanalia` 的基础是 [`vulkanalia-sys`](https://docs.rs/vulkanalia-sys) crate，它定义了 Vulkan API 注册表中的原始类型。这些原始类型被 `vulkanalia` crate 在 [`vk`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/index.html) 模块中重新导出，同时还包含了从 Vulkan API 注册表生成的其他一些项目，作为前面介绍中提到的对 Vulkan API 的轻量级包装。
 
-### Type Names
+### 类型名称
 
-Because Rust has support for namespaces unlike C, the `vulkanalia` API omits the parts of Vulkan type names that are used for namespacing purposes in C. More specifically, Vulkan types such as structs, unions, and enums lose their `Vk` prefix. For example, the `VkInstanceCreateInfo` struct becomes the [`InstanceCreateInfo`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/struct.InstanceCreateInfo.html) struct in `vulkanalia` and can be found in the previously mentioned [`vk`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/index.html) module.
+因为 Rust 有对名称空间（namespace）的支持而 C 没有，`vulkanalia` 的 API 会略去 Vulkan 类型名称中用于命名空间的部分。更具体地说，Vulkan 类型，例如结构体、联合和枚举，没有 `Vk` 前缀。例如，`VkInstanceCreateInfo` 结构体在 `vulkanalia` 中变成了 [`InstanceCreateInfo`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/struct.InstanceCreateInfo.html) 结构体，并且可以在前面提到的 [`vk`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/index.html) 模块中找到。
 
-Going forward, this tutorial will refer to the Vulkan types defined by `vulkanalia` using the `vk::` module prefix to make it clear the type represents something generated from the Vulkan API Registry.
+从现在开始，本教程将使用 `vulkanalia` 中的 `vk::` 模块前缀来引用 `vulkanalia` 中定义的 Vulkan 类型，以明确该类型表示的是从 Vulkan API 注册表生成的东西。
 
-These type names will each be links to the `vulkanalia` documentation for the referenced type. The `vulkanalia` documentation for Vulkan types will also contain a link to the Vulkan specification for the type which you can use to learn more about the purpose and usage of the type.
+这些类型名称会被链接到 `vulkanalia` 文档中对应的类型。Vulkan 类型的 `vulkanalia` 文档还包含一个指向 Vulkan规范中该类型的链接，可以用来了解该类型的目的和用法。
 
-A few type name examples:
+一些类型名的例子：
 
 * `vk::Instance`&nbsp;
 * `vk::InstanceCreateInfo`&nbsp;
 * `vk::InstanceCreateFlags`&nbsp;
 
-### Enums
+### 枚举
 
-`vulkanalia` models Vulkan enums as structs and models variants as associated constants for these structs. Rust enums are not used for Vulkan enums because the use of Rust enums in FFI can lead to [undefined behavior](https://github.com/rust-lang/rust/issues/36927).
+`vulkanalia` 将 Vulkan 枚举实现为结构体，并将枚举变体实现为这些结构体的关联常量。不使用 Rust 枚举是因为在 FFI 调用中使用 Rust 枚举可能导致 [未定义行为](https://github.com/rust-lang/rust/issues/36927)。
 
-Since associated constants are namespaced to the struct they are for, we don't need to worry about name conflicts between the values of different Vulkan enums (or enums from other libraries) like we would in C. So like with type names, `vulkanalia` omits the parts of variant names used for namespacing purposes.
+因为结构体充当了关联常量的命名空间，我们也就不必担心不同 Vulkan 枚举（或来自其他库的枚举）名称之间的冲突，就像在 C 中那样。所以，就像类型名称一样，`vulkanalia` 会略去 Vulkan 枚举名称中用于命名空间的部分。
 
-For example, the `VK_OBJECT_TYPE_INSTANCE` variant is the `INSTANCE` value for the `VkObjectType` enum. In `vulkanalia`, this variant becomes `vk::ObjectType::INSTANCE`.
+例如，`VK_OBJECT_TYPE_INSTANCE` 枚举变体是 `VkObjectType` 枚举的 `INSTANCE` 值。在 `vulkanalia` 中，这个变体变成了 `vk::ObjectType::INSTANCE`。
 
-### Bitmasks
+### 掩码（bitmasks）
 
-`vulkanalia` models Vulkan bitmasks as structs and models bitflags as associated constants for these structs. These structs and associated constants are generated by the `bitflags!` macro from the [`bitflags`](https://github.com/bitflags/bitflags) crate.
+`vulkanalia` 将掩码实现为结构体，并将位标志（bitflags）实现为这些结构体的关联常量。这些结构体和关联常量是通过由 [`bitflags`](https://github.com/bitflags/bitflags) crate 提供的 `bitflags!` 宏来生成的。
 
-Like with variants, the parts of bitmask names used for namespacing purposes are omitted.
+和枚举变体一样，位标志名中用于名称空间的部分会被略去。
 
-For example, the `VK_BUFFER_USAGE_TRANSFER_SRC_BIT` bitflag is the `TRANSFER_SRC` bitflag for the `VkBufferUsageFlags` bitmask. In `vulkanalia`, this becomes `vk::BufferUsageFlags::TRANSFER_SRC`.
+例如，`VK_BUFFER_USAGE_TRANSFER_SRC_BIT` 位标志是 `VkBufferUsageFlags` 掩码的 `TRANSFER_SRC` 位标志。在 `vulkanalia` 中，这个位标志变成了 `vk::BufferUsageFlags::TRANSFER_SRC`。
 
-### Commands
+### 命令
 
-The types for raw Vulkan commands like `vkCreateInstance` are defined in `vulkanalia` as function pointer type aliases with the `PFN_` (pointer to function) prefix. So the `vulkanalia` type alias for `vkCreateInstance` is `vk::PFN_vkCreateInstance`.
+诸如 `vkCreateInstance` 的原始 Vulkan 命令的类型在 `vulkanalia` 中被定义为带有 `PFN_`（pointer to function，函数指针）前缀的函数指针类型别名。所以 `vkCreateInstance` 的 `vulkanalia` 类型别名是 `vk::PFN_vkCreateInstance`。
 
-These function pointer types are not enough on their own to call Vulkan commands, we first need to load the commands described by these types. The Vulkan specification has a [detailed description](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#initialization-functionpointers) of how this is done, but I will present a simplified version here.
+这些函数签名本身还不足以调用 Vulkan 命令，我们必须先加载这些类型所描述的命令。Vulkan 规范针对这个问题有一个[详细的描述](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#initialization-functionpointers)，但是在这里我会给出一个简化的版本。
 
-The first Vulkan command to load is `vkGetInstanceProcAddr`. This command is loaded in a platform-specific manner, but `vulkanalia` provides an optional integration with [`libloading`](https://crates.io/crates/libloading) that we will be using in this tutorial to load this command from a Vulkan shared library. `vkGetInstanceProcAddr` can be then used to load the other Vulkan commands we want to call.
+第一个要加载的命令是 `vkGetInstanceProcAddr`，这个命令是以平台特定的方式加载的，但是 `vulkanalia` 提供了一个可选的 [`libloading`](https://crates.io/crates/libloading) 集成，我们会在本教程中使用它来从 Vulkan 共享库中加载这个命令。`vkGetInstanceProcAddr` 可以用来加载我们想要调用的其他 Vulkan 命令。
 
-However, there may be multiple versions of Vulkan commands available depending on the Vulkan implementations on your system. For example, if your system has both a dedicated NVIDIA GPU and an integrated Intel GPU, there may be separate implementations of device-specific Vulkan commands like `allocate_memory` for each device. In cases like this, `vkGetInstanceProcAddr` will return a command that will dispatch calls to the appropriate device-specific command depending on the device in use.
+然而，取决于系统上的 Vulkan 实现，可能会有多个版本的 Vulkan 命令可用。例如，如果你的系统上有一个独立的 NVIDIA GPU 和一个集成的 Intel GPU，那么可能会有针对每个设备的专用 Vulkan 命令的不同实现，例如 `allocate_memory`。在这种情况下，`vkGetInstanceProcAddr` 会返回一个命令，这个命令会根据使用的设备来分派调用到正确的设备特定命令。
 
-To avoid the runtime overhead of this dispatch, the `vkGetDeviceProcAddr` command can be used to directly load these device-specific Vulkan commands. This command is loaded in the same manner as `vkGetInstanceProcAddr`.
+要避免这种分派的运行时开销，可以使用 `vkGetDeviceProcAddr` 命令来直接加载这些设备特定的 Vulkan 命令。这个命令的加载方式和 `vkGetInstanceProcAddr` 一样。
 
-We will be calling dozens of Vulkan commands in this tutorial. Fortunately we won't have to load them manually, `vulkanalia` provides structs which can be used to easily load all the Vulkan commands in one of four categories:
+我们会在这个教程中用到许多 Vulkan 命令。幸运的是，我们不需要手动加载它们，因为 `vulkanalia` 已经提供了以下四类结构体，可以用来轻松地加载所有 Vulkan 命令：
 
-* `vk::StaticCommands` &ndash; The Vulkan commands loaded in a platform-specific manner that can then used to load the other commands (i.e., `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr`)
-* `vk::EntryCommands` &ndash; The Vulkan commands loaded using `vkGetInstanceProcAddr` and a null Vulkan instance. These commands are not tied to a specific Vulkan instance and are used to query instance support and create instances
-* `vk::InstanceCommands` &ndash; The Vulkan commands loaded using `vkGetInstanceProcAddr` and a valid Vulkan instance. These commands are tied to a specific Vulkan instance and, among other things, are used to query device support and create devices
-* `vk::DeviceCommands` &ndash; The Vulkan commands loaded using `vkGetDeviceProcAddr` and a valid Vulkan device. These commands are tied to a specific Vulkan device and expose most of the functionality you would expect from a graphics API
+* `vk::StaticCommands` &ndash; 以平台特定的方式加载的 Vulkan 命令，可以用来加载其他命令（例如 `vkGetInstanceProcAddr` 和 `vkGetDeviceProcAddr`）
+* `vk::EntryCommands` &ndash; 使用 `vkGetInstanceProcAddr` 和一个空的 Vulkan 实例加载的 Vulkan 命令。这些命令不与特定的 Vulkan 实例绑定，可以用来查询实例支持并创建实例
+* `vk::InstanceCommands` &ndash; 使用 `vkGetInstanceProcAddr` 和一个有效的 Vulkan 实例加载的 Vulkan 命令。这些命令与特定的 Vulkan 实例绑定，可以用来查询设备支持并创建设备
+* `vk::DeviceCommands` &ndash; 使用 `vkGetDeviceProcAddr` 和一个有效的 Vulkan 设备加载的 Vulkan 命令。这些命令与特定的 Vulkan 设备绑定，并且提供了你期望中图形 API 提供的大多数功能
 
-These structs allow you to easily load and call raw Vulkan commands from Rust, but `vulkanalia` offers wrappers around the raw Vulkan commands which make calling them from Rust easier and less error-prone.
+这些结构体能让你简单地在 Rust 中加载和调用原始 Vulkan 命令，不过 `vulkanalia` 提供了对原始命令的包装，这使得在 Rust 中使用它们更加容易，并且不易出错。
 
-### Command wrappers
+### 命令封装
 
-An example of a typical Vulkan command signature looks like this in C:
+一个典型的 Vulkan 命令的签名在 C 中看起来就像这样：
 
 ```c
 VkResult vkEnumerateInstanceExtensionProperties(
@@ -161,7 +159,7 @@ VkResult vkEnumerateInstanceExtensionProperties(
 );
 ```
 
-Someone who is familiar with the conventions of the Vulkan API could quickly see how this command is supposed to be used from this signature alone despite it not including some key information.
+熟悉 Vulkan API 的人可以从这个签名中快速看出这个命令的用法，尽管它没有包含一些关键信息。
 
 For those new to the Vulkan API, a look at the [documentation](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceExtensionProperties.html) for this command will likely be more illuminating. The description of the behavior of this command in the documentation suggests that using this command to list the available extensions for the Vulkan instance will be a multi-step process:
 
