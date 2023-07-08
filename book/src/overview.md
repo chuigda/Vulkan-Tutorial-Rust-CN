@@ -8,7 +8,7 @@
 
 ## Vulkan 的起源
 
-和之前的图形 API 一样，Vulkan 也是为跨平台抽象 [GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit) 而设计的。大部分之前的 API 都有一个问题，那就是在它们诞生的年代，它们是根据图形硬件的特性来设计的，而此时的图形硬件大多都只有一些可配置的功能。程序员必须以标准的格式提供顶点数据，并且在光照和着色选项上受制于 GPU 制造商。
+和之前的图形 API 一样，Vulkan 也是为跨平台抽象 [GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit) 而设计的。以往的 API 大都有一个问题，那就是在它们诞生的年代，它们是根据图形硬件的特性来设计的，而此时的图形硬件大多都只有一些可配置的功能。程序员必须以标准的格式提供顶点数据，并且在光照和着色选项上受制于 GPU 制造商。
 
 在显卡架构成熟之后，它们开始提供更多的可编程特性。所有这些新功能都必须以某种方式与现有的 API 集成。这就导致这些 API 不能提供理想的抽象，而显卡驱动需要猜测程序员的意图，以将其映射到现代图形架构。这就是为什么有这么多驱动更新来提高游戏性能，而有时候提升幅度很大。由于这些驱动的复杂性，应用程序开发人员还需要处理制造商之间的不一致性 例如 [着色器](https://en.wikipedia.org/wiki/Shader) 接受的语法。除了这些新功能之外，过去十年还涌入了具有强大图形硬件的移动设备。这些移动 GPU 出于空间和能耗上的考虑，采用了不同的架构。其中一个例子是 [tiled rendering](https://en.wikipedia.org/wiki/Tiled_rendering)，它可以给程序员提供对此功能的更多控制，从而提高性能。另一个起源于这些 API 时代的限制是有限的多线程支持，这可能会导致 CPU 成为性能瓶颈。
 
@@ -22,37 +22,39 @@ Vulkan 从头开始、针对现代图形架构而设计，从而解决了这些�
 
 一个 Vulkan 应用首先通过创建一个 `VkInstance` 来设置 Vulkan API。实例的创建是通过描述你的应用程序和你将要使用的 API 扩展来完成的。创建实例之后，你可以查询支持 Vulkan 的硬件，并选择一个或多个 `VkPhysicalDevice` 来使用。你可以查询像 VRAM 大小和设备功能这样的属性来选择所需的设备，例如优先使用独立显卡。
 
-### Step 2 - Logical device and queue families
+### 2. 逻辑设备和队列族（queue families）
 
-After selecting the right hardware device to use, you need to create a `VkDevice` (logical device), where you describe more specifically which `VkPhysicalDeviceFeatures` you will be using, like multi-viewport rendering and 64-bit floats. You also need to specify which queue families you would like to use. Most operations performed with Vulkan, like draw commands and memory operations, are asynchronously executed by submitting them to a `VkQueue`. Queues are allocated from queue families, where each queue family supports a specific set of operations in its queues. For example, there could be separate queue families for graphics, compute and memory transfer operations. The availability of queue families could also be used as a distinguishing factor in physical device selection. It is possible for a device with Vulkan support to not offer any graphics functionality, however all graphics cards with Vulkan support today will generally support all queue operations that we're interested in.
+选择正确的硬件设备后，你需要创建一个 `VkDevice` (逻辑设备)，在这里你需要更具体地描述你将要使用的 `VkPhysicalDeviceFeatures`，例如多视口渲染和 64 位浮点数。你还需要指定你想要使用的队列族。大多数 Vulkan 操作，例如绘制命令和内存操作，都是通过将它们提交到 `VkQueue` 来异步执行的。队列是从队列族中分配的，每个队列族都支持一组特定的操作。例如，可能会有单独的队列族用于图形、计算和内存传输操作。队列族的可用性也可以用作物理设备选择的区分因素。虽然支持 Vulkan 的设备可能不提供任何图形功能，但是今天所有支持 Vulkan 的显卡通常都支持我们感兴趣的所有队列操作。
 
-### Step 3 - Window surface and swapchain
+### 3. 创建窗口和交换链（swapchain）
 
-Unless you're only interested in offscreen rendering, you will need to create a window to present rendered images to. Windows can be created with the native platform APIs or libraries like [GLFW](http://www.glfw.org/), [SDL](https://www.libsdl.org/), or the [`winit`](https://github.com/rust-windowing/winit) crate. We will be using the `winit` crate in this tutorial, but more about that in the next chapter.
+除非你只对离屏渲染有兴趣，否则你需要创建一个窗口来呈现渲染图像。窗口可以使用本地平台 API，或类似 [GLFW](http://www.glfw.org/)、[SDL](https://www.libsdl.org/) 或 [`winit`](https://github.com/rust-windowing/winit) crate。在本教程中我们会使用 `winit` crate，下一章会对其进行详细介绍。
 
-We need two more components to actually render to a window: a window surface (`VkSurfaceKHR`) and a swapchain (`VkSwapchainKHR`). Note the `KHR` postfix, which means that these objects are part of a Vulkan extension. The Vulkan API itself is completely platform agnostic, which is why we need to use the standardized WSI (Window System Interface) extension to interact with the window manager. The surface is a cross-platform abstraction over windows to render to and is generally instantiated by providing a reference to the native window handle, for example `HWND` on Windows. However, `vulkanalia` has optional integration with the `winit` crate which we will be leveraging to handle the platform-specific details of creating a window and associated surface for us.
+我们还需要两个组件才能完成窗口渲染：一个窗口表面（`VkSurfaceKHR`）和一个交换链（`VkSwapchainKHR`），可以注意到这两个组件都有一个 `KHR` 后缀，这表示它们都是 Vulkan 扩展。Vulkan 本身完全是平台无关的，这就是为什么我们需要使用标准 WSI（Window System Interface，窗口系统接口）扩展与原生的窗口管理器进行交互。表面（Surface）是一个渲染窗口的跨平台抽象，通常它是由原生窗口系统句柄 —— 例如 Windows 上的 `HWND` —— 作为参数实例化得到的。然而，`vulkanalia` 包含了对 `winit` 可选的集成，这会帮助我们处理创建窗口和与之关联的表面的过程中那些平台特定的细节。
 
-The swapchain is a collection of render targets. Its basic purpose is to ensure that the image that we're currently rendering to is different from the one that is currently on the screen. This is important to make sure that only complete images are shown. Every time we want to draw a frame we have to ask the swapchain to provide us with an image to render to. When we've finished drawing a frame, the image is returned to the swapchain for it to be presented to the screen at some point. The number of render targets and conditions for presenting finished images to the screen depends on the present mode. Common present modes are  double buffering (vsync) and triple buffering. We'll look into these in the swapchain creation chapter.
+交换链是一系列的渲染目标。它可以保证我们正在渲染的图像不是当前屏幕上正在显然的图像，这样可以保证只有完整的图像才会被显示。每次我们想要绘制一帧时，我们都必须要求交换链提供一个图像来进行渲染。当我们完成一帧的绘制后，图像就会被返回到交换链中，以便在某个时刻呈现到屏幕上。渲染目标的数量和呈现图像到屏幕的条件取决于显示模式（present mode）。常见的显示模式有双缓冲（垂直同步）和三缓冲。我们将在创建交换链章节讨论这些问题。
 
-Some platforms allow you to render directly to a display without interacting with any window manager through the `VK_KHR_display` and `VK_KHR_display_swapchain` extensions. These allow you to create a surface that represents the entire screen and could be used to implement your own window manager, for example.
+ 有的平台允许你直接渲染到输出，而不通过 `VK_KHR_display` 和 `VK_KHR_display_swapchain` 与窗口管理器进行交互。这就允许你创建一个覆盖整个屏幕的表面，你可以用它来实现你自己的窗口管理器。
 
-### Step 4 - Image views and framebuffers
+### 4. 图像视图（image view）和帧缓冲（framebuffer）
 
-To draw to an image acquired from the swapchain, we have to wrap it into a `VkImageView` and `VkFramebuffer`. An image view references a specific part of an image to be used, and a framebuffer references image views that are to be used for color, depth and stencil targets. Because there could be many different images in the swapchain, we'll preemptively create an image view and framebuffer for each of them and select the right one at draw time.
+从交换链获取图像后，还不能直接在图像上进行绘制，需要将图像先包装进 `VkImageView` 和 `VkFramebuffer`。一个图像试图可以引用图像的一个特定部分，而一个帧缓冲则引用了用于颜色、深度和模板的图像视图。因为交换链中可能有很多不同的图像，所以我们会预先为每个图像创建一个图像视图和帧缓冲，并在绘制时选择正确的那个。
 
-### Step 5 - Render passes
+### 5. 渲染流程（render passes）
+
+Vulkan 中的渲染流程描述了渲染操作中使用的图像类型，图像的使用方式，以及如何处理它们的内容。在我们最初的三角形渲染程序中，我们会告诉 Vulkan 我们会使用一个图像作为颜色目标，并且我们希望在绘制操作之前将其清除为一个纯色。渲染流程只描述图像的类型，`VkFramebuffer` 则会将特定的图像绑定到这些槽中。
 
 Render passes in Vulkan describe the type of images that are used during rendering operations, how they will be used, and how their contents should be treated. In our initial triangle rendering application, we'll tell Vulkan that we will use a single image as color target and that we want it to be cleared to a solid color right before the drawing operation. Whereas a render pass only describes the type of images, a `VkFramebuffer` actually binds specific images to these slots.
 
-### Step 6 - Graphics pipeline
+### 6. 图形管线（graphics pipeline）
 
-The graphics pipeline in Vulkan is set up by creating a `VkPipeline` object. It describes the configurable state of the graphics card, like the viewport size and depth buffer operation and the programmable state using `VkShaderModule` objects. The `VkShaderModule` objects are created from shader byte code. The driver also needs to know which render targets will be used in the pipeline, which we specify by referencing the render pass.
+Vulkan 的图形管线通过创建 `VkPipeline` 对象建立。它描述了显卡的可配置状态 —— 例如视口（viewport）的大小和深度缓冲操作，以及使用 `VkShaderModule 的可编程状态。`VkShaderModule` 对象是从着色器字节码创建的。驱动还需要知道在管线中将使用哪些渲染目标，我们通过引用渲染流程来指定。
 
-One of the most distinctive features of Vulkan compared to existing APIs, is that almost all configuration of the graphics pipeline needs to be set in advance. That means that if you want to switch to a different shader or slightly change your vertex layout, then you need to entirely recreate the graphics pipeline. That means that you will have to create many `VkPipeline` objects in advance for all the different combinations you need for your rendering operations. Only some basic configuration, like viewport size and clear color, can be changed dynamically. All of the state also needs to be described explicitly, there is no default color blend state, for example.
+Vulkan 与之前的图形 API 最大的不同是几乎所有图形管线的配置都需要提前完成。这也就意味着当我们想要切换到另一个着色器，或者稍微改变顶点布局，整个图形管线都要被重建。也就是说，我们需要为所有不同的组合创建很多 `VkPipeline` 对象。只有一些基本的配置，例如视口大小和清除颜色，可以动态改变。所有的状态都需要被显式地描述，没有默认的颜色混合状态。
 
-The good news is that because you're doing the equivalent of ahead-of-time compilation versus just-in-time compilation, there are more optimization opportunities for the driver and runtime performance is more predictable, because large state changes like switching to a different graphics pipeline are made very explicit.
+这样做的好处类似于预编译相比于即时编译，驱动程序可以获得更大的优化空间，并且运行时的性能更加可预测，因为像切换到另一个图形管线这样的大的状态改变都是显式的。
 
-### Step 7 - Command pools and command buffers
+### 7. 指令池和指令缓冲
 
 As mentioned earlier, many of the operations in Vulkan that we want to execute, like drawing operations, need to be submitted to a queue. These operations first need to be recorded into a `VkCommandBuffer` before they can be submitted. These command buffers are allocated from a `VkCommandPool` that is associated with a specific queue family. To draw a simple triangle, we need to record a command buffer with the following operations:
 
@@ -63,13 +65,13 @@ As mentioned earlier, many of the operations in Vulkan that we want to execute, 
 
 Because the image in the framebuffer depends on which specific image the swapchain will give us, we need to record a command buffer for each possible image and select the right one at draw time. The alternative would be to record the command buffer again every frame, which is not as efficient.
 
-### Step 8 - Main loop
+### 8. 主循环
 
 Now that the drawing commands have been wrapped into a command buffer, the main loop is quite straightforward. We first acquire an image from the swapchain with `vkAcquireNextImageKHR`. We can then select the appropriate command buffer for that image and execute it with `vkQueueSubmit`. Finally, we return the image to the swapchain for presentation to the screen with `vkQueuePresentKHR`.
 
 Operations that are submitted to queues are executed asynchronously. Therefore we have to use synchronization objects like semaphores to ensure a correct order of execution. Execution of the draw command buffer must be set up to wait on image acquisition to finish, otherwise it may occur that we start rendering to an image that is still being read for presentation on the screen. The `vkQueuePresentKHR` call in turn needs to wait for rendering to be finished, for which we'll use a second semaphore that is signaled after rendering completes.
 
-### Summary
+### 总结
 
 This whirlwind tour should give you a basic understanding of the work ahead for drawing the first triangle. A real-world program contains more steps, like allocating vertex buffers, creating uniform buffers and uploading texture images that will be covered in subsequent chapters, but we'll start simple because Vulkan has enough of a steep learning curve as it is. Note that we'll cheat a bit by initially embedding the vertex coordinates in the vertex shader instead of using a vertex buffer. That's because managing vertex buffers requires some familiarity with command buffers first.
 
