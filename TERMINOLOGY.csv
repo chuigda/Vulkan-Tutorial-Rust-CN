@@ -2,8 +2,11 @@
 verbose,形容词,一般,,冗长
 redundant,形容词,一般,,冗余/多余
 aim at,动词,一般,,面向
+populate,动词,一般,,填充
 
 binding,名词,程序设计概念,,绑定
+builder,名词,程序设计概念,,建造者
+builder pattern,名词,程序设计概念,,建造者模式
 instance,名词,程序设计概念,,实例
 handle,名词,程序设计概念,,句柄
 pipeline,名词,程序设计概念,,管线
@@ -42,6 +45,7 @@ validation layer,名词,Vulkan概念,,校验层
 
 associated constant,名词,Rust概念,,关联常量
 crate,名词,Rust概念,,不译
+trait,名词,Rust概念,,不译
 
 issue,名词,Git概念,,问题
 pull request,名词,Git概念,,拉取请求
