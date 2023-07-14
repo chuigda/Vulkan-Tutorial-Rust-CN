@@ -1,6 +1,10 @@
-# Base code
+# 基本代码
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/00_base_code.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/setup/base_code.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/00_base_code.rs)
 
 In the `Development environment` chapter we created a Cargo project and added the necessary dependencies. In this chapter we will be replacing the code in the `src/main.rs` file with the following code:
 
