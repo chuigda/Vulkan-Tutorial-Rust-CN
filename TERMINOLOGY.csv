@@ -1,0 +1,47 @@
+英文,词性,属性,例句,翻译
+verbose,形容词,一般,,冗长
+redundant,形容词,一般,,冗余/多余
+aim at,动词,一般,,面向
+
+binding,名词,程序设计概念,,绑定
+instance,名词,程序设计概念,,实例
+handle,名词,程序设计概念,,句柄
+pipeline,名词,程序设计概念,,管线
+registry,名词,程序设计概念,,注册表
+namespace,名词,程序设计概念,,名称空间
+enumeration,名词,程序设计概念,,枚举
+variant,名词,程序设计概念,,枚举变体
+signature,名词,程序设计概念,,（函数）签名
+call,名词,程序设计概念,,调用
+component,名词,程序设计概念,,组件
+console,名词,程序设计概念,,控制台
+executable,名词,程序设计概念,,可执行文件
+
+queue,名词,数据结构,,队列
+
+texture,名词,计算机图形学术语,,纹理
+material,名词,计算机图形学术语,,材质
+framebuffer,名词,计算机图形学术语,,帧缓冲
+vertex,名词,计算机图形学术语,,顶点
+fragment,名词,计算机图形学术语,,片元
+shader,名词,计算机图形学术语,,着色器
+viewport,名词,计算机图形学术语,,视口
+render,动词,计算机图形学术语,,渲染
+surface,名词,计算机图形学术语,,表面
+surface format,名词,计算机图形学术语,,表面格式
+
+queue family,名词,Vulkan概念,,队列族
+queue families,名词,Vulkan概念,,队列族
+swapchain,名词,Vulkan概念,,交换链
+present mode,名词,Vulkan概念,,显示模式
+image view,名词,Vulkan概念,,图像视图
+render passes,名词,Vulkan概念,,渲染流程
+command pool,名词,Vulkan概念,,指令池
+command buffer,名词,Vulkan概念,,指令缓冲
+validation layer,名词,Vulkan概念,,校验层
+
+associated constant,名词,Rust概念,,关联常量
+crate,名词,Rust概念,,不译
+
+issue,名词,Git概念,,问题
+pull request,名词,Git概念,,拉取请求
