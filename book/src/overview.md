@@ -266,7 +266,7 @@ let instance = entry.create_instance(&info, None).unwrap();
 
 幸运的是，`vulkanalia` 为此提供了解决方案 —— 不调用 `build()`，而是直接将生成器传递给命令包装器！在任何接受 Vulkan 结构体的地方，你都可以直接提供与 Vulkan 结构体对应的生成器。如果从上面的代码中删除 `build()` 调用，Rust 编译器就能够利用生成器上的生存期来拒绝这个坏代码，并告诉你 `error[E0716]: temporary value dropped while borrowed`。
 
-### Preludes
+### `prelude` 模块
 
 `vulkanalia` 提供了[`prelude` 模块](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/prelude/index.html)，用于暴露使用 crate 所需的基本类型。每个 Vulkan 版本都有一个 `prelude` 模块，每个模块都会暴露相关的命令 trait，以及其他经常用到的类型：
 
