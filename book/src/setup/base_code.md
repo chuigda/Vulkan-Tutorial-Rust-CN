@@ -92,7 +92,7 @@ struct AppData {}
 
 ## 一个关于安全性的注解
 
-所有的 Vulkan 命令，无论是原始命令还是它们的包装起，在 `vulkanalia` 中都是被标记为 `unsafe` 的。这是因为许多 Vulkan 命令对如何调用它们作了限制，而 Rust 无法确保这些限制（除非引入一个更高阶的接口来隐藏 Vulkan API，例如 [`vulkano`](https://vulkano.rs)）。
+所有的 Vulkan 命令，无论是原始命令还是它们的包装器，在 `vulkanalia` 中都是被标记为 `unsafe` 的。这是因为许多 Vulkan 命令对如何调用它们作了限制，而 Rust 无法确保这些限制（除非引入一个更高阶的接口来隐藏 Vulkan API，例如 [`vulkano`](https://vulkano.rs)）。
 
 本教程通过把所有调用 Vulkan 命令的函数和方法标记为 `unsafe` 来解决这一问题。这可以最大程度上减少语法噪音，但一个真实的程序中你可能希望暴露你自己的一个安全的接口，来确保你调用的 Vulkan 命令的不变量。
 
