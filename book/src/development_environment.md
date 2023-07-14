@@ -1,16 +1,16 @@
-# Development environment
+# 开发环境
 
-In this chapter we'll set up your environment for developing Vulkan applications by installing the Vulkan SDK for your operating system. This tutorial assumes you already have a working Rust (1.51+) development environment.
+在这个章节中，我们将会安装 Vulkan SDK 并搭建开发 Vulkan 应用所需的环境。此教程假设你已经有一个搭建好的 Rust（1.51+）开发环境。
 
-## Cargo project
+## Cargo 项目
 
-First let's create our Cargo project:
+首先，我们创建一个 Cargo 项目：
 
 `cargo new vulkan-tutorial`
 
-After this command has executed, you'll have a folder called `vulkan-tutorial` containing a minimal Cargo project which produces a Rust executable.
+在这个命令执行后，你会看到一个叫做 `vulkan-tutorial` 的文件夹，里面有一个简单的生成 Rust 可执行应用的 Cargo 项目。
 
-Open the `Cargo.toml` file in the folder and add these dependencies in the pre-existing `[dependencies]` section:
+打开这个文件夹里的 `Cargo.toml` 文件，并且将下列依赖加入其中的 `[dependencies]` 部分：
 
 ```toml
 anyhow = "1"
@@ -25,63 +25,63 @@ vulkanalia = { version = "=0.21.0", features = ["libloading", "provisional", "wi
 winit = "0.28"
 ```
 
-* `anyhow` &ndash; used for simple error handling
-* `lazy_static` &ndash; used to store static data like vertices
-* `log` &ndash; used for logging statements
-* `nalgebra-glm` &ndash; used as a Rust replacement for [GLM](https://glm.g-truc.net/0.9.9/index.html) (graphics math library)
-* `png` &ndash; used to load PNGs to use as textures
-* `pretty_env_logger` &ndash; used to print our logs to the console
-* `thiserror` &ndash; used to define custom errors types without boilerplate
-* `tobj` &ndash; used to load 3D models in the [Wavefront .obj format](https:/en.wikipedia.org/wiki/Wavefront_.obj_file)
-* `vulkanalia` &ndash; used to call the Vulkan API
-* `winit` &ndash; used to create a window to render to
+* `anyhow` &ndash; 用于简单的错误处理
+* `lazy_static` &ndash; 用于存储静态数据，例如顶点数据
+* `log` &ndash; 日志库
+* `nalgebra-glm` &ndash; 一个 Rust 语言的 [GLM](https://glm.g-truc.net/0.9.9/index.html)（graphics math library，图形数学库）替代
+* `png` &ndash; 用于加载 PNG 图片文件作为纹理
+* `pretty_env_logger` &ndash; 用于打印日志到控制台
+* `thiserror` &ndash; 用于不需模板文件自定义错误类型
+* `tobj` &ndash; 用于加载 [Wavefront .obj 格式](https:/en.wikipedia.org/wiki/Wavefront_.obj_file) 的 3D 模型
+* `vulkanalia` &ndash; 用于调用 Vulkan API
+* `winit` &ndash; 用于创建将进行渲染的窗口
 
 ## Vulkan SDK
 
-The most important component you'll need for developing Vulkan applications is the SDK. It includes the headers, standard validation layers, debugging tools and a loader for the Vulkan functions. The loader looks up the functions in the driver at runtime, similarly to GLEW for OpenGL - if you're familiar with that.
+你在开发 Vulkan 应用时需要用到的最关键的组件就是 Vulkan SDK。它包含了头文件，标准验证层，调试工具，以及一个 Vulkan 函数的加载器。加载器将会在运行时从驱动中寻找这些函数，如果你熟悉 OpenGL 的话，它的功能与 GLEW 类似。
 
 ### Windows
 
-The SDK can be downloaded from the [LunarG website](https://vulkan.lunarg.com/) using the buttons at the bottom of the page. You don't have to create an account, but it will give you access to some additional documentation that may be useful to you.
+SDK 能在 [LunarG 网站](https://vulkan.lunarg.com/) 下载。创建账户不是必须的，但它会给你阅读一些或许对你有用的额外文档的权限。
 
 ![](./images/vulkan_sdk_download_buttons.png)
 
-Proceed through the installation and pay attention to the install location of the SDK. The first thing we'll do is verify that your graphics card and driver properly support Vulkan. Go to the directory where you installed the SDK, open the `Bin` directory and run the `vkcube.exe` demo. You should see the following:
+继续完成安装，并且注意 SDK 的安装路径。我们需要做的第一件事就是验证你的显卡与驱动支持 Vulkan。进入 SDK 的安装路径，打开 `Bin` 文件夹并且运行 `vkcube.exe` 示例应用。你应该看到这个画面：
 
 ![](./images/cube_demo.png)
 
-If you receive an error message then ensure that your drivers are up-to-date, include the Vulkan runtime and that your graphics card is supported. See the [introduction chapter](introduction.html) for links to drivers from the major vendors.
+如果你收到了一条报错信息，那你需要确保你的显卡驱动是最新的，包含 Vulkan 运行时，并且你的显卡是被支持的。主流品牌的驱动下载链接详见[介绍章节](introduction.html)。
 
-There is another program in this directory that will be useful for development. The `glslangValidator.exe` and `glslc.exe` programs will be used to compile shaders from the human-readable [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) to bytecode. We'll cover this in depth in the [shader modules chapter](pipeline/shader_modules.html). The `Bin` directory also contains the binaries of the Vulkan loader and the validation layers, while the `Lib` directory contains the libraries.
+这个文件夹里有另一个对开发很有用的程序。`glslangValidator.exe` 和 `glslc.exe` 将会把人类可阅读的 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) 代码编译为字节码。我们将会在[着色器模组章节](pipeline/shader_modules.html)深入讨论这部分内容。`Bin` 文件夹也包含了 Vulkan 加载器与验证层的二进制文件；`Lib` 文件夹包含了库。
 
-Feel free to explore the other files, but we won't need them for this tutorial.
+你可以自由地探索其它文件，但本教程并不会用到它们。
 
 ### Linux
 
-These instructions will be aimed at Ubuntu users, but you may be able to follow along by changing the `apt` commands to the package manager commands that are appropriate for you.
+以下指引的目标是 Ubuntu 用户，非 Ubuntu 用户也可以将 `apt` 命令换成合适的你使用的包管理器的命令。
 
-The most important components you'll need for developing Vulkan applications on Linux are the Vulkan loader, validation layers, and a couple of command-line utilities to test whether your machine is Vulkan-capable:
+在 Linux 上开发 Vulkan 应用时需要用到的最关键的组件是 Vulkan 加载器，验证层，以及一些用来测试你的机器是否支持 Vulkan 的命令行实用工具：
 
-* `sudo apt install vulkan-tools` &ndash; Command-line utilities, most importantly `vulkaninfo` and `vkcube`. Run these to confirm your machine supports Vulkan.
-* `sudo apt install libvulkan-dev` &ndash; Installs Vulkan loader. The loader looks up the functions in the driver at runtime, similarly to GLEW for OpenGL - if you're familiar with that.
-* `sudo apt install vulkan-validationlayers-dev` &ndash; Installs the standard validation layers. These are crucial when debugging Vulkan applications, and we'll discuss them in an upcoming chapter.
+* `sudo apt install vulkan-tools` &ndash; 命令行实用工具，最关键的两个是 `vulkaninfo` 和 `vkcube`。运行这两个命令来测试你的机器是否支持 Vulkan。
+* `sudo apt install libvulkan-dev` &ndash; 安装 Vulkan 加载器。加载器将会在运行时从驱动中寻找这些函数，如果你熟悉 OpenGL 的话，它的功能与 GLEW 类似。
+* `sudo apt install vulkan-validationlayers-dev` &ndash; 安装标准验证层。这在调试 Vulkan 应用程序时非常关键，我们会在之后的章节中讨论这部分内容。
 
-If installation was successful, you should be all set with the Vulkan portion. Remember to run `vkcube` and ensure you see the following pop up in a window:
+如果你安装成功了，你在 Vulkan 部分没有别的需要做的了。记得运行 `vkcube` 并确保你可以在一个窗口中看见这个画面：
 
 ![](./images/cube_demo_nowindow.png)
 
-If you receive an error message then ensure that your drivers are up-to-date, include the Vulkan runtime and that your graphics card is supported. See the [introduction chapter](introduction.html) for links to drivers from the major vendors.
+如果你收到了一条报错信息，那你需要确保你的显卡驱动是最新的，包含 Vulkan 运行时，并且你的显卡是被支持的。主流品牌的驱动下载链接详见[介绍章节](introduction.html)。
 
 ### macOS
 
-These instructions will assume you are using the [Homebrew package manager](https://brew.sh/). Also, keep in mind that you will need at least MacOS version 10.11, and your device needs to support the [Metal API](https://en.wikipedia.org/wiki/Metal_(API)#Supported_GPUs).
+以下指引将假设你在使用 [Homebrew 包管理器](https://brew.sh/)。并且注意你需要 macOS 10.11 或更新的版本。你的设备也需要支持 [Metal API](https://en.wikipedia.org/wiki/Metal_(API)#Supported_GPUs)。
 
-The SDK can be downloaded from the [LunarG website](https://vulkan.lunarg.com/) using the buttons at the bottom of the page. You don't have to create an account, but it will give you access to some additional documentation that may be useful to you.
+SDK 能在 [LunarG 网站](https://vulkan.lunarg.com/) 下载。创建账户不是必须的，但它会给你阅读一些或许对你有用的额外文档的权限。
 
 ![](./images/vulkan_sdk_download_buttons.png)
 
-The SDK version for MacOS internally uses [MoltenVK](https://moltengl.com/). There is no native support for Vulkan on MacOS, so what MoltenVK does is actually act as a layer that translates Vulkan API calls to Apple's Metal graphics framework. With this you can take advantage of debugging and performance benefits of Apple's Metal framework.
+macOS 版本的 SDK 在内部使用了 [MoltenVK](https://moltengl.com/)。Vulkan 在 macOS 上没有原生支持，所以 MoltenVK 会作为中间层把 Vulkan API 的调用翻译至苹果的 Metal 图形框架。这样你就可以享受到苹果的 Metal 框架在调试与性能上的优点。
 
-After downloading it, simply extract the contents to a folder of your choice. Inside the extracted folder, in the `Applications` folder you should have some executable files that will run a few demos using the SDK. Run the `vkcube` executable and you will see the following:
+下载完成之后，将其解压到你自己选择的文件夹。在解压后的文件夹内，你可以在 `Applications` 文件夹中找到一些使用 SDK 运行的示例应用的可执行文件。运行 `vkcube` 示例应用，你会看到这个画面：
 
 ![](./images/cube_demo_mac.png)
