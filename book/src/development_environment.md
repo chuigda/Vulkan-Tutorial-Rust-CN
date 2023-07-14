@@ -8,7 +8,7 @@
 
 `cargo new vulkan-tutorial`
 
-在执行这个命令后，你会看到一个叫做 `vulkan-tutorial` 的文件夹，里面有一个简单的生成 Rust 可执行应用的 Cargo 项目。
+在执行这个命令后，你会看到一个叫做 `vulkan-tutorial` 的文件夹，里面有一个简单的生成 Rust 可执行文件的 Cargo 项目。
 
 打开这个文件夹里的 `Cargo.toml` 文件，并且将下列依赖加入其中的 `[dependencies]` 部分：
 
