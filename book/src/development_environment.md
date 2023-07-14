@@ -8,7 +8,7 @@
 
 `cargo new vulkan-tutorial`
 
-在这个命令执行后，你会看到一个叫做 `vulkan-tutorial` 的文件夹，里面有一个简单的生成 Rust 可执行应用的 Cargo 项目。
+在执行这个命令后，你会看到一个叫做 `vulkan-tutorial` 的文件夹，里面有一个简单的生成 Rust 可执行应用的 Cargo 项目。
 
 打开这个文件夹里的 `Cargo.toml` 文件，并且将下列依赖加入其中的 `[dependencies]` 部分：
 
@@ -29,36 +29,36 @@ winit = "0.28"
 * `lazy_static` &ndash; 用于存储静态数据，例如顶点数据
 * `log` &ndash; 日志库
 * `nalgebra-glm` &ndash; 一个 Rust 语言的 [GLM](https://glm.g-truc.net/0.9.9/index.html)（graphics math library，图形数学库）替代
-* `png` &ndash; 用于加载 PNG 图片文件作为纹理
+* `png` &ndash; 用于将 PNG 图片文件加载到纹理
 * `pretty_env_logger` &ndash; 用于打印日志到控制台
-* `thiserror` &ndash; 用于不需模板文件自定义错误类型
+* `thiserror` &ndash; 用于在自定义错误类型时减少样板代码
 * `tobj` &ndash; 用于加载 [Wavefront .obj 格式](https:/en.wikipedia.org/wiki/Wavefront_.obj_file) 的 3D 模型
 * `vulkanalia` &ndash; 用于调用 Vulkan API
 * `winit` &ndash; 用于创建将进行渲染的窗口
 
 ## Vulkan SDK
 
-你在开发 Vulkan 应用时需要用到的最关键的组件就是 Vulkan SDK。它包含了头文件，标准验证层，调试工具，以及一个 Vulkan 函数的加载器。加载器将会在运行时从驱动中寻找这些函数，如果你熟悉 OpenGL 的话，它的功能与 GLEW 类似。
+在开发 Vulkan 应用时需要用到的最关键的组件就是 Vulkan SDK。它包含了头文件、标准验证层、调试工具，以及一个 Vulkan 函数的加载器。加载器将会在运行时从驱动中寻找这些函数，如果你熟悉 OpenGL 的话，它的功能与 GLEW 类似。
 
 ### Windows
 
-SDK 能在 [LunarG 网站](https://vulkan.lunarg.com/) 下载。创建账户不是必须的，但它会给你阅读一些或许对你有用的额外文档的权限。
+SDK 能在 [LunarG 网站](https://vulkan.lunarg.com/) 下载。创建账户不是必须的，但它会给你阅读一些额外文档的权限，这些文档或许对你有用。
 
 ![](./images/vulkan_sdk_download_buttons.png)
 
-继续完成安装，并且注意 SDK 的安装路径。我们需要做的第一件事就是验证你的显卡与驱动支持 Vulkan。进入 SDK 的安装路径，打开 `Bin` 文件夹并且运行 `vkcube.exe` 示例应用。你应该看到这个画面：
+继续完成安装，并且注意 SDK 的安装路径。我们需要做的第一件事就是验证你的显卡与驱动支持 Vulkan。进入 SDK 的安装路径，打开 `Bin` 文件夹并且运行 `vkcube.exe` 示例应用。你应该会看到这个画面：
 
 ![](./images/cube_demo.png)
 
-如果你收到了一条报错信息，那你需要确保你的显卡驱动是最新的，包含 Vulkan 运行时，并且你的显卡是被支持的。主流品牌的驱动下载链接详见[介绍章节](introduction.html)。
+如果你收到了一条错误信息，那你需要确保你的显卡驱动是最新的，包含 Vulkan 运行时，并且你的显卡支持 Vulkan。主流品牌的驱动下载链接详见[介绍章节](introduction.html)。
 
-这个文件夹里有另一个对开发很有用的程序。`glslangValidator.exe` 和 `glslc.exe` 将会把人类可阅读的 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) 代码编译为字节码。我们将会在[着色器模组章节](pipeline/shader_modules.html)深入讨论这部分内容。`Bin` 文件夹也包含了 Vulkan 加载器与验证层的二进制文件；`Lib` 文件夹包含了库。
+这个文件夹里有另一个对开发很有用的程序。`glslangValidator.exe` 和 `glslc.exe` 将会把人类可阅读的 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) （OpenGL Shading Language，OpenGL 着色器语言）代码编译为字节码。我们将会在[着色器模组章节](pipeline/shader_modules.html)深入讨论这部分内容。`Bin` 文件夹也包含了 Vulkan 加载器与验证层的二进制文件；`Lib` 文件夹包含了库。
 
 你可以自由地探索其它文件，但本教程并不会用到它们。
 
 ### Linux
 
-以下指引的目标是 Ubuntu 用户，非 Ubuntu 用户也可以将 `apt` 命令换成合适的你使用的包管理器的命令。
+以下操作说明面向 Ubuntu 用户，非 Ubuntu 用户也可以将 `apt` 命令换成合适的你使用的包管理器的命令。
 
 在 Linux 上开发 Vulkan 应用时需要用到的最关键的组件是 Vulkan 加载器，验证层，以及一些用来测试你的机器是否支持 Vulkan 的命令行实用工具：
 

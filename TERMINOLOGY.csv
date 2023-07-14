@@ -1,6 +1,7 @@
 英文,词性,属性,例句,翻译
 verbose,形容词,一般,,冗长
 redundant,形容词,一般,,冗余/多余
+aim at,动词,一般,,面向
 
 binding,名词,程序设计概念,,绑定
 instance,名词,程序设计概念,,实例
@@ -18,7 +19,7 @@ console,名词,程序设计概念,,控制台
 queue,名词,数据结构,,队列
 
 texture,名词,计算机图形学术语,,纹理
-matrial,名词,计算机图形学术语,,材质
+material,名词,计算机图形学术语,,材质
 framebuffer,名词,计算机图形学术语,,帧缓冲
 vertex,名词,计算机图形学术语,,顶点
 fragment,名词,计算机图形学术语,,片元
@@ -36,6 +37,7 @@ image view,名词,Vulkan概念,,图像视图
 render passes,名词,Vulkan概念,,渲染流程
 command pool,名词,Vulkan概念,,指令池
 command buffer,名词,Vulkan概念,,指令缓冲
+validation layer,名词,Vulkan概念,,校验层
 
 associated constant,名词,Rust概念,,关联常量
 crate,名词,Rust概念,,不译
