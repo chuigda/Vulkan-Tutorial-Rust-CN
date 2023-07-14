@@ -38,7 +38,7 @@ winit = "0.28"
 
 ## Vulkan SDK
 
-在开发 Vulkan 应用时需要用到的最关键的组件就是 Vulkan SDK。它包含了头文件、标准验证层、调试工具，以及一个 Vulkan 函数的加载器。加载器将会在运行时从驱动中寻找这些函数，如果你熟悉 OpenGL 的话，它的功能与 GLEW 类似。
+在开发 Vulkan 应用时需要用到的最关键的组件就是 Vulkan SDK。它包含了头文件、标准校验层、调试工具，以及一个 Vulkan 函数的加载器。加载器将会在运行时从驱动中寻找这些函数，如果你熟悉 OpenGL 的话，它的功能与 GLEW 类似。
 
 ### Windows
 
@@ -52,7 +52,7 @@ SDK 能在 [LunarG 网站](https://vulkan.lunarg.com/) 下载。创建账户不�
 
 如果你收到了一条错误信息，那你需要确保你的显卡驱动是最新的，包含 Vulkan 运行时，并且你的显卡支持 Vulkan。主流品牌的驱动下载链接详见[介绍章节](introduction.html)。
 
-这个文件夹里有另一个对开发很有用的程序。`glslangValidator.exe` 和 `glslc.exe` 将会把人类可阅读的 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) （OpenGL Shading Language，OpenGL 着色器语言）代码编译为字节码。我们将会在[着色器模组章节](pipeline/shader_modules.html)深入讨论这部分内容。`Bin` 文件夹也包含了 Vulkan 加载器与验证层的二进制文件；`Lib` 文件夹包含了库。
+这个文件夹里有另一个对开发很有用的程序。`glslangValidator.exe` 和 `glslc.exe` 将会把人类可阅读的 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) （OpenGL Shading Language，OpenGL 着色器语言）代码编译为字节码。我们将会在[着色器模组章节](pipeline/shader_modules.html)深入讨论这部分内容。`Bin` 文件夹也包含了 Vulkan 加载器与校验层的二进制文件；`Lib` 文件夹包含了库。
 
 你可以自由地探索其它文件，但本教程并不会用到它们。
 
@@ -60,11 +60,11 @@ SDK 能在 [LunarG 网站](https://vulkan.lunarg.com/) 下载。创建账户不�
 
 以下操作说明面向 Ubuntu 用户，非 Ubuntu 用户也可以将 `apt` 命令换成合适的你使用的包管理器的命令。
 
-在 Linux 上开发 Vulkan 应用时需要用到的最关键的组件是 Vulkan 加载器，验证层，以及一些用来测试你的机器是否支持 Vulkan 的命令行实用工具：
+在 Linux 上开发 Vulkan 应用时需要用到的最关键的组件是 Vulkan 加载器，校验层，以及一些用来测试你的机器是否支持 Vulkan 的命令行实用工具：
 
 * `sudo apt install vulkan-tools` &ndash; 命令行实用工具，最关键的两个是 `vulkaninfo` 和 `vkcube`。运行这两个命令来测试你的机器是否支持 Vulkan。
 * `sudo apt install libvulkan-dev` &ndash; 安装 Vulkan 加载器。加载器将会在运行时从驱动中寻找这些函数，如果你熟悉 OpenGL 的话，它的功能与 GLEW 类似。
-* `sudo apt install vulkan-validationlayers-dev` &ndash; 安装标准验证层。这在调试 Vulkan 应用程序时非常关键，我们会在之后的章节中讨论这部分内容。
+* `sudo apt install vulkan-validationlayers-dev` &ndash; 安装标准校验层。这在调试 Vulkan 应用程序时非常关键，我们会在之后的章节中讨论这部分内容。
 
 如果你安装成功了，你在 Vulkan 部分没有别的需要做的了。记得运行 `vkcube` 并确保你可以在一个窗口中看见这个画面：
 
