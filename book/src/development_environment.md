@@ -70,7 +70,7 @@ SDK 能在 [LunarG 网站](https://vulkan.lunarg.com/) 下载。创建账户不�
 
 ![](./images/cube_demo_nowindow.png)
 
-如果你收到了一条报错信息，那你需要确保你的显卡驱动是最新的，包含 Vulkan 运行时，并且你的显卡是被支持的。主流品牌的驱动下载链接详见[介绍章节](introduction.html)。
+如果你收到了一条错误信息，那你需要确保你的显卡驱动是最新的，包含 Vulkan 运行时，并且你的显卡支持 Vulkan。主流品牌的驱动下载链接详见[介绍章节](introduction.html)。
 
 ### macOS
 
