@@ -7,7 +7,7 @@
 
 # Setup
 
-- [Base code](./setup/base_code.md)
+- [基础代码](./setup/base_code.md)
 - [Instance](./setup/instance.md)
 - [Validation layers](./setup/validation_layers.md)
 - [Physical devices and queue families](./setup/physical_devices_and_queue_families.md)
