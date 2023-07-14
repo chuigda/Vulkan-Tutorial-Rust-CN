@@ -1,5 +1,9 @@
 # FAQ
 
+> 原文链接：<https://kylemayes.github.io/vulkanalia/faq.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+
 本页面列举了在开发 Vulkan 应用时可能遇到的常见问题及其解决方案。
 
 * **我在核心校验层中遇到了访问冲突（access violation）错误** &ndash; 确保未运行 MSI Afterburner / RivaTuner Statistics Server，因为它们和 Vulkan 之间存在一些兼容性问题。
