@@ -114,7 +114,7 @@ Vulkan API 是用 C 语言定义的。Vulkan API 的规范 —— Vulkan API 注
 
 `vulkanalia` 将 Vulkan 枚举实现为结构体，并将枚举变体实现为这些结构体的关联常量。不使用 Rust 枚举是因为在 FFI 调用中使用 Rust 枚举可能导致 [未定义行为](https://github.com/rust-lang/rust/issues/36927)。
 
-因为结构体充当了关联常量的命名空间，我们也就不必担心不同 Vulkan 枚举（或来自其他库的枚举）名称之间的冲突，就像在 C 中那样。所以，就像类型名称一样，`vulkanalia` 会略去 Vulkan 枚举名称中用于命名空间的部分。
+因为结构体充当了关联常量的名称空间，我们也就不必担心不同 Vulkan 枚举（或来自其他库的枚举）名称之间的冲突，就像在 C 中那样。所以，就像类型名称一样，`vulkanalia` 会略去 Vulkan 枚举名称中用于名称空间的部分。
 
 例如，`VK_OBJECT_TYPE_INSTANCE` 枚举变体是 `VkObjectType` 枚举的 `INSTANCE` 值。在 `vulkanalia` 中，这个变体变成了 `vk::ObjectType::INSTANCE`。
 
@@ -161,13 +161,13 @@ VkResult vkEnumerateInstanceExtensionProperties(
 
 熟悉 Vulkan API 的人可以从这个签名中快速看出这个命令的用法，尽管它没有包含一些关键信息。
 
-对于那些新接触 Vulkan API 的人来说，查看此命令的[文档](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceExtensionProperties.html)可能会更加有启发性。文档中对此命令行为的描述表明，使用此命令列出 Vulkan 实例可用的扩展将是一个多步骤的过程：
+而对于那些刚接触 Vulkan API 的人来说，查看此命令的[文档](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceExtensionProperties.html)可能会更有启发性。文档中对此命令行为的描述表明，使用此命令列出 Vulkan 实例可用的扩展（extension）需要多个步骤：
 
 1. 调用命令以获取扩展的数量
-2. 分配一个可以包含输出扩展数量的缓冲区
+2. 分配一个可以容纳输出扩展数量的缓冲区
 3. 再次调用命令，以扩展填充缓冲区
 
-所以在 C++ 中，这可能看起来像这样（为简单起见，这里忽略了命令的结果）：
+所以在 C++ 中，这些步骤可能看起来像这样（简单起见，这里忽略了命令的结果）：
 
 ```c++
 // 1.
@@ -181,7 +181,7 @@ std::vector<VkExtensionProperties> pProperties{pPropertyCount};
 vkEnumerateInstanceExtensionProperties(NULL, &pPropertyCount, pProperties.data());
 ```
 
-`vkEnumerateInstanceExtensionProperties` 的包装器的 Rust 签名如下：
+而 `vkEnumerateInstanceExtensionProperties` 的包装器的 Rust 签名如下：
 
 ```rust,noplaypen
 unsafe fn enumerate_instance_extension_properties(
@@ -193,10 +193,10 @@ unsafe fn enumerate_instance_extension_properties(
 这个命令包装器使得从 Rust 使用 `vkEnumerateInstanceExtensionProperties` 更加容易、更少出错，并且更符合惯用法：
 
 * `layer_name` 参数的可选性被编码在函数签名中。这个参数是可选的，这一点在 C 函数签名中没有体现，需要查看 Vulkan 规范才能得到这个信息
-* 命令的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）来建模。这使得我们可以利用 Rust 强大的错误处理能力，以及在忽略检查可失败命令的结果时由编译器发出警告
+* 命令的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）来体现。这使得我们可以利用 Rust 强大的错误处理能力，以及在忽略检查可失败命令的结果时由编译器发出警告
 * 命令包装器在内部处理了上面描述的三个步骤，并返回一个包含扩展属性的 `Vec`
 
-注意，命令包装器仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类的错误（例如将空的层名称传递给此命令），但仍然有很多事情可能会出错，导致诸如段错误之类的有趣事情发生。你可以随时检查 Vulkan 文档中命令的 `Valid Usage` 部分，以查看调用该命令的有效不变式。
+注意，命令包装器仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类型的错误（例如将空的层名称传递给此命令），但还是有很多可能会出错的事情，导致诸如段错误之类“有趣”的事情发生。你可以随时检查 Vulkan 文档中命令的 `Valid Usage` 部分，以查看有效地调用该命令所需要遵循的不变式（invariants）。
 
 你可能注意到了上面命令包装器中的 `&self` 参数。这些命令包装器是在 `vulkanalia` 暴露的类型实现的 trait 中定义的。这些 trait 可以分为两类：版本 trait 和扩展 trait。版本 trait 为 Vulkan 的标准部分提供命令包装器，而扩展 trait 为 Vulkan 扩展的命令提供命令包装器。
 
@@ -206,11 +206,11 @@ unsafe fn enumerate_instance_extension_properties(
 
 这些版本和扩展 trait 是为包含加载的命令和所需的 Vulkan 实例或设备（如果有的话）的类型定义的。这些类型是精心手工制作的，而不是 `vulkanalia` 的 `vk` 模块中生成的 Vulkan 绑定的一部分。它们是 `Entry`、`Instance` 和 `Device` 结构体，将在后面的章节中使用。
 
-从现在开始，本教程将继续像本节一样直接按名称引用这些命令包装器（例如 `create_instance`）。你可以访问 `vulkanalia` 文档来获取命令包装器的更多信息，例如命令包装器是在哪个 trait 中定义的。
+从现在开始，本教程将继续像本章节一样直接按名称引用这些命令包装器（例如 `create_instance`）。你可以访问 `vulkanalia` 文档来获取命令包装器的更多信息，例如命令包装器是在哪个 trait 中定义的。
 
 ### 建造者（Builders）
 
-Vulkan API 在很大程度上使用结构体作为 Vulkan 命令的参数。作为命令参数使用的 Vulkan 结构体有一个字段，用于指示结构体的类型。在 C API 中，这个字段（`sType`）需要被显式地设置。例如，这里我们正在填充 `VkInstanceCreateInfo` 的一个实例，然后在 C++ 中使用它来调用 `vkCreateInstance`：
+Vulkan API 通常使用结构体作为 Vulkan 命令的参数。作为命令参数使用的 Vulkan 结构体有一个字段，用于指示结构体的类型。在 C API 中，这个字段（`sType`）需要被显式地设置。例如，这里我们正在填充 `VkInstanceCreateInfo` 的一个实例，然后在 C++ 中使用它来调用 `vkCreateInstance`：
 
 ```c++
 std::vector<const char*> extensions{/* 3 extension names */};
@@ -224,7 +224,7 @@ VkInstance instance;
 vkCreateInstance(&info, NULL, &instance);
 ```
 
-当使用 `vulkanalia` 时，你仍然可以以这种方式填充参数结构体，但是 `vulkanalia` 提供了建造者（builder），简化了这些参数结构体的构造。`vk::InstanceCreateInfo` 的 `vulkanalia` 建造者是 `vk::InstanceCreateInfoBuilder`。使用这个建造者，上面的代码将变成：
+当使用 `vulkanalia` 时，你仍然可以以这种方式填充参数结构体，但是 `vulkanalia` 提供了建造者（builder），简化了这些参数结构体的构造。在 `vulkanalia` 中，`vk::InstanceCreateInfo` 对应的建造者是 `vk::InstanceCreateInfoBuilder`。使用这个建造者，上面的代码将变成：
 
 ```rust,noplaypen
 let extensions = &[/* 3 extension names */];

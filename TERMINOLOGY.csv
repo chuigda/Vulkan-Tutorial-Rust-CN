@@ -3,6 +3,8 @@ verbose,形容词,一般,,冗长
 redundant,形容词,一般,,冗余/多余
 aim at,动词,一般,,面向
 populate,动词,一般,,填充
+extension,名词,一般,,扩展
+invariants,名词,一般,,不变式
 
 binding,名词,程序设计概念,,绑定
 builder,名词,程序设计概念,,建造者
