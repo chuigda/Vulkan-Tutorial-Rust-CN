@@ -147,7 +147,7 @@ Vulkan API 是用 C 语言定义的。Vulkan API 的规范 —— Vulkan API 注
 
 这些结构体能让你简单地在 Rust 中加载和调用原始 Vulkan 命令，不过 `vulkanalia` 提供了对原始命令的包装，这使得在 Rust 中使用它们更加容易，并且不易出错。
 
-### 命令封装
+### 命令包装器（wrapper）
 
 一个典型的 Vulkan 命令的签名在 C 中看起来就像这样：
 
@@ -164,8 +164,8 @@ VkResult vkEnumerateInstanceExtensionProperties(
 而对于那些刚接触 Vulkan API 的人来说，查看此命令的[文档](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceExtensionProperties.html)可能会更有启发性。文档中对此命令行为的描述表明，使用此命令列出 Vulkan 实例可用的扩展（extension）需要多个步骤：
 
 1. 调用命令以获取扩展的数量
-2. 分配一个可以容纳输出扩展数量的缓冲区
-3. 再次调用命令，以扩展填充缓冲区
+2. 分配一个可以容纳输出的缓冲区
+3. 再次调用命令，获取扩展并填充缓冲区
 
 所以在 C++ 中，这些步骤可能看起来像这样（简单起见，这里忽略了命令的结果）：
 
@@ -192,25 +192,31 @@ unsafe fn enumerate_instance_extension_properties(
 
 这个命令包装器使得从 Rust 使用 `vkEnumerateInstanceExtensionProperties` 更加容易、更少出错，并且更符合惯用法：
 
-* `layer_name` 参数的可选性被编码在函数签名中。这个参数是可选的，这一点在 C 函数签名中没有体现，需要查看 Vulkan 规范才能得到这个信息
-* 命令的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）来体现。这使得我们可以利用 Rust 强大的错误处理能力，以及在忽略检查可失败命令的结果时由编译器发出警告
+* `layer_name` 参数的可选性被编码在函数签名中。这个参数是可选的，这一点在 C 函数签名中没有体现，需要查阅 Vulkan 规范才能得到这个信息
+* 命令的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）体现。这使得我们可以利用 Rust 强大的错误处理能力，并且在我们忽略检查可失败命令的结果时，编译器会发出警告
 * 命令包装器在内部处理了上面描述的三个步骤，并返回一个包含扩展属性的 `Vec`
 
-注意，命令包装器仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类型的错误（例如将空的层名称传递给此命令），但还是有很多可能会出错的事情，导致诸如段错误之类“有趣”的事情发生。你可以随时检查 Vulkan 文档中命令的 `Valid Usage` 部分，以查看有效地调用该命令所需要遵循的不变式（invariants）。
+注意，命令包装器仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类型的错误（例如给此命令传递一个空的层名称，）但还是有很多可能会出错的事情，导致诸如段错误之类“有趣”的事情发生。你可以随时检查 Vulkan 文档中命令的 `Valid Usage` 部分以了解如何正确地调用命令。
 
-你可能注意到了上面命令包装器中的 `&self` 参数。这些命令包装器是在 `vulkanalia` 暴露的类型实现的 trait 中定义的。这些 trait 可以分为两类：版本 trait 和扩展 trait。版本 trait 为 Vulkan 的标准部分提供命令包装器，而扩展 trait 为 Vulkan 扩展的命令提供命令包装器。
+你可能注意到了上面命令包装器中的 `&self` 参数。这些命令包装器是在 trait 中定义的，而 `vulkanalia` 暴露的类型实现了这些 trait。这些 trait 可以分为两类：版本 trait （version traits）和扩展 trait（extension traits）。版本 trait 为 Vulkan 的标准部分中的命令提供命令包装器，而扩展 trait 为 Vulkan 扩展中的命令提供命令包装器。
 
-例如，`enumerate_instance_extension_properties` 在 `vk::EntryV1_0` trait 中，因为它是一个非扩展 Vulkan 命令，是 Vulkan 1.0 的一部分，不依赖于 Vulkan 实例或设备。像 `cmd_draw_indirect_count` 这样的 Vulkan 命令，它是在 Vulkan 1.2 中添加的，并且依赖于 Vulkan 设备，将在 `vk::DeviceV1_2` trait 中。
+例如，`enumerate_instance_extension_properties` 是一个非扩展 Vulkan 命令，是 Vulkan 1.0 的一部分，不依赖于 Vulkan 实例或设备，所以它被放在 `vk::EntryV1_0` trait 中。而 `cmd_draw_indirect_count` 命令是在 Vulkan 1.2 中添加的，并且依赖于 Vulkan 设备，所以它被放在 `vk::DeviceV1_2` trait 中。
 
-`vk::KhrSurfaceExtension` 是一个扩展 trait 的例子，我们将在后面的章节中使用它来调用 `destroy_surface_khr` 这样的 Vulkan 命令，这些命令是在 `VK_KHR_surface` 扩展中定义的。
+而 `vk::KhrSurfaceExtension` 是一个扩展 trait，我们将在后面的章节中使用它来调用 `destroy_surface_khr` 这样的 Vulkan 命令，这些命令是在 `VK_KHR_surface` 扩展中定义的。
 
-这些版本和扩展 trait 是为包含加载的命令和所需的 Vulkan 实例或设备（如果有的话）的类型定义的。这些类型是精心手工制作的，而不是 `vulkanalia` 的 `vk` 模块中生成的 Vulkan 绑定的一部分。它们是 `Entry`、`Instance` 和 `Device` 结构体，将在后面的章节中使用。
+<!-- TODO: needs much refinement -->
+这些版本和扩展 trait 是为包含加载的命令和所需的 Vulkan 实例或设备（如果有的话）的类型定义的。这些类型是精心手工制作的，而不是 `vulkanalia` 的 `vk` 模块中自动生成的 Vulkan 绑定的一部分。它们是 `Entry`、`Instance` 和 `Device` 结构体，将在后面的章节中使用。
 
 从现在开始，本教程将继续像本章节一样直接按名称引用这些命令包装器（例如 `create_instance`）。你可以访问 `vulkanalia` 文档来获取命令包装器的更多信息，例如命令包装器是在哪个 trait 中定义的。
 
-### 建造者（Builders）
+<!--
+1. 机械工业出版社翻译的《GoF 设计模式》使用了“生成器模式”
+2. Wikipedia 也使用了“生成器模式”: https://zh.wikipedia.org/zh-cn/%E7%94%9F%E6%88%90%E5%99%A8%E6%A8%A1%E5%BC%8F
+3. Rust 的生成器 (generator) 还早得很，<i>而且我觉得那玩意没屌用</i>，不用管它
+-->
+### 生成器（Builders）
 
-Vulkan API 通常使用结构体作为 Vulkan 命令的参数。作为命令参数使用的 Vulkan 结构体有一个字段，用于指示结构体的类型。在 C API 中，这个字段（`sType`）需要被显式地设置。例如，这里我们正在填充 `VkInstanceCreateInfo` 的一个实例，然后在 C++ 中使用它来调用 `vkCreateInstance`：
+Vulkan API 通常使用结构体作为 Vulkan 命令的参数。这些作为命令的参数使用的 Vulkan 结构体有一个字段，用于指示结构体的类型。在 C API 中，这个字段（`sType`）需要被显式地设置。例如，这里我们正在填充 `VkInstanceCreateInfo` 的一个实例，然后在 C++ 中使用它来调用 `vkCreateInstance`：
 
 ```c++
 std::vector<const char*> extensions{/* 3 extension names */};
@@ -224,7 +230,7 @@ VkInstance instance;
 vkCreateInstance(&info, NULL, &instance);
 ```
 
-当使用 `vulkanalia` 时，你仍然可以以这种方式填充参数结构体，但是 `vulkanalia` 提供了建造者（builder），简化了这些参数结构体的构造。在 `vulkanalia` 中，`vk::InstanceCreateInfo` 对应的建造者是 `vk::InstanceCreateInfoBuilder`。使用这个建造者，上面的代码将变成：
+当使用 `vulkanalia` 时，你仍然可以用这种方式填充参数结构体，但是 `vulkanalia` 提供了生成器（builder），简化了这些参数结构体的构造。在 `vulkanalia` 中，`vk::InstanceCreateInfo` 对应的生成器是 `vk::InstanceCreateInfoBuilder`。使用这个生成器，上面的代码就可以写成：
 
 ```rust,noplaypen
 let extensions = &[/* 3 extension names */];
@@ -238,12 +244,17 @@ let instance = entry.create_instance(&info, None).unwrap();
 
 注意以下差异：
 
-* 无需为 `s_type` 字段提供值。这是因为建造者会自动为这个字段提供正确的值（`vk::StructureType::INSTANCE_CREATE_INFO`）
-* 无需为 `enabled_extension_count` 字段提供值。这是因为 `enabled_extension_names` 建造者方法使用提供的切片的长度来自动设置这个字段
+* 无需为 `s_type` 字段提供值。这是因为生成器会自动为这个字段提供正确的值（`vk::StructureType::INSTANCE_CREATE_INFO`）
+* 无需为 `enabled_extension_count` 字段提供值。这是因为生成器的 `enabled_extension_names` 方法会自动使用提供的切片的长度设置这个字段
 
-然而，上面的 Rust 代码有一定程度的危险。建造者有生命周期，这强制要求存储在其中的引用至少与建造者本身一样长。在上面的例子中，这意味着 Rust 编译器会确保传递给 `enabled_extension_names` 方法的切片至少与建造者一样长。然而，一旦我们调用 `.build()` 来获取底层的 `vk::InstanceCreateInfo` 结构体，建造者的生命周期就会被丢弃。这意味着 Rust 编译器无法再阻止我们在尝试解引用一个不存在的切片的指针时自己踩到坑里。
+<!-- 
+生命周期属于是误译，显然 Rust 的 lifetime 里面没有“周”。
+生命周期应该用来指 React，Vue 的 lifecycle 那种东西。
+所以我们选择了“生存期”。
+-->
+然而，上面的 Rust 代码有一定程度的危险。生成器有生存期（lifetime），这要求生成器中存储的引用至少要与生成器本身活得一样久。也就是说，在上面的例子中，Rust 编译器会确保传递给 `enabled_extension_names` 方法的切片至少活得与生成器一样长。然而，一旦我们调用 `.build()` 来获取底层的 `vk::InstanceCreateInfo` 结构体，生成器的生存期就会被丢弃。这意味着 Rust 编译器不再能防止我们 _搬起石头砸自己的脚_，例如解引用一个已经不存在的切片的指针。
 
-下面的代码会崩溃（期望如此），因为传递给 `enabled_extension_names` 的临时 `Vec` 在我们使用 `vk::InstanceCreateInfo` 结构体调用 `create_instance` 时已经被丢弃了：
+下面的代码会崩溃（但愿如此），因为传递给 `enabled_extension_names` 的临时 `Vec` 在我们使用 `vk::InstanceCreateInfo` 结构体调用 `create_instance` 时已经被丢弃了：
 
 ```rust,noplaypen,panics
 let info = vk::InstanceCreateInfo::builder()
@@ -253,11 +264,11 @@ let info = vk::InstanceCreateInfo::builder()
 let instance = entry.create_instance(&info, None).unwrap();
 ```
 
-幸运的是，`vulkanalia` 为此提供了解决方案。只需不调用 `build()`，而是将建造者传递给命令包装器！在命令包装器期望一个 Vulkan 结构体的任何地方，你都可以提供关联的建造者。如果从上面的代码中删除 `build()` 调用，Rust 编译器将能够使用建造者上的生命周期来拒绝这个坏代码，显示 `error[E0716]: temporary value dropped while borrowed`。
+幸运的是，`vulkanalia` 为此提供了解决方案 —— 不调用 `build()`，而是直接将生成器传递给命令包装器！在任何接受 Vulkan 结构体的地方，你都可以直接提供与 Vulkan 结构体对应的生成器。如果从上面的代码中删除 `build()` 调用，Rust 编译器就能够利用生成器上的生存期来拒绝这个坏代码，并告诉你 `error[E0716]: temporary value dropped while borrowed`。
 
-### 预导入（Preludes）
+### Preludes
 
-`vulkanalia` 提供了[预导入模块](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/prelude/index.html)，用于暴露使用 crate 所需的基本类型。每个 Vulkan 版本都有一个预导入模块，每个模块都会暴露相关的命令 trait，以及其他非常频繁使用的类型：
+`vulkanalia` 提供了[`prelude` 模块](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/prelude/index.html)，用于暴露使用 crate 所需的基本类型。每个 Vulkan 版本都有一个 `prelude` 模块，每个模块都会暴露相关的命令 trait，以及其他经常用到的类型：
 
 ```rust,noplaypen
 // Vulkan 1.0
@@ -270,10 +281,11 @@ use vulkanalia::prelude::v1_1::*;
 use vulkanalia::prelude::v1_2::*;
 ```
 
-## 验证层（Validation layers）
+<!-- VulkanTutorialCN 使用了这个翻译 -->
+## 校验层（Validation layers）
 
-如前文所述，Vulkan 是为高性能和低驱动程序开销而设计的。因此，它默认情况下将包含非常有限的错误检查和调试功能。如果你做错了什么，驱动程序通常会崩溃而不是返回错误代码，或者更糟糕的是，它会在你的显卡上运行，但在其他显卡上完全失败。
+如前文所述，Vulkan 是为高性能和低驱动程序开销而设计的。因此，默认情况下 Vulkan 只包含非常有限的错误检查和调试功能。如果你做错了什么，驱动程序通常会崩溃而不是返回错误代码，或者比这更糟 —— 程序会在你的显卡上运行，但在其他显卡上完全失效。
 
-Vulkan 允许你通过一种称为*验证层*的功能来启用广泛的检查。验证层是可以插入到 API 和图形驱动程序之间的代码片段，用于对函数参数运行额外的检查和跟踪内存管理问题。好处是你可以在开发期间启用它们，然后在发布应用程序时完全禁用它们，以实现零开销。任何人都可以编写自己的验证层，但是 LunarG 的 Vulkan SDK 提供了一套标准的验证层，我们将在本教程中使用它们。你还需要注册一个回调函数来接收验证层的调试消息。
+你可以通过*校验层*来在 Vulkan 中启用很多检查。校验层是可以插入到 API 和图形驱动程序之间的代码片段，用于对函数参数进行额外的检查，并且跟踪内存管理问题。你可以在开发时启用它们，然后在发布应用程序时将其完全禁用，从而实现零开销。任何人都可以编写自己的校验层，但是 LunarG 的 Vulkan SDK 提供了一套标准的校验层，我们将在本教程中使用它们。你还需要注册一个回调函数来接收校验层的调试消息。
 
-因为 Vulkan 对每个操作都非常明确，验证层也非常广泛，所以实际上比 OpenGL 和 Direct3D 更容易找出为什么你的画面黑屏了！
+因为 Vulkan 对每个操作都非常明确，校验层也非常广泛，所以实际上相比于 OpenGL 和 Direct3D，你更容易找出为什么你的画面是全黑的！
