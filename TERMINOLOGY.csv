@@ -26,8 +26,9 @@ terminal,名词,程序设计概念,,终端
 executable,名词,程序设计概念,,可执行文件
 event loop,名词,程序设计概念,,事件循环
 wrapper,名词,程序设计概念,,封装
-flag,名词,程序设计概念,,旗标
+flag,名词,程序设计概念,,标志
 profiling,名词,程序设计概念,,分析
+backwards compatibility,名词,程序设计概念,,向后兼容性
 
 queue,名词,数据结构,,队列
 
