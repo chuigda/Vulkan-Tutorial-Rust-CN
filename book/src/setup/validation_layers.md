@@ -8,7 +8,7 @@
 
 Vulkan API 的设计秉持了尽可能降低驱动开销的理念，带来的影响就是 API 默认只提供极少的错误检查。即便是像把枚举设置成了一个非法值这样简单的错误也不会被显式处理，而是会导致程序崩溃或是未定义行为。由于 Vulkan 要求你明确你所做的事，你很容易就会犯下许多小错误，例如在使用一个新的 GPU 特性时忘记在创建逻辑设备时请求这个特性。
 
-然而，这并不意味着 API 上就没法进行错误检查。Vulkan 引入了一个叫做校验层（Validation Layer）的优雅的系统。校验层是可选的，它们能在 Vulkan 函数调用时插入钩子，用来执行额外的操作。一些通常的操作包括：
+然而，这并不意味着 Vulkan API 就没法进行错误检查。Vulkan 引入了一个优雅的系统，叫做校验层（Validation Layer）。校验层是可选的，它们能在你调用 Vulkan 函数时插入钩子，执行额外的操作。一些通常的操作包括：
 
 * 对比规范检查参数值，以检测是否有误用
 * 追踪对象的创建和销毁，找出资源泄漏
@@ -16,7 +16,7 @@ Vulkan API 的设计秉持了尽可能降低驱动开销的理念，带来的影
 * 在标准输出中打印含有所有调用极其参数的日志
 * 追踪 Vulkan 调用，用于分析性能（profiling）与重放（replay）
 
-诊断校验层中一个函数的实现看起来像这样（C 语言）：
+诊断校验层中一个函数的实现看起来就像这样（C 语言）：
 
 ```c
 VkResult vkCreateInstance(
@@ -33,13 +33,13 @@ VkResult vkCreateInstance(
 }
 ```
 
-你可以随意堆叠校验层来引入你感兴趣的调试功能。你只需要为 Debug 构建启用校验层，然后在 Release 构建把它们禁用。这样就能使这两个构建获得最大收益。
+你可以随意堆叠校验层来引入你感兴趣的调试功能。你只需为 Debug 构建启用校验层，而在 Release 构建禁用它们，就能使这两个构建获得最大收益。
 
-Vulkan 并不内置任何校验层，但是 LunarG Vulkan SDK 提供了一系列用以检查通用错误的校验层。它们是完全[开源](https://github.com/KhronosGroup/Vulkan-ValidationLayers)的，所以你可以找到它们能检查的错误类型，并且可以参与贡献。你的应用可能会因为无意中用到了未定义行为而在不同驱动上发生错误。避免这种事发生的最好方式就是使用校验层。
+Vulkan 并不内置任何校验层，但是 LunarG Vulkan SDK 提供了一系列校验层，用以检查常见的错误。它们是完全[开源](https://github.com/KhronosGroup/Vulkan-ValidationLayers)的，所以你可以找到它们能检查的错误类型，并且可以参与贡献。你的应用可能会因为无意中依赖于未定义行为而在不同驱动上发生错误，而避免这种事发生的最好方式就是使用校验层。
 
 校验层只能在安装到系统中之后使用。比如 LunarG 校验层只能在安装了 Vulkan SDK 的电脑上使用。
 
-之前，在 Vulkan 中有两种不同类型的校验层：实例（instance）特定层与设备（device）特定层。实例特定层只会检查与全局 Vulkan 对象（例如实例）有关的调用，而设备特定层  只会检查与一个特定 GPU 有关的调用。设备特定层现在已经被弃用了，意味着实例特定层能应用在所有 Vulkan 调用上。规范文档依旧建议你为兼容性启用设备特定层，而在某些实现中它是必须的。我们将简单地在逻辑设备级别指定与实例相同的层，稍后我们会看到。
+之前，在 Vulkan 中有两种不同类型的校验层：实例（instance）特定的校验层与设备（device）特定的校验特定层。实例特定的校验层会检查与全局 Vulkan 对象 —— 例如 Vulkan 实例 —— 相关的调用，而设备特定的校验层只会检查与某个特定的 GPU 相关的调用。设备特定的校验层现在已经被弃用了，这也就意味着实例特定的校验层会对所有的 Vulkan 调用生效。规范文档依旧建议你处于兼容性考虑启用设备特定的校验层，而在某些实现中它是必须的。我们将简单地在逻辑设备级别指定与实例相同的校验层，稍后我们会看到。
 
 在开始之前，我们需要为本章节添加一些新的引入：
 
@@ -67,7 +67,7 @@ const VALIDATION_LAYER: vk::ExtensionName =
     vk::ExtensionName::from_bytes(b"VK_LAYER_KHRONOS_validation");
 ```
 
-我们给我们的 `create_instance` 函数加一些新的代码，用来收集所有支持的实例特定层并将其存储在一个 `HashSet` 中，检查这些校验层是否可用，并且创建一个包含校验层名称的列表。这些代码应该放在构建 `vk::ApplicationInfo` 结构体的正下方：
+我们给 `create_instance` 函数加一些新的代码，用来收集所有支持的实例特定校验层并将其存储在一个 `HashSet` 中，然后使用这个 `HashSet` 检查我们需要的校验层是否可用，并创建一个包含校验层名称的列表。这些代码应该放在构建 `vk::ApplicationInfo` 结构体的正下方：
 
 ```rust,noplaypen
 let available_layers = entry
@@ -87,7 +87,7 @@ let layers = if VALIDATION_ENABLED {
 };
 ```
 
-然后，你需要调用 `enabled_layer_names`，在 `vk::InstanceCreateInfo` 中指定需要启用的校验层
+然后，你需要调用 `enabled_layer_names`，在 `vk::InstanceCreateInfo` 中指定需要启用的校验层：
 
 ```rust,noplaypen
 let info = vk::InstanceCreateInfo::builder()
@@ -97,7 +97,7 @@ let info = vk::InstanceCreateInfo::builder()
     .flags(flags);
 ```
 
-现在，在 Debug 模式下执行程序，并且确保没有跳出 `Validation layer requested but not supported.` 这条错误信息。如果看到报错信息，那你需要看一下 FAQ。如果一切顺利，那么 `create_instance` 应该永远都不会返回错误代码 `vk::ErrorCode::LAYER_NOT_PRESENT`，不过你还是应该运行程序以确保没有这个错误代码。
+现在，在 Debug 模式下执行程序，并且确保没有跳出 `Validation layer requested but not supported.` 这条错误信息。如果看到报错信息，那你需要看一下 FAQ。如果一切顺利，那么 `create_instance` 应该永远都不会返回错误代码 `vk::ErrorCode::LAYER_NOT_PRESENT`，不过你还是应该运行程序以确保万无一失。
 
 ## 消息回调
 
