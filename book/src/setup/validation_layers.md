@@ -1,18 +1,18 @@
-# Validation layers
+# 校验层
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/02_validation_layers.rs)
+**代码：**[main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/02_validation_layers.rs)
 
-The Vulkan API is designed around the idea of minimal driver overhead and one of the manifestations of that goal is that there is very limited error checking in the API by default. Even mistakes as simple as setting enumerations to incorrect values are generally not explicitly handled and will simply result in crashes or undefined behavior. Because Vulkan requires you to be very explicit about everything you're doing, it's easy to make many small mistakes like using a new GPU feature and forgetting to request it at logical device creation time.
+Vulkan API 的设计围绕了尽可能降低驱动开销的理念。这个目标带来的影响就是 API 默认只提供极少的错误检查。即便是像把枚举设置成了一个非法值这样简单的错误也不会被显式处理，并会导致程序崩溃或是未定义行为。由于 Vulkan 要求你明确你所做的事，你很容易就会犯下许多小错误，诸如在使用一个新的 GPU 特性时忘了在创建时在逻辑设备上请求这个特性。
 
-However, that doesn't mean that these checks can't be added to the API. Vulkan introduces an elegant system for this known as validation layers. Validation layers are optional components that hook into Vulkan function calls to apply additional operations. Common operations in validation layers are:
+然而，这并不意味着这些错误检查就没法在 API 上实现。Vulkan 引入了一个叫做校验层（Validation Layer）的优雅的系统。校验层包含可选的组件，它们会在 Vulkan 函数调用时插入钩子，用来执行额外的操作。在校验层的一些通用操作有：
 
-* Checking the values of parameters against the specification to detect misuse
-* Tracking creation and destruction of objects to find resource leaks
-* Checking thread safety by tracking the threads that calls originate from
-* Logging every call and its parameters to the standard output
-* Tracing Vulkan calls for profiling and replaying
+* 对比标准检查参数值，检测是否有误用
+* 追踪对象的创建和销毁，找出资源泄漏
+* 通过追踪调用的线程来源，检查线程安全性
+* 在标准输出中打印含有所有调用与参数的日志
+* 追踪 Vulkan 调用，用于分析性能（profiling）与重放（replay）
 
-Here's an example of what the implementation of a function in a diagnostics validation layer could look like (in C):
+诊断校验层中一个函数的实现看起来像这样（C 语言）：
 
 ```c
 VkResult vkCreateInstance(
@@ -29,15 +29,15 @@ VkResult vkCreateInstance(
 }
 ```
 
-These validation layers can be freely stacked to include all the debugging functionality that you're interested in. You can simply enable validation layers for debug builds and completely disable them for release builds, which gives you the best of both worlds!
+你可以随意堆叠校验层来引入你感兴趣的调试用功能。你只需要为 Debug 构建启用校验层，然后在 Release 构建把它们禁用。这样就能使这两个构建获得最大收益。
 
-Vulkan does not come with any validation layers built-in, but the LunarG Vulkan SDK provides a nice set of layers that check for common errors. They're also completely [open source](https://github.com/KhronosGroup/Vulkan-ValidationLayers), so you can check which kind of mistakes they check for and contribute. Using the validation layers is the best way to avoid your application breaking on different drivers by accidentally relying on undefined behavior.
+Vulkan 并不内置任何校验层，但是 LunarG Vulkan SDK 提供了一系列用以检查通用错误的校验层。它们是完全[开源](https://github.com/KhronosGroup/Vulkan-ValidationLayers)的，所以你可以找到它们支持检查的错误类型，并且可以参与贡献。你的应用可能会因为无意中用到了未定义行为而在不同驱动上发生错误。避免这种事发生的最好方式就是使用校验层。
 
-Validation layers can only be used if they have been installed onto the system. For example, the LunarG validation layers are only available on PCs with the Vulkan SDK installed.
+校验层只能在安装到系统中之后使用。比如 LunarG 校验层只能在安装了 Vulkan SDK 的电脑上使用。
 
-There were formerly two different types of validation layers in Vulkan: instance and device specific. The idea was that instance layers would only check calls related to global Vulkan objects like instances, and device specific layers would only check calls related to a specific GPU. Device specific layers have now been deprecated, which means that instance validation layers apply to all Vulkan calls. The specification document still recommends that you enable validation layers at device level as well for compatibility, which is required by some implementations. We'll simply specify the same layers as the instance at logical device level, which we'll see later on.
+之前，在 Vulkan 中有两种不同类型的校验层：实例（instance）特定层与设备（device）特定层。实例特定层只会检查与全局 Vulkan 对象（例如实例）有关的调用，而设备特定层只会检查与一个特定 GPU 有关的调用。设备特定层现在已经被弃用了，意味着实例特定层能应用在所有 Vulkan 调用上。规范文档依旧建议你为兼容性启用设备特定层，在某些实现中它是必须的。We'll simply specify the same layers as the instance at logical device level, which we'll see later on.
 
-Before we get started, we'll need some new imports for this chapter:
+在我们开始之前，我们需要为本章节添加一些新的引入：
 
 ```rust,noplaypen
 use std::collections::HashSet;
@@ -47,13 +47,13 @@ use std::os::raw::c_void;
 use vulkanalia::vk::ExtDebugUtilsExtension;
 ```
 
-`HashSet` will be used for storing and querying supported layers and the other imports will be used in the function we will be writing to log messages from the validation layer with the exception of `vk::ExtDebugUtilsExtension` which provides the command wrappers for managing debugging functionality.
+`HashSet` 会被用在存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的指令封装。其它引入会被用于记录校验层传来的信息。
 
-## Using validation layers
+## 使用校验层
 
-In this section we'll see how to enable the standard diagnostics layers provided by the Vulkan SDK. Just like extensions, validation layers need to be enabled by specifying their name. All of the useful standard validation is bundled into a layer included in the SDK that is known as `VK_LAYER_KHRONOS_validation`.
+在这个章节中，我们会学到如何启用 Vulkan SDK 提供的标准诊断层。与扩展一样，校验层需要使用它们的名称以启用。在 SDK 中，`VK_LAYER_KHRONOS_validation` 是一个打包后的校验层，它包含了所有有用的标准校验。
 
-Let's first add two configuration variables to the program to specify the layers to enable and whether to enable them or not. I've chosen to base that value on whether the program is being compiled in debug mode or not.
+我们先给我们程序加两个配置变量，一个用来指定需要启用的校验层，一个用来指定是否启用校验层。我决定根据程序是否使用 Debug 模式编译来选择是否启用校验层。
 
 ```rust,noplaypen
 const VALIDATION_ENABLED: bool =
@@ -63,7 +63,7 @@ const VALIDATION_LAYER: vk::ExtensionName =
     vk::ExtensionName::from_bytes(b"VK_LAYER_KHRONOS_validation");
 ```
 
-We'll add some new code to our `^create_instance` function that collects the supported instance layers into a `HashSet`, checks that the validation layer is available, and creates a list of layer names containing the validation layer. This code should go right below where the `vk::ApplicationInfo` struct is built:
+我们给我们的 `create_instance` 函数加一些新的代码，来把所有支持的实例层集中进一个 `HashSet` 中，检查这些校验层是否可用，并且创建一个包含校验层名称的列表。代码应当放在构建 `vk::ApplicationInfo` 结构体的正下方：
 
 ```rust,noplaypen
 let available_layers = entry
@@ -83,7 +83,7 @@ let layers = if VALIDATION_ENABLED {
 };
 ```
 
-Then you'll need to specify the requested layers in `vk::InstanceCreateInfo` by adding a call to the `enabled_layer_names` builder method:
+然后，你需要在 `vk::InstanceCreateInfo` 中指定请求的校验层。我们需要调用 `enabled_layer_names` 构建方法：
 
 ```rust,noplaypen
 let info = vk::InstanceCreateInfo::builder()
@@ -93,15 +93,15 @@ let info = vk::InstanceCreateInfo::builder()
     .flags(flags);
 ```
 
-Now run the program in debug mode and ensure that the `Validation layer requested but not supported.` error does not occur. If it does, then have a look at the FAQ. If you get past that check, then `create_instance` should never return a `vk::ErrorCode::LAYER_NOT_PRESENT` error code but you should still run the program to be sure.
+现在，在 Debug 模式下执行程序，并且确保没有跳出 `Validation layer requested but not supported.` 这条错误信息。如果看到报错信息，那你需要看一下 FAQ。如果你通过了这条检查，那 `create_instance` 应当不会返回错误代码 `vk::ErrorCode::LAYER_NOT_PRESENT`，但是你依旧应该运行程序以确保没有这个错误代码。
 
-## Message callback
+## 消息回调
 
-The validation layers will print debug messages to the standard output by default, but we can also handle them ourselves by providing an explicit callback in our program. This will also allow you to decide which kind of messages you would like to see, because not all are necessarily (fatal) errors. If you don't want to do that right now then you may skip to the last section in this chapter.
+校验层默认会打印调试消息至标准输出，但我们也可以通过提供显式回调的方式自己处理这些消息。这样我们可以自己决定处理哪些类型的消息，因为并非所有消息是（致命）错误消息。如果你不想现在做这些事，你可以跳到本章的最后一节。
 
-To set up a callback in the program to handle messages and the associated details, we have to set up a debug messenger with a callback using the `VK_EXT_debug_utils` extension.
+为了在程序中配置一个处理消息与附带细节的回调，我们需要使用 `VK_EXT_debug_utils` 扩展配置一个带回调的调试信使（debug messenger）。
 
-We'll add some more code to our `^create_instance` function. This time we'll modify the `extensions` list to be mutable and then add the debug utilities extension to the list when the validation layer is enabled:
+我们会对 `create_instance` 函数添加更多代码。这次我们需要将 `extensions` 列表改为可变的，然后在校验层启用时将调试实用工具扩展 （debug utilities extension）加入这个列表：
 
 ```rust,noplaypen
 let mut extensions = vk_window::get_required_instance_extensions(window)
@@ -177,7 +177,7 @@ struct AppData {
 }
 ```
 
-Now modify the signature and end of the `^create_instance` function to look like this:
+修改 `create_instance` 函数的签名与结尾，让它变得像这样：
 
 ```rust,noplaypen
 unsafe fn create_instance(
@@ -202,6 +202,7 @@ unsafe fn create_instance(
 }
 ```
 
+> **注：**在 Vulkan 旗标（例如上面的例子中的 `vk::DebugUtilsMessageTypeFlagsEXT::all()`）上调用 `all` 静态方法会返回一系列 `vulkanalia` 可识别的旗标。这些旗标会在返回的对应二进制位上被设为 1。
 > **Note:** Calling the `all` static method on a set of Vulkan flags (e.g., `vk::DebugUtilsMessageTypeFlagsEXT::all()` as in the above example) will return a set of flags with all of the bits set for the flags known by `vulkanalia`. This introduces the possibility that if the application uses an implementation of Vulkan older than the latest version of Vulkan that `vulkanalia` supports, this set of flags could include flags that aren't known by the Vulkan implementation in use by the application. This shouldn't cause any issues with the functionality of the application, but you might see some validation errors. If you encounter warnings about unknown flags because of these debug flags, you can avoid them by upgrading your Vulkan SDK to the latest version (or directly specifying the supported flags).
 
 We have first extracted our Vulkan instance out of the return expression so we can use it to add our debug callback.
@@ -247,7 +248,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Debugging instance creation and destruction
+## 创建与销毁调试实例
 
 Although we've now added debugging with validation layers to the program we're not covering everything quite yet. The `create_debug_utils_messenger_ext` call requires a valid instance to have been created and `destroy_debug_utils_messenger_ext` must be called before the instance is destroyed. This currently leaves us unable to debug any issues in the `create_instance` and `destroy_instance` calls.
 
@@ -290,7 +291,7 @@ Now we should be able to run our program and see logs from our debug callback, b
 
 If everything is working you shouldn't see any warning or error messages. Going forward you will probably want to increase the minimum log level to `info` using `RUST_LOG` to reduce the verbosity of the logs unless you are trying to debug an error.
 
-## Configuration
+## 配置
 
 There are a lot more settings for the behavior of validation layers than just the flags specified in the `vk::DebugUtilsMessengerCreateInfoEXT` struct. Browse to the Vulkan SDK and go to the `Config` directory. There you will find a `vk_layer_settings.txt` file that explains how to configure the layers.
 

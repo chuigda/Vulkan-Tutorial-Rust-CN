@@ -19,11 +19,14 @@ enumeration,名词,程序设计概念,,枚举
 variant,名词,程序设计概念,,枚举变体
 signature,名词,程序设计概念,,（函数）签名
 call,名词,程序设计概念,,调用
+callback,名词,程序设计概念,,回调
 component,名词,程序设计概念,,组件
 console,名词,程序设计概念,,控制台
 terminal,名词,程序设计概念,,终端
 executable,名词,程序设计概念,,可执行文件
 event loop,名词,程序设计概念,,事件循环
+wrapper,名词,程序设计概念,,封装
+flag,名词,程序设计概念,,旗标
 
 queue,名词,数据结构,,队列
 
