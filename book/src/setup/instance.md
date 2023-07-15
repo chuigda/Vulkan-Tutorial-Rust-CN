@@ -1,8 +1,12 @@
-# Instance
+# Vulkan 实例
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/01_instance_creation.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/setup/instance.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-The very first thing you will want to do is initialize the Vulkan library by creating an *instance*. The instance is the connection between your application and the Vulkan library and creating it involves specifying some details about your application to the driver. To get started, add the following imports:
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/01_instance_creation.rs)
+
+你首先要做的事情就是通过创建一个 *实例* 来初始化 Vulkan 库。实例是你的应用程序和 Vulkan 库之间的连接，创建它涉及到向驱动程序指定一些关于你的应用程序的细节。首先，添加下面的导入：
 
 ```rust,noplaypen
 use anyhow::{anyhow, Result};
@@ -12,13 +16,13 @@ use vulkanalia::window as vk_window;
 use vulkanalia::prelude::v1_0::*;
 ```
 
-Here we first add the [`anyhow!`](https://docs.rs/anyhow/latest/anyhow/macro.anyhow.html) macro to our imports from `anyhow`. This macro will be used to easily construct instances of `anyhow` errors. Then, we import `log::*` so we can use the logging macros from the `log` crate. Next, we import `LibloadingLoader` which serves as `vulkanalia`'s `libloading` integration which we will use to load the initial Vulkan commands from the Vulkan shared library. The standard name of the Vulkan shared library on your operating system (e.g., `vulkan-1.dll` on Windows) is then imported as `LIBRARY`.
+这里我们引入 [`anyhow!`](https://docs.rs/anyhow/latest/anyhow/macro.anyhow.html) 宏，这个宏可以让我们轻松地构造 `anyhow` 错误的实例。然后，我们引入 `log::*`，这样我们就可以使用 `log` crate 中的日志宏。接下来，我们引入 `LibloadingLoader`，它是 `vulkanalia` 提供的 `libloading` 集成，我们会用它来从 Vulkan 共享库中加载最初的 Vulkan 命令。你操作系统上 Vulkan 共享库（例如 Windows 上的 `vulkan-1.dll`）将会被导入为 `LIBRARY`。
 
-Next we import `vulkanalia`'s window integration as `vk_window` which in this chapter we will use to enumerate the global Vulkan extensions required to render to a window. In a future chapter we will also use `vk_window` to link our Vulkan instance with our `winit` window.
+接着我们将 `vulkanalia` 对窗口的集成导入为 `vk_window`，我们将在本章中使用它来枚举渲染到窗口所需的全局 Vulkan 扩展。在将来的章节中，我们还将使用 `vk_window` 来将 Vulkan 实例与 `winit` 窗口链接起来。
 
-Lastly we import the Vulkan 1.0 prelude from `vulkanalia` which will provide all of the other Vulkan-related imports we will need for this and future chapters.
+最后我们从 `vulkanalia` 引入 Vulkan 1.0 的 `prelude`  模块，它将为本章和将来的章节提供我们需要的所有其他 Vulkan 相关的导入。
 
-Now, to create an instance we'll next have to fill in a struct with some information about our application. This data is technically optional, but it may provide some useful information to the driver in order to optimize our specific application (e.g., because it uses a well-known graphics engine with certain special behavior). This struct is called `vk::ApplicationInfo` and we'll create it in a new function called `^create_instance` that takes our window and a Vulkan entry point (which we will create later) and returns a Vulkan instance:
+要创建一个实例，我们就要用我们的应用程序的一些信息来填充一个 `vk::ApplicationInfo` 结构体。这些数据从技术上来说是可选的，但它可以给驱动程序提供一些有用的信息，以便优化我们的特定应用程序（例如我们的应用程序使用了某个众所周知的图形引擎，这个引擎具有某些特定的行为）。我们将在函数 `create_instance` 中创建 `vk::ApplicationInfo` 结构体，这个函数接受我们的窗口和一个 Vulkan 入口点（entry point）（我们将在后面创建）并返回一个 Vulkan 实例：
 
 ```rust,noplaypen
 unsafe fn create_instance(window: &Window, entry: &Entry) -> Result<Instance> {
@@ -31,7 +35,7 @@ unsafe fn create_instance(window: &Window, entry: &Entry) -> Result<Instance> {
 }
 ```
 
-A lot of information in Vulkan is passed through structs instead of function parameters and we'll have to fill in one more struct to provide sufficient information for creating an instance. This next struct is not optional and tells the Vulkan driver which global extensions and validation layers we want to use. Global here means that they apply to the entire program and not a specific device, which will become clear in the next few chapters. First we'll need to use `vulkanalia`'s window integration to enumerate the required global extensions and convert them into null-terminated C strings (`*const c_char`):
+在 Vulkan 中，许多信息都是通过结构体而非函数参数传递的，所以我们再需要填充一个结构体，来提供创建一个实例所需的信息。下一个结构体是不可选的，它会告诉 Vulkan 驱动程序我们想要使用哪些全局扩展和校验层。这里的“全局”意味着这些扩展和校验层适用于整个程序，而不是特定的设备。“全局”和“设备”的概念将在接下来的几章中逐渐变得清晰。首先我们需要使用 `vulkanalia` 的窗口集成 `vk_window` 来枚举所需的全局扩展，并将它们转换为以空字符结尾的 C 字符串（null-terminated C strings）（`*const c_char`）：
 
 ```rust,noplaypen
 let extensions = vk_window::get_required_instance_extensions(window)
@@ -40,7 +44,7 @@ let extensions = vk_window::get_required_instance_extensions(window)
     .collect::<Vec<_>>();
 ```
 
-With our list of required global extensions in hand we can create and return a Vulkan instance using the Vulkan entry point passed into this function:
+在有了所需的全局扩展列表之后，我们就可以使用传入此函数的 Vulkan 入口点来创建 Vulkan 实例并将其返回了：
 
 ```rust,noplaypen
 let info = vk::InstanceCreateInfo::builder()
@@ -50,12 +54,12 @@ let info = vk::InstanceCreateInfo::builder()
 Ok(entry.create_instance(&info, None)?)
 ```
 
-As you'll see, the general pattern that object creation function parameters in Vulkan follow is:
+如你所见，Vulkan 中的对象创建函数参数的一般模式是：
 
-* Reference to struct with creation info
-* Optional reference to custom allocator callbacks, always `None` in this tutorial
+* 包含创建信息的结构体的引用
+* 可选的自定义分配器回调的引用，本教程中始终为 `None`
 
-Now that we have a function to create Vulkan instances from entry points, we next need to create a Vulkan entry point. This entry point will load the Vulkan commands used to query instance support and create instances. But before we do that, let's add some fields to our `App` struct to store the Vulkan entry point and instance we will be creating:
+现在我们有了一个可以通过入口点创建 Vulkan 实例的函数，接下来我们需要创建一个 Vulkan 入口点。这个入口点将加载用于查询实例支持和创建实例的 Vulkan 命令。但在此之前，让我们向我们的 `App` 结构体添加一些字段来存储我们将要创建的 Vulkan 入口点和实例：
 
 ```rust,noplaypen
 struct App {
@@ -64,7 +68,7 @@ struct App {
 }
 ```
 
-To populate these fields, update the `App::create` method to the following:
+接着，像这样更新 `App::create` 方法，以填充 `App` 中的这些字段：
 
 ```rust,noplaypen
 unsafe fn create(window: &Window) -> Result<Self> {
@@ -75,11 +79,11 @@ unsafe fn create(window: &Window) -> Result<Self> {
 }
 ```
 
-Here we first create a Vulkan function loader which will be used to load the initial Vulkan commands from the Vulkan shared library. Next we create the Vulkan entry point using the function loader which will load all of the commands we need to manage Vulkan instances. Lastly we are now able to call our `^create_instance` function with the Vulkan entry point.
+这里我们首先创建了一个 Vulkan 函数加载器，用来从 Vulkan 共享库中加载最初的 Vulkan 命令，接着我们使用这个函数加载器创建 Vulkan 入口点，这个入口点将会加载我们需要的所有 Vulkan 命令。最后，我们用 Vulkan 入口点调用 `create_instance` 函数来创建 Vulkan 实例。
 
-## Cleaning up
+## 清理工作
 
-The `Instance` should only be destroyed right before the program exits. It can be destroyed in the `App::destroy` method using `destroy_instance`:
+只有当程序将要退出时，`Instance` 实例才应该被销毁。可以在 `App::destroy` 方法中使用 `destroy_instance` 销毁实例：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -87,39 +91,39 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-Like the Vulkan commands used to create objects, the commands used to destroy objects also take an optional reference to custom allocator callbacks. So like before, we pass `None` to indicate we are content with the default allocation behavior.
+和创建对象所用的 Vulkan 命令一样，用于销毁对象的 Vulkan 命令也接受一个可选的、指向自定义分配器回调的引用。所以和之前一样，我们传入 `None` 来使用默认的分配器行为。
 
-## Non-conformant Vulkan implementations
+## 不合规的 Vulkan 实现
 
-Not every platform is so fortunate to have an implementation of the Vulkan API that fully conforms to the Vulkan specification. On such a platform, there may be standard Vulkan features that are not available and/or there may be significant differences between the actual behavior of a Vulkan application using that non-conformant implementation and what the Vulkan specification says that application should behave.
+不幸的是，并非每个平台都有一个完全符合 Vulkan 规范的 Vulkan API 的实现。在这样的平台上，可能会有一些标准的 Vulkan 特性是不可用的，或者 Vulkan 应用程序的实际行为与 Vulkan 规范有很大的不同。
 
-Since version 1.3.216 of the Vulkan SDK, applications that use a non-conformant Vulkan implementation must enable some additional Vulkan extensions. These compatibility extensions have the primary purpose of forcing the developer to acknowledge that their application is using a non-conformant implementation of Vulkan and that they should not expect everything to be as the Vulkan specification says it should be.
+在 Vulkan SDK 的 1.3.216 版本之后，使用不合规 Vulkan 实现的应用程序必须启用一些额外的 Vulkan 扩展。这些兼容性扩展的主要目的是强制开发人员承认他们的应用程序正在使用不合规的 Vulkan 实现，并且他们不期望一切都按 Vulkan 规范进行。
 
-This tutorial will be utilizing these compatibility Vulkan extensions so that your application can run even on platforms that lack a fully conforming Vulkan implementation.
+本教程会使用这些兼容性 Vulkan 扩展，这样你的程序就可以在缺少完全符合 Vulkan 实现的平台上运行了。
 
-However, you might ask "Why are we doing this? Do we really need to worry about supporting niche platforms in an introductory Vulkan tutorial?" As it turns out, the not-so-niche macOS is among those platforms that lack a fully-conformant Vulkan implementation.
+然而，你可能会问：“为什么我们要这么做？我们真的需要在一个入门级的 Vulkan 教程中考虑对小众平台的支持吗？”而事实证明，不那么小众的 macOS 就是那些缺少完全符合 Vulkan 实现的平台之一。
 
-As was mentioned in the introduction, Apple has their own low-level graphics API, [Metal](https://en.wikipedia.org/wiki/Metal_(API)). The Vulkan implementation that is provided as part of the Vulkan SDK for macOS ([MoltenVK](https://moltengl.com/)) is a layer that sits in-between your application and Metal and translates the Vulkan API calls your application makes into Metal API calls. Because MoltenVK is [not fully conformant with the Vulkan specification](https://www.lunarg.com/wp-content/uploads/2022/05/The-State-of-Vulkan-on-Apple-15APR2022.pdf), you will need to enable the compatibility Vulkan extensions we've been talking about to support macOS. 
+就如我们在介绍中提到的，Apple 有他们自己的底层图形 API，[Metal](https://en.wikipedia.org/wiki/Metal_(API))。Vulkan SDK 为 macOS 提供的 Vulkan 实现（[MoltenVK](https://moltengl.com/)）是一个位于应用程序和 Metal 之间的中间层，它将应用程序所做的 Vulkan API 调用转换为 Metal API 调用。因为 MoltenVK [不完全符合 Vulkan 规范](https://www.lunarg.com/wp-content/uploads/2022/05/The-State-of-Vulkan-on-Apple-15APR2022.pdf)，所以你需要启用我们在本教程中将要讨论的兼容性 Vulkan 扩展来支持 macOS。
 
-As an aside, while MoltenVK is not fully-conformant, you shouldn't encounter any issues caused by deviations from the Vulkan specification while following this tutorial on macOS.
+顺带一提，尽管 MoltenVK 不是完全合规的实现，在 macOS 上实践本教程时，应该也是不会有任何问题的。
 
-## Enabling compatibility extensions
+## 启用兼容性扩展
 
-> **Note:** Even if you are not following this tutorial on a macOS, some of the code added in this section is referenced in the remainder of this tutorial so you can't just skip it!
+> **注意：** 就算你用的不是 macOS，本节中添加的一些代码也会在本教程的后续部分中被引用，所以你不能跳过它们！
 
-We'll want to check if the version of Vulkan we are using is equal to or greather than the version of Vulkan that introduced the compatibility extension requirement. With this goal in mind, we'll first add an additional import:
+我们希望检查我们所用的 Vulkan 版本是否高于引入兼容性扩展要求的 Vulkan 版本。我们首先添加一个额外的导入：
 
 ```rust,noplaypen
 use vulkanalia::Version;
 ```
 
-With this new import in place, we'll define a constant for the minimum version:
+导入 `vulkanalia::Version` 之后，我们就可以定义一个常量来表示最低版本：
 
 ```rust,noplaypen
 const PORTABILITY_MACOS_VERSION: Version = Version::new(1, 3, 216);
 ```
 
-Replace the extension enumeration and instance creation code with the following:
+接着，像这样修改枚举扩展并创建实例的代码：
 
 ```rust,noplaypen
 let mut extensions = vk_window::get_required_instance_extensions(window)
@@ -127,7 +131,7 @@ let mut extensions = vk_window::get_required_instance_extensions(window)
     .map(|e| e.as_ptr())
     .collect::<Vec<_>>();
 
-// Required by Vulkan SDK on macOS since 1.3.216.
+// 从 Vulkan 1.3.216 之后，macOS 上的 Vulkan 实现需要启用额外的扩展
 let flags = if 
     cfg!(target_os = "macos") && 
     entry.version()? >= PORTABILITY_MACOS_VERSION
@@ -146,18 +150,18 @@ let info = vk::InstanceCreateInfo::builder()
     .flags(flags);
 ```
 
-This code enables `KHR_PORTABILITY_ENUMERATION_EXTENSION` if your application is being compiled for a platform that lacks a non-conformant Vulkan implementation (just checking for macOS here) and the Vulkan version meets or exceeds the minimum version we just defined.
+这些代码会在 Vulkan 版本高于我们定义的最小版本，而平台又缺乏完全符合 Vulkan 实现（这里只检查了 macOS）的情况下启用 `KHR_PORTABILITY_ENUMERATION_EXTENSION ` 兼容性扩展。
 
-This code also enables `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` under the same conditions. This extension is needed to enable the `KHR_PORTABILITY_SUBSET_EXTENSION` device extension which will be added later in the tutorial when we set up a logical device.
+这段代码还会启用 `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` 扩展。启用前 `KHR_PORTABILITY_SUBSET_EXTENSION` 需要先启用这个扩展。我们在后面的教程中创建逻辑设备时会用到 `KHR_PORTABILITY_SUBSET_EXTENSION` 扩展。
 
-## `Instance` vs `vk::Instance`
+## `Instance` 和 `vk::Instance`
 
-When we call our `^create_instance` function, what we get back is not a raw Vulkan instance as would be returned by the Vulkan command `vkCreateInstance` (`vk::Instance`). Instead what we got back is a custom type defined by `vulkanalia` which combines both a raw Vulkan instance and the commands loaded for that specific instance.
+当我们调用 `create_instance` 函数时，我们得到的不是 Vulkan 命令 `vkCreateInstance` 返回的原始 Vulkan 实例，而是一个 `vulkanalia` 中的自定义类型，它将原始 Vulkan 实例和为该特定实例加载的命令结合在一起。
 
-This is the `Instance` type we have been using (imported from the `vulkanalia` prelude) which should not be confused with the `vk::Instance` type which represents a raw Vulkan instance. In future chapters we will also use the `Device` type which, like `Instance`, is a pairing of a raw Vulkan device (`vk::Device`) and the commands loaded for that specific device. Fortunately we will not be using `vk::Instance` or `vk::Device` directly in this tutorial so you don't need to worry about getting them mixed up.
+我们使用的 `Instance` 类型（从 `vulkanalia` 的 `prelude` 模块中导入）不应和 `vk::Instance` 混淆。`vk::Instance` 类型是原始的 Vulkan 实例。在后面的章节中，我们也会用到 `Device` 类型。和 `Instance` 类似的是，`Device` 也由原始 Vulkan 设备（`vk::Device`）和为该设备加载的命令组成。幸运的是，本教程中我们不需要直接使用 `vk::Instance` 或者 `vk::Device`，所以你不用担心弄混它们。
 
-Because an `Instance` contains both a Vulkan instance and the associated commands, the command wrappers implemented for an `Instance` are able to provide the Vulkan instance when it is required by the underlying Vulkan command.
+因为 `Instance` 中包含了 Vulkan 实例和与之关联的命令，所以 `Instance` 的命令包装器也能够在需要原始 Vulkan 实例时提供它。
 
-If you look at the documentation for the `vkDestroyInstance` command, you will see that it takes two parameters: the instance to destroy and the optional custom allocator callbacks. However, `destroy_instance` only takes the optional custom allocator callbacks because it is able to provide the raw Vulkan handle as the first parameter itself as described above.
+如果你查看 `vkDestroyInstance` 命令的文档，你会发现它接受两个参数：要销毁的实例和可选的自定义分配器回调。然而，`destroy_instance` 只接受可选的自定义分配器回调，因为它能够提供原始 Vulkan 实例作为第一个参数，就像上面描述的那样。
 
-Before continuing with the more complex steps after instance creation, it's time to evaluate our debugging options by checking out validation layers.
+创建完实例之后，在继续进行更复杂的步骤之前，是时候拿出校验层，看看我们的调试功能了。

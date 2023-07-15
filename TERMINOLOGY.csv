@@ -5,6 +5,9 @@ aim at,动词,一般,,面向
 populate,动词,一般,,填充
 extension,名词,一般,,扩展
 invariants,名词,一般,,不变式
+conformant,形容词,一般,,合规的
+non-conformant,形容词,一般,,不合规的
+raw,形容词,一般,,原始的
 
 bitmask,名词,程序设计概念,,掩码
 binding,名词,程序设计概念,,绑定
@@ -52,6 +55,8 @@ render passes,名词,Vulkan概念,,渲染流程
 command pool,名词,Vulkan概念,,指令池
 command buffer,名词,Vulkan概念,,指令缓冲
 validation layer,名词,Vulkan概念,,校验层
+
+null-terminated C string,名词,C语言概念,,以空字符结尾的C字符串
 
 associated constant,名词,Rust概念,,关联常量
 lifetime,名词,Rust概念,,生存期
