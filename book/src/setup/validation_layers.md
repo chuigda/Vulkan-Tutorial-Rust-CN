@@ -1,15 +1,19 @@
 # 校验层
 
+> 原文链接：<https://kylemayes.github.io/vulkanalia/setup/validation_layers.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+
 **代码：**[main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/02_validation_layers.rs)
 
-Vulkan API 的设计围绕了尽可能降低驱动开销的理念。这个目标带来的影响就是 API 默认只提供极少的错误检查。即便是像把枚举设置成了一个非法值这样简单的错误也不会被显式处理，并会导致程序崩溃或是未定义行为。由于 Vulkan 要求你明确你所做的事，你很容易就会犯下许多小错误，诸如在使用一个新的 GPU 特性时忘了在创建时在逻辑设备上请求这个特性。
+Vulkan API 的设计秉持了尽可能降低驱动开销的理念，带来的影响就是 API 默认只提供极少的错误检查。即便是像把枚举设置成了一个非法值这样简单的错误也不会被显式处理，而是会导致程序崩溃或是未定义行为。由于 Vulkan 要求你明确你所做的事，你很容易就会犯下许多小错误，例如在使用一个新的 GPU 特性时忘记在创建逻辑设备时请求这个特性。
 
-然而，这并不意味着这些错误检查就没法在 API 上实现。Vulkan 引入了一个叫做校验层（Validation Layer）的优雅的系统。校验层包含可选的组件，它们会在 Vulkan 函数调用时插入钩子，用来执行额外的操作。在校验层的一些通用操作有：
+然而，这并不意味着 API 上就没法进行错误检查。Vulkan 引入了一个叫做校验层（Validation Layer）的优雅的系统。校验层是可选的，它们能在 Vulkan 函数调用时插入钩子，用来执行额外的操作。一些通常的操作包括：
 
-* 对比标准检查参数值，检测是否有误用
+* 对比规范检查参数值，以检测是否有误用
 * 追踪对象的创建和销毁，找出资源泄漏
-* 通过追踪调用的线程来源，检查线程安全性
-* 在标准输出中打印含有所有调用与参数的日志
+* 通过追踪发起调用的线程，检查线程安全性
+* 在标准输出中打印含有所有调用极其参数的日志
 * 追踪 Vulkan 调用，用于分析性能（profiling）与重放（replay）
 
 诊断校验层中一个函数的实现看起来像这样（C 语言）：
@@ -29,15 +33,15 @@ VkResult vkCreateInstance(
 }
 ```
 
-你可以随意堆叠校验层来引入你感兴趣的调试用功能。你只需要为 Debug 构建启用校验层，然后在 Release 构建把它们禁用。这样就能使这两个构建获得最大收益。
+你可以随意堆叠校验层来引入你感兴趣的调试功能。你只需要为 Debug 构建启用校验层，然后在 Release 构建把它们禁用。这样就能使这两个构建获得最大收益。
 
-Vulkan 并不内置任何校验层，但是 LunarG Vulkan SDK 提供了一系列用以检查通用错误的校验层。它们是完全[开源](https://github.com/KhronosGroup/Vulkan-ValidationLayers)的，所以你可以找到它们支持检查的错误类型，并且可以参与贡献。你的应用可能会因为无意中用到了未定义行为而在不同驱动上发生错误。避免这种事发生的最好方式就是使用校验层。
+Vulkan 并不内置任何校验层，但是 LunarG Vulkan SDK 提供了一系列用以检查通用错误的校验层。它们是完全[开源](https://github.com/KhronosGroup/Vulkan-ValidationLayers)的，所以你可以找到它们能检查的错误类型，并且可以参与贡献。你的应用可能会因为无意中用到了未定义行为而在不同驱动上发生错误。避免这种事发生的最好方式就是使用校验层。
 
 校验层只能在安装到系统中之后使用。比如 LunarG 校验层只能在安装了 Vulkan SDK 的电脑上使用。
 
-之前，在 Vulkan 中有两种不同类型的校验层：实例（instance）特定层与设备（device）特定层。实例特定层只会检查与全局 Vulkan 对象（例如实例）有关的调用，而设备特定层只会检查与一个特定 GPU 有关的调用。设备特定层现在已经被弃用了，意味着实例特定层能应用在所有 Vulkan 调用上。规范文档依旧建议你为兼容性启用设备特定层，在某些实现中它是必须的。We'll simply specify the same layers as the instance at logical device level, which we'll see later on.
+之前，在 Vulkan 中有两种不同类型的校验层：实例（instance）特定层与设备（device）特定层。实例特定层只会检查与全局 Vulkan 对象（例如实例）有关的调用，而设备特定层只会检查与一个特定 GPU 有关的调用。设备特定层现在已经被弃用了，意味着实例特定层能应用在所有 Vulkan 调用上。规范文档依旧建议你为兼容性启用设备特定层，而在某些实现中它是必须的。我们将简单地在逻辑设备级别指定与实例相同的层，稍后我们会看到。
 
-在我们开始之前，我们需要为本章节添加一些新的引入：
+在开始之前，我们需要为本章节添加一些新的引入：
 
 ```rust,noplaypen
 use std::collections::HashSet;
@@ -51,9 +55,9 @@ use vulkanalia::vk::ExtDebugUtilsExtension;
 
 ## 使用校验层
 
-在这个章节中，我们会学到如何启用 Vulkan SDK 提供的标准诊断层。与扩展一样，校验层需要使用它们的名称以启用。在 SDK 中，`VK_LAYER_KHRONOS_validation` 是一个打包后的校验层，它包含了所有有用的标准校验。
+在这个章节中，我们会学到如何启用 Vulkan SDK 提供的标准诊断层。与扩展一样，校验层需要指定它们的名称以启用。在 SDK 中，所有有用的标准校验都被打包于 `VK_LAYER_KHRONOS_validation` 校验层中。
 
-我们先给我们程序加两个配置变量，一个用来指定需要启用的校验层，一个用来指定是否启用校验层。我决定根据程序是否使用 Debug 模式编译来选择是否启用校验层。
+我们先给我们程序增加两个配置变量，一个用来指定需要启用的校验层，一个用来指定是否启用校验层。我决定根据程序是否使用 Debug 模式编译来选择是否启用校验层。
 
 ```rust,noplaypen
 const VALIDATION_ENABLED: bool =
@@ -63,7 +67,7 @@ const VALIDATION_LAYER: vk::ExtensionName =
     vk::ExtensionName::from_bytes(b"VK_LAYER_KHRONOS_validation");
 ```
 
-我们给我们的 `create_instance` 函数加一些新的代码，来把所有支持的实例层集中进一个 `HashSet` 中，检查这些校验层是否可用，并且创建一个包含校验层名称的列表。代码应当放在构建 `vk::ApplicationInfo` 结构体的正下方：
+我们给我们的 `create_instance` 函数加一些新的代码，用来收集所有支持的实例层，并将其存储在一个 `HashSet` 中，检查这些校验层是否可用，并且创建一个包含校验层名称的列表。以下代码应该放在构建 `vk::ApplicationInfo` 结构体的正下方：
 
 ```rust,noplaypen
 let available_layers = entry
