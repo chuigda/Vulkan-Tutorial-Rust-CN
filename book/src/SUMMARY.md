@@ -8,7 +8,7 @@
 # Setup
 
 - [基础代码](./setup/base_code.md)
-- [Instance](./setup/instance.md)
+- [Vulkan 实例](./setup/instance.md)
 - [校验层](./setup/validation_layers.md)
 - [Physical devices and queue families](./setup/physical_devices_and_queue_families.md)
 - [Logical device and queues](./setup/logical_device_and_queues.md)
