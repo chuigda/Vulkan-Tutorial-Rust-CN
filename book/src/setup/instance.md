@@ -103,27 +103,27 @@ unsafe fn destroy(&mut self) {
 
 然而，你可能会问：“为什么我们要这么做？我们真的需要在一个入门级的 Vulkan 教程中考虑对小众平台的支持吗？”而事实证明，不那么小众的 macOS 就是那些缺少完全符合 Vulkan 实现的平台之一。
 
-As was mentioned in the introduction, Apple has their own low-level graphics API, [Metal](https://en.wikipedia.org/wiki/Metal_(API)). The Vulkan implementation that is provided as part of the Vulkan SDK for macOS ([MoltenVK](https://moltengl.com/)) is a layer that sits in-between your application and Metal and translates the Vulkan API calls your application makes into Metal API calls. Because MoltenVK is [not fully conformant with the Vulkan specification](https://www.lunarg.com/wp-content/uploads/2022/05/The-State-of-Vulkan-on-Apple-15APR2022.pdf), you will need to enable the compatibility Vulkan extensions we've been talking about to support macOS. 
+就如我们在介绍中提到的，Apple 有他们自己的底层图形 API，[Metal](https://en.wikipedia.org/wiki/Metal_(API))。Vulkan SDK 为 macOS 提供的 Vulkan 实现（[MoltenVK](https://moltengl.com/)）是一个位于应用程序和 Metal 之间的中间层，它将应用程序所做的 Vulkan API 调用转换为 Metal API 调用。因为 MoltenVK [不完全符合 Vulkan 规范](https://www.lunarg.com/wp-content/uploads/2022/05/The-State-of-Vulkan-on-Apple-15APR2022.pdf)，所以你需要启用我们在本教程中将要讨论的兼容性 Vulkan 扩展来支持 macOS。
 
-As an aside, while MoltenVK is not fully-conformant, you shouldn't encounter any issues caused by deviations from the Vulkan specification while following this tutorial on macOS.
+顺带一提，尽管 MoltenVK 不是完全合规的实现，在 macOS 上实践本教程时，应该也是不会有任何问题的。
 
-## Enabling compatibility extensions
+## 启用兼容性扩展
 
-> **Note:** Even if you are not following this tutorial on a macOS, some of the code added in this section is referenced in the remainder of this tutorial so you can't just skip it!
+> **注意：** 就算你用的不是 macOS，本节中添加的一些代码也会在本教程的后续部分中被引用，所以你不能跳过它们！
 
-We'll want to check if the version of Vulkan we are using is equal to or greather than the version of Vulkan that introduced the compatibility extension requirement. With this goal in mind, we'll first add an additional import:
+我们希望检查我们所用的 Vulkan 版本是否高于引入兼容性扩展要求的 Vulkan 版本。我们首先添加一个额外的导入：
 
 ```rust,noplaypen
 use vulkanalia::Version;
 ```
 
-With this new import in place, we'll define a constant for the minimum version:
+导入 `vulkanalia::Version` 之后，我们就可以定义一个常量来表示最低版本：
 
 ```rust,noplaypen
 const PORTABILITY_MACOS_VERSION: Version = Version::new(1, 3, 216);
 ```
 
-Replace the extension enumeration and instance creation code with the following:
+接着，像这样修改枚举扩展并创建实例的代码：
 
 ```rust,noplaypen
 let mut extensions = vk_window::get_required_instance_extensions(window)
@@ -131,7 +131,7 @@ let mut extensions = vk_window::get_required_instance_extensions(window)
     .map(|e| e.as_ptr())
     .collect::<Vec<_>>();
 
-// Required by Vulkan SDK on macOS since 1.3.216.
+// 从 Vulkan 1.3.216 之后，macOS 上的 Vulkan 实现需要启用额外的扩展
 let flags = if 
     cfg!(target_os = "macos") && 
     entry.version()? >= PORTABILITY_MACOS_VERSION
@@ -150,18 +150,18 @@ let info = vk::InstanceCreateInfo::builder()
     .flags(flags);
 ```
 
-This code enables `KHR_PORTABILITY_ENUMERATION_EXTENSION` if your application is being compiled for a platform that lacks a non-conformant Vulkan implementation (just checking for macOS here) and the Vulkan version meets or exceeds the minimum version we just defined.
+这些代码会在 Vulkan 版本高于我们定义的最小版本，而平台又缺乏完全符合 Vulkan 实现（这里只检查了 macOS）的情况下启用 `KHR_PORTABILITY_ENUMERATION_EXTENSION ` 兼容性扩展。
 
-This code also enables `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` under the same conditions. This extension is needed to enable the `KHR_PORTABILITY_SUBSET_EXTENSION` device extension which will be added later in the tutorial when we set up a logical device.
+这段代码还会启用 `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` 扩展。启用 `KHR_PORTABILITY_SUBSET_EXTENSION` 需要先启用这个扩展。我们在后面的教程中创建逻辑设备时会用到 `KHR_PORTABILITY_SUBSET_EXTENSION` 扩展。
 
-## `Instance` vs `vk::Instance`
+## `Instance` 和 `vk::Instance`
 
-When we call our `^create_instance` function, what we get back is not a raw Vulkan instance as would be returned by the Vulkan command `vkCreateInstance` (`vk::Instance`). Instead what we got back is a custom type defined by `vulkanalia` which combines both a raw Vulkan instance and the commands loaded for that specific instance.
+当我们调用 `create_instance` 函数时，我们得到的不是 Vulkan 命令 `vkCreateInstance` 返回的原始 Vulkan 实例，而是一个 `vulkanalia` 中的自定义类型，它将原始 Vulkan 实例和为该特定实例加载的命令结合在一起。
 
-This is the `Instance` type we have been using (imported from the `vulkanalia` prelude) which should not be confused with the `vk::Instance` type which represents a raw Vulkan instance. In future chapters we will also use the `Device` type which, like `Instance`, is a pairing of a raw Vulkan device (`vk::Device`) and the commands loaded for that specific device. Fortunately we will not be using `vk::Instance` or `vk::Device` directly in this tutorial so you don't need to worry about getting them mixed up.
+我们使用的 `Instance` 类型（从 `vulkanalia` 的 `prelude` 模块中导入）不应和 `vk::Instance` 混淆。`vk::Instance` 类型是原始的 Vulkan 实例。在后面的章节中，我们也会用到 `Device` 类型。和 `Instance` 类似的是，`Device` 也由原始 Vulkan 设备（`vk::Device`）和为该设备加载的命令组成。幸运的是，本教程中我们不需要直接使用 `vk::Instance` 或者 `vk::Device`，所以你不用担心弄混它们。
 
-Because an `Instance` contains both a Vulkan instance and the associated commands, the command wrappers implemented for an `Instance` are able to provide the Vulkan instance when it is required by the underlying Vulkan command.
+因为 `Instance` 中包含了 Vulkan 实例和与之关联的命令，所以 `Instance` 的命令包装器也能够在需要原始 Vulkan 实例时提供它。
 
-If you look at the documentation for the `vkDestroyInstance` command, you will see that it takes two parameters: the instance to destroy and the optional custom allocator callbacks. However, `destroy_instance` only takes the optional custom allocator callbacks because it is able to provide the raw Vulkan handle as the first parameter itself as described above.
+如果你查看 `vkDestroyInstance` 命令的文档，你会发现它接受两个参数：要销毁的实例和可选的自定义分配器回调。然而，`destroy_instance` 只接受可选的自定义分配器回调，因为它能够提供原始 Vulkan 实例作为第一个参数，就像上面描述的那样。
 
-Before continuing with the more complex steps after instance creation, it's time to evaluate our debugging options by checking out validation layers.
+创建完实例之后，在继续进行更复杂的步骤之前，是时候通过拿出校验层来评估我们的调试选项了。
