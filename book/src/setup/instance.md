@@ -91,7 +91,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-和创建对象所用的 Vulkan 命令异样，用于销毁对象的 Vulkan 命令也接受一个可选的、指向自定义分配器回调的引用。所以和之前一样，我们传入 `None` 来使用默认的分配器行为。
+和创建对象所用的 Vulkan 命令一样，用于销毁对象的 Vulkan 命令也接受一个可选的、指向自定义分配器回调的引用。所以和之前一样，我们传入 `None` 来使用默认的分配器行为。
 
 ## 不合规的 Vulkan 实现
 
@@ -152,7 +152,7 @@ let info = vk::InstanceCreateInfo::builder()
 
 这些代码会在 Vulkan 版本高于我们定义的最小版本，而平台又缺乏完全符合 Vulkan 实现（这里只检查了 macOS）的情况下启用 `KHR_PORTABILITY_ENUMERATION_EXTENSION ` 兼容性扩展。
 
-这段代码还会启用 `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` 扩展。启用 `KHR_PORTABILITY_SUBSET_EXTENSION` 需要先启用这个扩展。我们在后面的教程中创建逻辑设备时会用到 `KHR_PORTABILITY_SUBSET_EXTENSION` 扩展。
+这段代码还会启用 `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` 扩展。启用前 `KHR_PORTABILITY_SUBSET_EXTENSION` 需要先启用这个扩展。我们在后面的教程中创建逻辑设备时会用到 `KHR_PORTABILITY_SUBSET_EXTENSION` 扩展。
 
 ## `Instance` 和 `vk::Instance`
 
@@ -164,4 +164,4 @@ let info = vk::InstanceCreateInfo::builder()
 
 如果你查看 `vkDestroyInstance` 命令的文档，你会发现它接受两个参数：要销毁的实例和可选的自定义分配器回调。然而，`destroy_instance` 只接受可选的自定义分配器回调，因为它能够提供原始 Vulkan 实例作为第一个参数，就像上面描述的那样。
 
-创建完实例之后，在继续进行更复杂的步骤之前，是时候通过拿出校验层来评估我们的调试选项了。
+创建完实例之后，在继续进行更复杂的步骤之前，是时候拿出校验层，看看我们的调试功能了。
