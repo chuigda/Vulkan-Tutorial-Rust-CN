@@ -11,7 +11,7 @@
 - [Vulkan 实例](./setup/instance.md)
 - [校验层](./setup/validation_layers.md)
 - [物理设备与队列族](./setup/physical_devices_and_queue_families.md)
-- [Logical device and queues](./setup/logical_device_and_queues.md)
+- [逻辑设备与队列](./setup/logical_device_and_queues.md)
 
 # Presentation
 
@@ -19,9 +19,9 @@
 - [Swapchain](./presentation/swapchain.md)
 - [Image views](./presentation/image_views.md)
 
-# Pipeline
+# 管线
 
-- [Introduction](./pipeline/introduction.md)
+- [介绍](./pipeline/introduction.md)
 - [Shader modules](./pipeline/shader_modules.md)
 - [Fixed functions](./pipeline/fixed_functions.md)
 - [Render passes](./pipeline/render_passes.md)
