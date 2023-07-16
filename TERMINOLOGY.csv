@@ -8,6 +8,7 @@ invariants,名词,一般,,不变式
 conformant,形容词,一般,,合规的
 non-conformant,形容词,一般,,不合规的
 raw,形容词,一般,,原始的
+expose,动词,一般,It exposes a `vk::SurfaceKHR` object that represents an abstract type of surface to present rendered images to,暴露（接口，API 等）
 
 bitmask,名词,程序设计概念,,掩码
 binding,名词,程序设计概念,,绑定
@@ -53,7 +54,8 @@ graphics card,名词,计算机图形学术语,,显卡
 queue family,名词,Vulkan概念,,队列族
 queue families,名词,Vulkan概念,,队列族
 swapchain,名词,Vulkan概念,,交换链
-present mode,名词,Vulkan概念,,显示模式
+presentation,名词,Vulkan概念,,呈现
+present mode,名词,Vulkan概念,,呈现模式
 image view,名词,Vulkan概念,,图像视图
 render passes,名词,Vulkan概念,,渲染流程
 command pool,名词,Vulkan概念,,指令池
