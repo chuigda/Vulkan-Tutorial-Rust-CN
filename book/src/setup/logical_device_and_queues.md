@@ -6,7 +6,7 @@
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/04_logical_device.rs)
 
-选择了要使用的物理设备之后，我们需要设置一个与之交互的逻辑设备。逻辑设备的创建过程与实例的创建过程相似，即描述我们希望使用的功能。我们还需要指定要创建的队列，现在我们已经查询了可用的队列族。如果您有不同的需求，甚至可以从同一个物理设备创建多个逻辑设备。
+选择了要使用的物理设备之后，我们需要设置一个与之交互的逻辑设备。逻辑设备的创建过程与实例的创建过程相似，即描述我们希望使用的功能。既然我们已经查询了可用的队列族，我们还需要指定要创建哪些队列。如果您有不同的需求，甚至可以从同一个物理设备创建多个逻辑设备。
 
 首先，在 `App` 中添加一个新的字段来存储逻辑设备：
 
@@ -17,7 +17,7 @@ struct App {
 }
 ```
 
-接下来，在 `App::create` 中调用 `create_logical_device` 函数，并将得到的逻辑设备添加到 `App` 的初始化器中：
+接下来，在 `App::create` 中调用 `create_logical_device` 函数，并将得到的逻辑设备添加到 `App` 的初始化器（initializer）中：
 
 ```rust,noplaypen
 impl App {
@@ -38,7 +38,7 @@ unsafe fn create_logical_device(
 
 ## 指定要创建的队列
 
-创建逻辑设备涉及再次在结构体中指定一堆细节，其中第一个是 `vk::DeviceQueueCreateInfo`。这个结构体描述了我们为单个队列族需要的队列数量。现在，我们只对具备图形功能的队列感兴趣。
+创建逻辑设备需要再用结构体指定一堆细节，其中第一个是 `vk::DeviceQueueCreateInfo`。这个结构体描述了我们为单个队列族需要的队列数量。现在，我们只对具备图形功能的队列感兴趣。
 
 ```rust,noplaypen
 let indices = QueueFamilyIndices::get(instance, data, data.physical_device)?;
@@ -149,4 +149,4 @@ data.graphics_queue = device.get_device_queue(indices.graphics, 0);
 Ok(device)
 ```
 
-有了逻辑设备和队列句柄，我们现在可以真正开始使用显卡来执行任务了！在接下来的几章中，我们将设置资源以将结果呈现给窗口系统。
+有了逻辑设备和队列句柄，我们现在可以真正开始使用显卡（graphics card）来执行任务了！在接下来的几章中，我们将设置资源以将结果呈现给窗口系统。
