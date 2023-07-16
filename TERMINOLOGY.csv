@@ -34,6 +34,7 @@ profiling,名词,程序设计概念,,分析
 backwards compatibility,名词,程序设计概念,,向后兼容性
 field,名词,程序设计概念,,字段
 method,名词,程序设计概念,,方法
+initializer,名词,程序设计概念,,初始化器
 
 queue,名词,数据结构,,队列
 
@@ -47,6 +48,7 @@ viewport,名词,计算机图形学术语,,视口
 render,动词,计算机图形学术语,,渲染
 surface,名词,计算机图形学术语,,表面
 surface format,名词,计算机图形学术语,,表面格式
+graphics card,名词,计算机图形学术语,,显卡
 
 queue family,名词,Vulkan概念,,队列族
 queue families,名词,Vulkan概念,,队列族
