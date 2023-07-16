@@ -36,6 +36,7 @@ backwards compatibility,名词,程序设计概念,,向后兼容性
 field,名词,程序设计概念,,字段
 method,名词,程序设计概念,,方法
 initializer,名词,程序设计概念,,初始化器
+platform-specific,形容词,程序设计概念,,平台特定的
 
 queue,名词,数据结构,,队列
 
