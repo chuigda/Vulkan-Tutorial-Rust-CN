@@ -8,7 +8,7 @@
 
 在通过 `Instance` 初始化 Vulkan 库之后，我们需要在系统中选择一个支持我们所需功能的图形处理器。事实上，我们可以选择任意多个图形处理器，并同时使用它们，不过在本教程中我们只会选择第一个满足我们需求的图形处理器。
 
-我们会添加一个 `pick_physical_device` 函数，用来枚举并选择图形处理器，然后将图形处理器及其相关信息存储在 `AppData` 中。这个函数及其调用的函数会使用一个自定义的错误类型（`SuitabilityError`）来表示图形处理器不满足应用程序的需求。这个错误类型会使用 `thiserror` crate 来自动实现错误类型需要的所有的样板代码。
+我们会添加一个 `pick_physical_device` 函数，用来枚举并选择图形处理器，然后将图形处理器及其相关信息存储在 `AppData` 中。这个函数及其调用的函数会使用一个自定义的错误类型（`SuitabilityError`）来表示物理设备不满足应用程序的需求。这个错误类型会使用 `thiserror` crate 来自动实现错误类型需要的所有的样板代码。
 
 ```rust,noplaypen
 use thiserror::Error;
@@ -30,7 +30,7 @@ unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Resul
 }
 ```
 
-被选中的显卡会被存储在我们刚添加到 `AppData` 结构体的 `vk::PhysicalDevice` 句柄中。当 `Instance` 被销毁时，这个对象也会被隐式销毁，所以我们不需要在 `App::destroy` 方法中做任何额外的工作。
+被选中的物理设备会被存储在我们刚添加到 `AppData` 结构体的 `vk::PhysicalDevice` 句柄中。当 `Instance` 被销毁时，这个对象也会被隐式销毁，所以我们不需要在 `App::destroy` 方法中做任何额外的工作。
 
 ```rust,noplaypen
 struct AppData {
@@ -41,7 +41,7 @@ struct AppData {
 
 ## 设备的适用性
 
-我们需要一种确定一个物理设备是否合适的方式。我们会创建一个用来检测设备适用性的函数，如果我们传给这个函数的物理设备不能完全支持我们需要的功能，那么这个函数会返回一个 `SuitabilityError` 错误：
+我们需要一种方法来确定一个物理设备是否符合我们的需求。我们会创建一个用来检测设备适用性的函数，如果我们传给这个函数的物理设备不能完全支持我们需要的功能，那么这个函数会返回一个 `SuitabilityError` 错误：
 
 ```rust,noplaypen
 unsafe fn check_physical_device(
@@ -53,7 +53,7 @@ unsafe fn check_physical_device(
 }
 ```
 
-要评估一个物理设备是否满足我们的需求，我们可以从查询一些细节开始。设备的基本信息，例如名称、类型和支持的 Vulkan 版本都可以使用 `get_physical_device_properties` 查询：
+要评估一个物理设备是否满足我们的需求，我们可以从设备中查询一些详细信息设备的基本信息，例如名称、类型和支持的 Vulkan 版本都可以使用 `get_physical_device_properties` 查询：
 
 ```rust,noplaypen
 let properties = instance
@@ -69,7 +69,7 @@ let features = instance
 
 我们会在讨论设备内存和队列族（见下一节）的时候再讨论更多可以查询的设备细节。
 
-举个例子，假设我们的应用程序只能在支持几何着色器（geometry shader）的独立显卡上运行。那么 `check_physical_device` 函数可能会像这样：
+举个例子，假设我们的应用程序只能在支持几何着色器（geometry shader）的独立显卡上运行。那么 `check_physical_device` 函数可能如下所示：
 
 ```rust,noplaypen
 unsafe fn check_physical_device(
@@ -91,7 +91,7 @@ unsafe fn check_physical_device(
 }
 ```
 
-相比于直接选择第一个合适的设备，你也可以给每个设备评分，然后选择得分最高的那个。这样你就可以通过给独立显卡一个更高的分数来优先选择独立显卡，但是如果只有集成显卡可用，那么就会回退到集成显卡。你也可以直接显示设备的名称，然后让用户自行选择。
+相比于直接选择第一个合适的设备，你也可以给每个设备评分，然后选择得分最高的那个。这样你就可以通过给独立显卡一个更高的分数来优先选择独立显卡，但是如果只有集成显卡可用，就回退到集成显卡。你也可以直接显示设备的名称，然后让用户自行选择。
 
 接下来，我们会讨论我们第一个真正需要的功能。
 
