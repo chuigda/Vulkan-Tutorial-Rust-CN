@@ -2,8 +2,17 @@
 verbose,形容词,一般,,冗长
 redundant,形容词,一般,,冗余/多余
 aim at,动词,一般,,面向
+populate,动词,一般,,填充
+extension,名词,一般,,扩展
+invariants,名词,一般,,不变式
+conformant,形容词,一般,,合规的
+non-conformant,形容词,一般,,不合规的
+raw,形容词,一般,,原始的
 
+bitmask,名词,程序设计概念,,掩码
 binding,名词,程序设计概念,,绑定
+builder,名词,程序设计概念,,生成器
+builder pattern,名词,程序设计概念,,生成器模式
 instance,名词,程序设计概念,,实例
 handle,名词,程序设计概念,,句柄
 pipeline,名词,程序设计概念,,管线
@@ -13,10 +22,16 @@ enumeration,名词,程序设计概念,,枚举
 variant,名词,程序设计概念,,枚举变体
 signature,名词,程序设计概念,,（函数）签名
 call,名词,程序设计概念,,调用
+callback,名词,程序设计概念,,回调
 component,名词,程序设计概念,,组件
 console,名词,程序设计概念,,控制台
 terminal,名词,程序设计概念,,终端
 executable,名词,程序设计概念,,可执行文件
+event loop,名词,程序设计概念,,事件循环
+wrapper,名词,程序设计概念,,封装
+flag,名词,程序设计概念,,标志
+profiling,名词,程序设计概念,,分析
+backwards compatibility,名词,程序设计概念,,向后兼容性
 
 
 queue,名词,数据结构,,队列
@@ -42,8 +57,13 @@ command pool,名词,Vulkan概念,,指令池
 command buffer,名词,Vulkan概念,,指令缓冲
 validation layer,名词,Vulkan概念,,校验层
 
+null-terminated C string,名词,C语言概念,,以空字符结尾的C字符串
+
 associated constant,名词,Rust概念,,关联常量
+lifetime,名词,Rust概念,,生存期
+prelude,名词,Rust概念,,不译
 crate,名词,Rust概念,,不译
+trait,名词,Rust概念,,不译
 
 issue,名词,Git概念,,问题
 pull request,名词,Git概念,,拉取请求

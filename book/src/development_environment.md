@@ -1,5 +1,9 @@
 # 开发环境
 
+> 原文链接：<https://kylemayes.github.io/vulkanalia/development_environment.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+
 在这个章节中，我们将会安装 Vulkan SDK 并搭建开发 Vulkan 应用所需的环境。此教程假设你已经有一个搭建好的 Rust（1.51+）开发环境。
 
 ## Cargo 项目
