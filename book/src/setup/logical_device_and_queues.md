@@ -105,7 +105,7 @@ let info = vk::DeviceCreateInfo::builder()
     .enabled_features(&features);
 ```
 
-完事！现在，我们准备好通过调用适当命名的 `create_device` 方法来实例化逻辑设备了。
+就是这样，我们现在可以调用名为 `create_device` 的方法来实例化逻辑设备了。
 
 ```rust,noplaypen
 let device = instance.create_device(data.physical_device, &info, None)?;
