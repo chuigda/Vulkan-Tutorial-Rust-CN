@@ -41,6 +41,7 @@ framebuffer,名词,计算机图形学术语,,帧缓冲
 vertex,名词,计算机图形学术语,,顶点
 fragment,名词,计算机图形学术语,,片元
 shader,名词,计算机图形学术语,,着色器
+geometry shader,名词,计算机图形学术语,,几何着色器
 viewport,名词,计算机图形学术语,,视口
 render,动词,计算机图形学术语,,渲染
 surface,名词,计算机图形学术语,,表面
