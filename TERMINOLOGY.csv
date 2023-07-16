@@ -32,7 +32,9 @@ wrapper,名词,程序设计概念,,封装
 flag,名词,程序设计概念,,标志
 profiling,名词,程序设计概念,,分析
 backwards compatibility,名词,程序设计概念,,向后兼容性
-
+field,名词,程序设计概念,,字段
+trait,名词,程序设计概念,,特性
+method,名词,程序设计概念,,方法
 
 queue,名词,数据结构,,队列
 
