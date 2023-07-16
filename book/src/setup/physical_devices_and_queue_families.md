@@ -1,8 +1,12 @@
-# Physical devices and queue families
+# 物理设备与队列族
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/03_physical_device_selection.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/setup/physical_devices_and_queue_families.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-After initializing the Vulkan library through an `Instance` we need to look for and select a graphics card in the system that supports the features we need. In fact we can select any number of graphics cards and use them simultaneously, but in this tutorial we'll stick to the first graphics card that suits our needs.
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/03_physical_device_selection.rs)
+
+在通过 `Instance` 初始化 Vulkan 库之后，我们需要在系统中选择一个支持我们所需功能的图形处理器。事实上，我们可以选择任意多个图形处理器，并同时使用它们，不过在本教程中我们只会选择第一个满足我们需求的图形处理器。
 
 We'll add a `pick_physical_device` function which will accomplish this task and write the physical device and related information to the `AppData` instance. This function and the functions it calls will use a custom error type (`SuitabilityError`) to signal that a physical device does not satisfy the requirements of the application. This error type will use the `thiserror` crate to automatically implement all the necessary boilerplate for an error type.
 
