@@ -8,7 +8,7 @@
 
 在通过 `Instance` 初始化 Vulkan 库之后，我们需要在系统中选择一个支持我们所需功能的图形处理器。事实上，我们可以选择任意多个图形处理器，并同时使用它们，不过在本教程中我们只会选择第一个满足我们需求的图形处理器。
 
-We'll add a `pick_physical_device` function which will accomplish this task and write the physical device and related information to the `AppData` instance. This function and the functions it calls will use a custom error type (`SuitabilityError`) to signal that a physical device does not satisfy the requirements of the application. This error type will use the `thiserror` crate to automatically implement all the necessary boilerplate for an error type.
+我们将添加一个名为 `pick_physical_device` 的函数来完成这个任务，并将物理设备及其相关信息写入 `AppData` 实例。这个函数及其调用的函数将使用自定义错误类型（`SuitabilityError`）来表示物理设备不满足应用程序的要求。这个错误类型将使用 `thiserror` crate 来自动实现所有必要的错误类型的样板代码。
 
 ```rust,noplaypen
 use thiserror::Error;
@@ -30,7 +30,7 @@ unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Resul
 }
 ```
 
-The graphics card that we'll end up selecting will be stored in a `vk::PhysicalDevice` handle that is added as a new field to the `AppData` struct. This object will be implicitly destroyed when the `Instance` is destroyed, so we won't need to do anything new in the `App::destroy` method.
+我们将选择的显卡将存储在 `vk::PhysicalDevice` 句柄中，并作为 `AppData` 结构体的一个新字段添加。这个对象将在 `Instance` 被销毁时被隐式销毁，因此我们不需要在 `App::destroy` 方法中做任何新的操作。
 
 ```rust,noplaypen
 struct AppData {
@@ -39,9 +39,9 @@ struct AppData {
 }
 ```
 
-## Device suitability
+## 设备适用性
 
-We'll need a way to determine whether a physical device meets our needs. We'll start by creating a function that returns a `SuitabilityError` if a supplied physical device does not support everything we require:
+我们需要一种方法来确定一个物理设备是否符合我们的需求。我们将首先创建一个函数，如果提供的物理设备不支持我们需要的所有功能，则返回一个 `SuitabilityError`：
 
 ```rust,noplaypen
 unsafe fn check_physical_device(
@@ -53,23 +53,23 @@ unsafe fn check_physical_device(
 }
 ```
 
-To evaluate whether a physical device meets our needs we can start by querying for some details. Basic device properties like the name, type, and supported Vulkan version can be queried using `get_physical_device_properties`:
+为了评估一个物理设备是否符合我们的需求，我们可以从设备中查询一些详细信息。可以使用 `get_physical_device_properties` 查询设备的基本属性，比如名称、类型和支持的Vulkan版本：
 
 ```rust,noplaypen
 let properties = instance
     .get_physical_device_properties(physical_device);
 ```
 
-The support for optional features like texture compression, 64 bit floats, and multi-viewport rendering (useful for VR) can be queried using `get_physical_device_features`:
+可以使用 `get_physical_device_features` 查询对可选功能的支持，比如纹理压缩、64 位浮点数和多视口渲染（在VR中很有用）：
 
 ```rust,noplaypen
 let features = instance
     .get_physical_device_features(physical_device);
 ```
 
-There are more details that can be queried from devices that we'll discuss later concerning device memory and queue families (see the next section).
+还有更多关于设备的细节可以查询，我们将在后面讨论与设备内存和队列族相关的内容（请参阅下一节）。
 
-As an example, let's say we consider our application only usable for dedicated graphics cards that support geometry shaders. Then the `check_physical_device` function might look like this:
+举个例子，假设我们认为我们的应用程序只适用于支持几何着色器的独立显卡，那么 `check_physical_device` 函数可能如下所示：
 
 ```rust,noplaypen
 unsafe fn check_physical_device(
@@ -91,9 +91,9 @@ unsafe fn check_physical_device(
 }
 ```
 
-Instead of just checking if a device is suitable or not and going with the first one, you could also give each device a score and pick the highest one. That way you could favor a dedicated graphics card by giving it a higher score, but fall back to an integrated GPU if that's the only available one. You could also just display the names of the choices and allow the user to select.
+与其仅仅检查设备是否适合或不适合，并选择第一个设备，您还可以为每个设备评分并选择得分最高的设备。这样，您可以优先选择独立显卡，并给它一个较高的分数，但如果只有集成显卡可用，那么可以回退到集成显卡。您还可以只显示可用设备的名称，并允许用户进行选择。
 
-Next we'll discuss the first real required feature.
+接下来，我们将讨论第一个真正需要的功能。
 
 ## Queue families
 
