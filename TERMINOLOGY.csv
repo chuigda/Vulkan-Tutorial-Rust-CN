@@ -8,7 +8,7 @@ invariants,名词,一般,,不变式
 conformant,形容词,一般,,合规的
 non-conformant,形容词,一般,,不合规的
 raw,形容词,一般,,原始的
-expose,动词,一般,It exposes a `vk::SurfaceKHR` object that represents an abstract type of surface to present rendered images to,暴露（接口，API 等）
+property,名词,一般,,属性
 
 bitmask,名词,程序设计概念,,掩码
 binding,名词,程序设计概念,,绑定
@@ -37,6 +37,7 @@ field,名词,程序设计概念,,字段
 method,名词,程序设计概念,,方法
 initializer,名词,程序设计概念,,初始化器
 platform-specific,形容词,程序设计概念,,平台特定的
+expose,动词,程序设计概念,It exposes a `vk::SurfaceKHR` object that represents an abstract type of surface to present rendered images to,暴露（接口，API 等）
 
 queue,名词,数据结构,,队列
 
@@ -52,6 +53,14 @@ render,动词,计算机图形学术语,,渲染
 surface,名词,计算机图形学术语,,表面
 surface format,名词,计算机图形学术语,,表面格式
 graphics card,名词,计算机图形学术语,,显卡
+mesh,名词,计算机图形学术语,,网格
+tessellation,名词,计算机图形学术语,,细分曲面
+rasterization,名词,计算机图形学术语,,光栅化
+primitive,名词,计算机图形学术语,,图元
+discretize,动词,计算机图形学术语,,离散化
+depth test,名词,计算机图形学术语,,深度测试
+
+normal,名词,数学概念,,法向量、法线
 
 queue family,名词,Vulkan概念,,队列族
 queue families,名词,Vulkan概念,,队列族

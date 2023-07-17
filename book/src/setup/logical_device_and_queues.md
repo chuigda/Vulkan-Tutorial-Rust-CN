@@ -1,4 +1,4 @@
-# Logical device and queues
+# 逻辑设备与队列
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/setup/logical_device_and_queues.html>
 > 

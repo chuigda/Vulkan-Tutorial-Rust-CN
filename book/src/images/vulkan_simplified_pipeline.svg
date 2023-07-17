@@ -190,7 +190,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 88px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Input assembler</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">输入组装器</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -198,7 +198,7 @@
            y="12"
            font-size="12px"
            id="text28"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Input assembler</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">输入组装器</text>
       </switch>
     </g>
     <path
@@ -237,7 +237,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 77px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Vertex shader</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">顶点着色器</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -245,7 +245,7 @@
            y="12"
            font-size="12px"
            id="text40"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Vertex shader</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">顶点着色器</text>
       </switch>
     </g>
     <path
@@ -284,7 +284,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 63px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Tessellation</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">密铺</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -292,7 +292,7 @@
            y="12"
            font-size="12px"
            id="text52"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Tessellation</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">密铺</text>
       </switch>
     </g>
     <path
@@ -331,7 +331,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 95px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Geometry shader</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">几何着色器</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -339,7 +339,7 @@
            y="12"
            font-size="12px"
            id="text64"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Geometry shader</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">几何着色器</text>
       </switch>
     </g>
     <path
@@ -378,7 +378,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 73px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Rasterization</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">光栅化</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -386,7 +386,7 @@
            y="12"
            font-size="12px"
            id="text76"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Rasterization</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">光栅化</text>
       </switch>
     </g>
     <path
@@ -425,7 +425,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 94px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Fragment shader</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">片元着色器</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -433,7 +433,7 @@
            y="12"
            font-size="12px"
            id="text88"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Fragment shader</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">片元着色器</text>
       </switch>
     </g>
     <path
@@ -472,7 +472,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 82px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Color blending</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">混色</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -480,7 +480,7 @@
            y="12"
            font-size="12px"
            id="text100"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Color blending</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">混色</text>
       </switch>
     </g>
     <path
@@ -511,7 +511,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; overflow: hidden; max-height: 16px; max-width: 196px; width: 103px; white-space: normal; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Vertex/index buffer</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">顶点/索引缓冲</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -519,7 +519,7 @@
            y="12"
            font-size="12px"
            id="text110"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Vertex/index buffer</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">顶点/索引缓冲</text>
       </switch>
     </g>
     <g
@@ -536,7 +536,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; overflow: hidden; max-height: 16px; max-width: 196px; width: 67px; white-space: normal; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Framebuffer</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">帧缓冲</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -544,7 +544,7 @@
            y="12"
            font-size="12px"
            id="text116"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Framebuffer</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">帧缓冲</text>
       </switch>
     </g>
   </g>
