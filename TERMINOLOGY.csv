@@ -8,6 +8,7 @@ invariants,名词,一般,,不变式
 conformant,形容词,一般,,合规的
 non-conformant,形容词,一般,,不合规的
 raw,形容词,一般,,原始的
+property,名词,一般,,属性
 
 bitmask,名词,程序设计概念,,掩码
 binding,名词,程序设计概念,,绑定
@@ -53,10 +54,11 @@ surface,名词,计算机图形学术语,,表面
 surface format,名词,计算机图形学术语,,表面格式
 graphics card,名词,计算机图形学术语,,显卡
 mesh,名词,计算机图形学术语,,网格
-tessellation,名词,计算机图形学术语,,密铺
+tessellation,名词,计算机图形学术语,,细分曲面
 rasterization,名词,计算机图形学术语,,光栅化
 primitive,名词,计算机图形学术语,,图元
 discretize,动词,计算机图形学术语,,离散化
+depth test,名词,计算机图形学术语,,深度测试
 
 normal,名词,数学概念,,法向量、法线
 
