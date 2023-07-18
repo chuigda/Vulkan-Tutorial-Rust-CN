@@ -70,7 +70,7 @@ let components = vk::ComponentMapping::builder()
 ```
 
 <!-- TODO subresource 这个翻译还有待考虑 -->
-接着，我们为图像视图定义子资源（subresource）范围，它描述了图像的用途以及应该访问图像的哪一部分。我们的图像将被用作没有 mipmap 级别，也没有多个层次的颜色目标。
+接着，我们为图像视图定义子资源（subresource）范围，它描述了图像的用途以及应该访问图像的哪一部分。这里，我们的图像将被用作没有 mipmap 级别，也没有多个层次的颜色目标：
 
 ```rust,noplaypen
 let subresource_range = vk::ImageSubresourceRange::builder()
@@ -94,7 +94,7 @@ let info = vk::ImageViewCreateInfo::builder()
     .subresource_range(subresource_range);
 ```
 
-`view_type` 和 `format` 字段指定了图像数据应该如何被解释。`view_type` 字段允许你将图像视图视为一维纹理、二维纹理、三维纹理或者立方体贴图。
+`view_type` 和 `format` 字段指定图像数据应该如何被解释。`view_type` 字段用于指定图像应该被视为一维纹理、二维纹理、三维纹理还是立方体贴图。
 
 接下来就只要调用 `create_image_view` 函数了：
 
@@ -102,7 +102,7 @@ let info = vk::ImageViewCreateInfo::builder()
 device.create_image_view(&info, None)
 ```
 
-不同于图像，图像视图是由我们显式创建的，所以我们需要在 `App::destroy` 中添加一个类似的循环来销毁它们：
+不同于交换链中的图像，图像视图是由我们显式创建的，所以我们需要在 `App::destroy` 中添加一个类似的循环来销毁它们：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
