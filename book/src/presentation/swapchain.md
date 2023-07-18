@@ -6,7 +6,7 @@
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/06_swapchain_creation.rs)
 
-Vulkan 没有“默认帧缓冲”（default framebuffer）的概念，因此，Vulkan 需要一个架构来持有我们将要绘制的帧缓冲。这个架构就是*交换链*，在 Vulkan 中它必须被显式创建。交换链本质上就是一个队列，其中充满了等待呈现到屏幕上的图像。我们的应用程序每次会从这个队列中获取一张图像，在上面绘制，然后将它返还到队列中。队列如何工作以及何时呈现队列中的图像取决于交换链的设置，但通常来说，交换链的目的是使图像的呈现与屏幕刷新率同步。
+Vulkan 没有“默认帧缓冲”（default framebuffer）的概念，因此，Vulkan 需要一个结构来持有我们将要绘制的帧缓冲，这个架构就是*交换链*。在 Vulkan 中，交换链必须被显式创建。交换链本质上就是一个队列，其中充满了等待呈现到屏幕上的图像。我们的应用程序每次会从这个队列中获取一张图像，在上面绘制，然后将它返还到队列中。交换链的设置决定了这个队列如何工作，以及何时呈现队列中的图像，但通常来说，交换链的目的是使图像的呈现与屏幕刷新率同步。
 
 ## 检测交换链支持
 
@@ -72,8 +72,6 @@ unsafe fn check_physical_device_extensions(
 ## 启用设备扩展
 
 使用交换链需要先启用 `VK_KHR_swapchain` 扩展。启用扩展只需要在 `create_logical_device` 函数中对设备扩展列表进行一点小小的修改。使用 `DEVICE_EXTENSIONS` 构造一个由空结尾的字符串组成的列表，来初始化我们的设备扩展列表：
-
-Using a swapchain requires enabling the `VK_KHR_swapchain` extension first. Enabling the extension just requires a small change to our list of device extensions in the `create_logical_device` function. Initialize our list of device extensions with a list of null-terminated strings constructed from `DEVICE_EXTENSIONS`:
 
 ```rust,noplaypen
 let mut extensions = DEVICE_EXTENSIONS
@@ -410,7 +408,7 @@ struct AppData {
 data.swapchain = device.create_swapchain_khr(&info, None)?;
 ```
 
-毫无疑问，参数是交换链的创建信息和可选的自定义分配器。没有什么意外的。创建出的交换链需要在 `App::destroy` 中，在设备被销毁前清理掉：
+不出所料，参数是交换链的创建信息和可选的自定义分配器。没有什么意外的。创建出的交换链需要在 `App::destroy` 中，在设备被销毁前清理掉：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
