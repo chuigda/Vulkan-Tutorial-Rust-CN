@@ -1,26 +1,32 @@
-# Swapchain
+# 交换链
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/06_swapchain_creation.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/presentation/swapchain.html>
+>
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-Vulkan does not have the concept of a "default framebuffer", hence it requires an infrastructure that will own the buffers we will render to before we visualize them on the screen. This infrastructure is known as the *swapchain* and must be created explicitly in Vulkan. The swapchain is essentially a queue of images that are waiting to be presented to the screen. Our application will acquire such an image to draw to it, and then return it to the queue. How exactly the queue works and the conditions for presenting an image from the queue depend on how the swapchain is set up, but the general purpose of the swapchain is to synchronize the presentation of images with the refresh rate of the screen.
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/06_swapchain_creation.rs)
 
-## Checking for swapchain support
+Vulkan 没有“默认帧缓冲”（default framebuffer）的概念，因此，Vulkan 需要一个架构来持有我们将要绘制的帧缓冲。这个架构就是*交换链*，在 Vulkan 中它必须被显式创建。交换链本质上就是一个队列，其中充满了等待呈现到屏幕上的图像。我们的应用程序每次会从这个队列中获取一张图像，在上面绘制，然后将它返还到队列中。队列如何工作以及何时呈现队列中的图像取决于交换链的设置，但通常来说，交换链的目的是使图像的呈现与屏幕刷新率同步。
 
-Not all graphics cards are capable of presenting images directly to a screen for various reasons, for example because they are designed for servers and don't have any display outputs. Secondly, since image presentation is heavily tied into the window system and the surfaces associated with windows, it is not actually part of the Vulkan core. You have to enable the `VK_KHR_swapchain` device extension after querying for its support. Also, like before, you need to import the `vulkanalia` extension trait for `VK_KHR_swapchain`:
+## 检测交换链支持
+
+出于某些原因，不是所有的显卡都能直接向屏幕呈现图像，例如有些显卡是为服务器设计的，没有图像输出接口。其次，呈现图像和窗口系统以及与窗口系统关联的表面密切相关。因此，交换链不是 Vulkan 核心的一部分。你必须先查询设备对交换链扩展 `VK_KHR_swapchain` 的支持，然后启用它。
+
+像之前一样，我们首先导入 `vulkanalia` 的扩展 trait `vk::KhrSwapchainExtension`：
 
 ```rust,noplaypen
 use vulkanalia::vk::KhrSwapchainExtension;
 ```
 
-Then we'll first extend the `check_physical_device` function to check if this extension is supported. We've previously seen how to list the extensions that are supported by a `vk::PhysicalDevice`, so doing that should be fairly straightforward.
+接着，我们扩展 `check_physical_device` 函数，增加对 `VK_KHR_swapchain` 扩展支持的检查。我们之前已经看过如何列出一个物理设备支持的扩展，所以这一步应该非常直观。
 
-First declare a list of required device extensions, similar to the list of validation layers to enable.
+首先声明一个所需设备扩展的列表，这一步和启用校验层的列表类似：
 
 ```rust,noplaypen
 const DEVICE_EXTENSIONS: &[vk::ExtensionName] = &[vk::KHR_SWAPCHAIN_EXTENSION.name];
 ```
 
-Next, create a new function `check_physical_device_extensions` that is called from `check_physical_device` as an additional check:
+然后创建一个新函数 `check_physical_device_extensions` 作为 `check_physical_device` 的附加检查：
 
 ```rust,noplaypen
 unsafe fn check_physical_device(
@@ -41,7 +47,7 @@ unsafe fn check_physical_device_extensions(
 }
 ```
 
-Modify the body of the function to enumerate the extensions and check if all of the required extensions are amongst them.
+修改 `check_physical_device_extensions` 的函数体，枚举设备支持的所有扩展，并检查其中是否包含所有所需的扩展：
 
 ```rust,noplaypen
 unsafe fn check_physical_device_extensions(
@@ -61,9 +67,11 @@ unsafe fn check_physical_device_extensions(
 }
 ```
 
-Now run the code and verify that your graphics card is indeed capable of creating a swapchain. It should be noted that the availability of a presentation queue, as we checked in the previous chapter, implies that the swapchain extension must be supported. However, it's still good to be explicit about things, and the extension does have to be explicitly enabled.
+现在运行代码，确保你的显卡支持交换链的创建。值得注意的是，我们在前一章检查呈现队列的可用性时，已经隐式地检查了交换链扩展的支持。不过显式地检查一下也好，而且交换链扩展必须显式地启用。
 
-## Enabling device extensions
+## 启用设备扩展
+
+使用交换链需要先启用 `VK_KHR_swapchain` 扩展。启用扩展只需要在 `create_logical_device` 函数中对设备扩展列表进行一点小小的修改。使用 `DEVICE_EXTENSIONS` 构造一个由空结尾的字符串组成的列表，来初始化我们的设备扩展列表：
 
 Using a swapchain requires enabling the `VK_KHR_swapchain` extension first. Enabling the extension just requires a small change to our list of device extensions in the `create_logical_device` function. Initialize our list of device extensions with a list of null-terminated strings constructed from `DEVICE_EXTENSIONS`:
 
@@ -74,17 +82,17 @@ let mut extensions = DEVICE_EXTENSIONS
     .collect::<Vec<_>>();
 ```
 
-## Querying details of swapchain support
+## 查询交换链支持的细节
 
-Just checking if a swapchain is available is not sufficient, because it may not actually be compatible with our window surface. Creating a swapchain also involves a lot more settings than instance and device creation, so we need to query for some more details before we're able to proceed.
+只检查交换链是否可用还不够，因为它不一定和我们的窗口表面兼容。创建交换链还需要更多的设置，因此在继续推进之前，我们需要查询更多的细节。
 
-There are basically three kinds of properties we need to check:
+总的来说，我们需要检查三种基本属性：
 
-* Basic surface capabilities (min/max number of images in swapchain, min/max width and height of images)
-* Surface formats (pixel format, color space)
-* Available presentation modes
+* 基本的表面能力（交换链中图像的最小/最大数量，图像的最小/最大宽度和高度）
+* 表面格式（像素格式，颜色空间）
+* 可用的呈现模式
 
-Similar to `QueueFamilyIndices`, we'll use a struct to pass these details around once they've been queried. The three aforementioned types of properties come in the form of the following structs and lists of structs:
+与 `QueueFamilyIndices` 类似，我们会使用一个结构体来存储这些细节：
 
 ```rust,noplaypen
 #[derive(Clone, Debug)]
@@ -95,7 +103,7 @@ struct SwapchainSupport {
 }
 ```
 
-We'll now create a new method `SwapchainSupport::get` that will initialize this struct with all of the structs we need.
+现在我们创建一个新的方法 `SwapchainSupport::get`，用来初始化这个结构体，填充我们所需的所有字段：
 
 ```rust,noplaypen
 impl SwapchainSupport {
@@ -119,9 +127,9 @@ impl SwapchainSupport {
 }
 ```
 
-The meaning of these structs and exactly which data they contain is discussed in the next section.
+这些字段的含义以及它们包含的数据的确切含义将在下一节中讨论。
 
-All of the details are in the struct now, so let's extend `check_physical_device` once more to utilize this method to verify that swapchain support is adequate. swapchain support is sufficient for this tutorial if there is at least one supported image format and one supported presentation mode given the window surface we have.
+现在，所有细节都在这个结构体里了，让我们再扩展一次 `check_physical_device` 函数，用这个方法来验证交换链的支持是否足够。只要交换链支持至少一种图像格式，以及至少一种给定窗口表面的呈现模式，那么这个交换链就可以满足本教程的需求。
 
 ```rust,noplaypen
 unsafe fn check_physical_device(
@@ -140,21 +148,21 @@ unsafe fn check_physical_device(
 }
 ```
 
-It is important that we only try to query for swapchain support after verifying that the extension is available.
+注意我们必须在确认交换链扩展可用之后，再检查交换链支持。
 
-## Choosing the right settings for the swapchain
+## 为交换链选择正确的设置
 
-If the conditions we just added were met then the support is definitely sufficient, but there may still be many different modes of varying optimality. We'll now write a couple of functions to find the right settings for the best possible swapchain. There are three types of settings to determine:
+如果交换链满足我们刚刚所说的那些条件，那么这个交换链肯定是够用了。但交换链支持的设置很多，我们还需要做到最好。我们现在要写一些函数来找到最佳的交换链设置。有三种类型的设置需要确定：
 
-* Surface format (color depth)
-* Presentation mode (conditions for "swapping" images to the screen)
-* Swap extent (resolution of images in swapchain)
+* 表面格式（颜色深度）
+* 呈现模式（将图像“交换”到屏幕的条件）
+* 交换范围（交换链中图像的分辨率）
 
-For each of these settings we'll have an ideal value in mind that we'll go with if it's available and otherwise we'll create some logic to find the next best thing.
+每一种设置都有一个理想值，如果这个理想值可用，我们就使用它，否则我们就创建一些逻辑来找到次佳的值。
 
-### Surface format
+### 表面格式
 
-The function for this setting starts out like this. We'll later pass the `formats` field of the `SwapchainSupport` struct as argument.
+我们从一个下面这样的函数开始，稍后我们会把 `SwapchainSupport` 结构体的 `formats` 字段传给它作参数：
 
 ```rust,noplaypen
 fn get_swapchain_surface_format(
@@ -163,11 +171,11 @@ fn get_swapchain_surface_format(
 }
 ```
 
-Each `vk::SurfaceFormatKHR` entry contains a `format` and a `color_space` member. The `format` member specifies the color channels and types. For example, `vk::Format::B8G8R8A8_SRGB` means that we store the B, G, R and alpha channels in that order with an 8 bit unsigned integer for a total of 32 bits per pixel. The `color_space` member indicates if the sRGB color space is supported or not using the `vk::ColorSpaceKHR::SRGB_NONLINEAR` flag.
+`vk::SurfaceFormatKHR` 有 `format` 和 `color_space` 两个成员。`format` 指定颜色的通道数和类型。例如，`vk::Format::B8G8R8A8_SRGB` 表示我们按照 B、G、R 和 alpha 通道的顺序存储颜色，每个通道使用 8 位无符号整数，每像素总共 32 位。`color_space` 成员使用 `vk::ColorSpaceKHR::SRGB_NONLINEAR` 标志表示是否支持 sRGB 颜色空间。
 
-For the color space we'll use sRGB if it is available, because it [results in more accurate perceived colors](http://stackoverflow.com/questions/12524623/). It is also pretty much the standard color space for images, like the textures we'll use later on. Because of that we should also use an sRGB color format, of which one of the most common ones is `vk::Format::B8G8R8A8_SRGB`.
+因为 sRGB 颜色空间可以[更准确地表示颜色](http://stackoverflow.com/questions/12524623/)，所以我们会优先使用它。它也是纹理等图像的标准颜色空间。因此，我们也应该优先使用 sRGB 颜色格式，其中最常见的一个就是 `vk::Format::B8G8R8A8_SRGB`。
 
-Let's go through the list and see if the preferred combination is available:
+让我们遍历 `formats` 列表，看看是否有我们想要的组合：
 
 ```rust,noplaypen
 fn get_swapchain_surface_format(
@@ -184,9 +192,9 @@ fn get_swapchain_surface_format(
 }
 ```
 
-If that also fails then we could rank the available formats based on how "good" they are, but in most cases it's okay to just settle with the first format that is specified hence `.unwrap_or_else(|| formats[0])`.
+如果没有，那么我们可以评估可用格式的优劣，然后选择一个最好的。但在大多数情况下，随遇而安地使用第一个格式也行，所以我们用 `unwrap_or_else` 方法来简化代码。
 
-### Presentation mode
+### 呈现模式
 
 The presentation mode is arguably the most important setting for the swapchain, because it represents the actual conditions for showing images to the screen. There are four possible modes available in Vulkan:
 
