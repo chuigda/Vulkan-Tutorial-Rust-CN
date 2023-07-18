@@ -15,8 +15,8 @@
 
 # Presentation
 
-- [Window surface](./presentation/window_surface.md)
-- [Swapchain](./presentation/swapchain.md)
+- [窗口表面](./presentation/window_surface.md)
+- [交换链](./presentation/swapchain.md)
 - [图像视图](./presentation/image_views.md)
 
 # 管线
@@ -29,7 +29,7 @@
 
 # Drawing
 
-- [Framebuffers](./drawing/framebuffers.md)
+- [帧缓冲](./drawing/framebuffers.md)
 - [Command buffers](./drawing/command_buffers.md)
 - [Rendering and presentation](./drawing/rendering_and_presentation.md)
 
