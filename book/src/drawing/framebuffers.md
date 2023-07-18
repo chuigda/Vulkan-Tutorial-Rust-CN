@@ -37,7 +37,7 @@ unsafe fn create_framebuffers(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-在 `create_framebuffers` 函数中，遍历交换链中所有图像视图，为每个图像视图创建一个帧缓冲：
+`create_framebuffers` 函数将遍历交换链中所有图像视图，为每个图像视图创建一个帧缓冲：
 
 ```rust,noplaypen
 unsafe fn create_framebuffers(device: &Device, data: &mut AppData) -> Result<()> {
