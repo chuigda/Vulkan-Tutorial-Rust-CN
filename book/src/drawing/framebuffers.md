@@ -1,4 +1,4 @@
-# 帧缓冲区
+# 帧缓冲
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/drawing/framebuffers.html>
 > 
