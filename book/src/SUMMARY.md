@@ -17,7 +17,7 @@
 
 - [Window surface](./presentation/window_surface.md)
 - [Swapchain](./presentation/swapchain.md)
-- [Image views](./presentation/image_views.md)
+- [图像视图](./presentation/image_views.md)
 
 # 管线
 
