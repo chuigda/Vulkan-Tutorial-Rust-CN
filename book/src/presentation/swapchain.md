@@ -156,7 +156,7 @@ unsafe fn check_physical_device(
 
 * 表面格式（颜色深度）
 * 呈现模式（将图像“交换”到屏幕的条件）
-* 交换范围（交换链中图像的分辨率）
+* 交换范围（swap extent）（交换链中图像的分辨率）
 
 每一种设置都有一个理想值，如果这个理想值可用，我们就使用它，否则我们就创建一些逻辑来找到次佳的值。
 
@@ -238,10 +238,7 @@ fn get_swapchain_extent(
 }
 ```
 
-<!-- TODO need refinement -->
-交换范围就是交换链中图像的分辨率，它几乎总是等于我们正在绘制的窗口的分辨率。可用的分辨率范围在 `vk::SurfaceCapabilitiesKHR` 结构体中定义。Vulkan 告诉我们要匹配窗口的分辨率，方法是在 `current_extent` 成员中设置宽度和高度。然而，有些窗口管理器允许我们在这里做一些改变，这是通过将 `current_extent` 中的宽度和高度设置为一个特殊值来指示的：`u32` 的最大值。在这种情况下，我们将选择最佳匹配窗口的分辨率，这个分辨率必须在 `min_image_extent` 和 `max_image_extent` 的范围内。
-
-The swap extent is the resolution of the swapchain images and it's almost always exactly equal to the resolution of the window that we're drawing to. The range of the possible resolutions is defined in the `vk::SurfaceCapabilitiesKHR` structure. Vulkan tells us to match the resolution of the window by setting the width and height in the `current_extent` member. However, some window managers do allow us to differ here and this is indicated by setting the width and height in `current_extent` to a special value: the maximum value of `u32`. In that case we'll pick the resolution that best matches the window within the `min_image_extent` and `max_image_extent` bounds.
+交换范围就是交换链中图像的分辨率，它几乎总是等于我们正在绘制的窗口的分辨率。可用的分辨率范围在 `vk::SurfaceCapabilitiesKHR` 结构体中定义。Vulkan 通过 `current_extent` 成员来告知适合我们窗口的交换范围。一些窗口系统会将 `current_extent` 的宽和高设置为一个特殊值 —— `u32` 类型的最大值 —— 来表示允许我们自己选择对于窗口最合适的交换范围，在这种情况下我们需要在 `min_image_extent` 和 `max_image_extent` 的范围内选择一个最合适的分辨率。
 
 ```rust,noplaypen
 fn get_swapchain_extent(
@@ -269,13 +266,13 @@ fn get_swapchain_extent(
 }
 ```
 
-We define the `clamp` function to restrict the actual size of the window within the supported range supported by the Vulkan device.
+我们使用 `clamp` 函数来限制窗口的实际大小在 Vulkan 设备支持的范围内。
 
-## Creating the swapchain
+## 创建交换链
 
-Now that we have all of these helper functions assisting us with the choices we have to make at runtime, we finally have all the information that is needed to create a working swapchain.
+现在我们有了所有用来帮助我们在运行时做出决策的辅助函数，我们终于有了创建工作交换链所需的所有信息。
 
-Create a `create_swapchain` function that starts out with the results of these calls and make sure to call it from `App::create` after logical device creation.
+创建一个 `create_swapchain` 函数，它首先调用这些辅助函数并取得其结果。然后，在 `App::create` 中创建逻辑设备之后调用这个函数：
 
 ```rust,noplaypen
 impl App {
@@ -304,19 +301,19 @@ unsafe fn create_swapchain(
 }
 ```
 
-Aside from these properties we also have to decide how many images we would like to have in the swapchain. The implementation specifies the minimum number that it requires to function:
+除去这些属性之外，我们还需要决定交换链中图像的数量。交换链有一个工作所需的最小图像数量：
 
 ```rust,noplaypen
 let image_count = support.capabilities.min_image_count;
 ```
 
-However, simply sticking to this minimum means that we may sometimes have to wait on the driver to complete internal operations before we can acquire another image to render to. Therefore it is recommended to request at least one more image than the minimum:
+然而，仅仅满足这个最小值意味着我们有时候必须等待驱动程序完成内部操作，然后才能获取另一张图像来渲染。因此，建议至少请求比最小值多一张图像：
 
 ```rust,noplaypen
 let image_count = support.capabilities.min_image_count + 1;
 ```
 
-We should also make sure to not exceed the maximum number of images while doing this, where `0` is a special value that means that there is no maximum:
+我们也要确保我们请求的图像数量不超过最大值，其中 `0` 是一个特殊值，表示没有最大值：
 
 ```rust,noplaypen
 let mut image_count = support.capabilities.min_image_count + 1;
@@ -327,12 +324,12 @@ if support.capabilities.max_image_count != 0
 }
 ```
 
-Next, we need to specify how to handle swapchain images that will be used across multiple queue families. That will be the case in our application if the graphics queue family is different from the presentation queue. We'll be drawing on the images in the swapchain from the graphics queue and then submitting them on the presentation queue. There are two ways to handle images that are accessed from multiple queues:
+接下来，我们需要说明如何处理在多个队列族中使用的交换链图像。如果图形队列族与呈现队列族不同，我们的应用程序就要在图形队列上绘制交换链中的图像，然后在呈现队列上提交它们。在这种情况下，我们需要指定如何处理在多个队列族中使用的交换链图像：
 
-* `vk::SharingMode::EXCLUSIVE` &ndash; An image is owned by one queue family at a time and ownership must be explicitly transferred before using it in another queue family. This option offers the best performance.
-* `vk::SharingMode::CONCURRENT` &ndash; Images can be used across multiple queue families without explicit ownership transfers.
+* `vk::SharingMode::EXCLUSIVE` &ndash; 一张图像同时只能被一个队列族持有，在另一个队列中使用它之前，必须显式地转移其所有权。这种方式能提供最好的性能。
+* `vk::SharingMode::CONCURRENT` &ndash; 一张图像可以在多个队列族中使用，而不需要显式地转移所有权。
 
-If the queue families differ, then we'll be using the concurrent mode in this tutorial to avoid having to do the ownership chapters, because these involve some concepts that are better explained at a later time. Concurrent mode requires you to specify in advance between which queue families ownership will be shared using the `queue_family_indices` builder method If the graphics queue family and presentation queue family are the same, which will be the case on most hardware, then we should stick to exclusive mode, because concurrent mode requires you to specify at least two distinct queue families.
+如果图形队列族和呈现队列族不同，我们的教程中会使用 `CONCURRENT` 模式，这样我们就不需要讲解所有权，毕竟这里面涉及的一些东西最好以后再详细解释。你必须使用 `queue_family_indices` 构建器方法提前指定哪些队列族之间可以共享交换链图像的所有权。如果图形队列族和呈现队列族相同 —— 大多数硬件都是这样的 —— 那么我们应该使用 `EXCLUSIVE` 模式，因为 `CONCURRENT` 模式要求你至少指定两个不同的队列族。
 
 ```rust,noplaypen
 let mut queue_family_indices = vec![];
@@ -345,7 +342,7 @@ let image_sharing_mode = if indices.graphics != indices.present {
 };
 ```
 
-As is tradition with Vulkan objects, creating the swapchain object requires filling in a large structure. It starts out very familiarly:
+和其他的 Vulkan 对象一样，创建交换链对象也要填充一个巨大的结构体。又是熟悉的开始：
 
 ```rust,noplaypen
 let info = vk::SwapchainCreateInfoKHR::builder()
@@ -353,7 +350,7 @@ let info = vk::SwapchainCreateInfoKHR::builder()
     // continued...
 ```
 
-After specifying which surface the swapchain should be tied to, the details of the swapchain images are specified:
+在指定交换链所绑定的表面之后，我们需要指定交换链图像的细节：
 
 ```rust,noplaypen
     .min_image_count(image_count)
@@ -364,41 +361,41 @@ After specifying which surface the swapchain should be tied to, the details of t
     .image_usage(vk::ImageUsageFlags::COLOR_ATTACHMENT)
 ```
 
-The `image_array_layers` specifies the amount of layers each image consists of. This is always `1` unless you are developing a stereoscopic 3D application. The `image_usage` bitmask specifies what kind of operations we'll use the images in the swapchain for. In this tutorial we're going to render directly to them, which means that they're used as color attachment. It is also possible that you'll render images to a separate image first to perform operations like post-processing. In that case you may use a value like `vk::ImageUsageFlags::TRANSFER_DST` instead and use a memory operation to transfer the rendered image to a swapchain image.
+`image_array_layers` 指定每张图像的*层*（layer）数。除非你在开发一个立体 3D 应用程序，否则这个值总是 `1`。`image_usage` 位掩码指定我们会对交换链中的图像进行何种操作。在本教程中，我们将直接在图像上绘制，这意味着它们被用作颜色*附件*（color attachment）。先将图像渲染到另一个图像上、再执行后处理等操作也是可以的。在这种情况下，你可以使用 `vk::ImageUsageFlags::TRANSFER_DST` 这样的值，然后使用内存操作将渲染好的图像传输到交换链图像上。
 
 ```rust,noplaypen
     .image_sharing_mode(image_sharing_mode)
     .queue_family_indices(&queue_family_indices)
 ```
 
-Next we'll provide the image sharing mode and indices of the queue families permitted to share the swapchain images.
+接着我们提供图像共享模式，以及允许共享交换链图像的队列族的索引。
 
 ```rust,noplaypen
     .pre_transform(support.capabilities.current_transform)
 ```
 
-We can specify that a certain transform should be applied to images in the swapchain if it is supported (`supported_transforms` in `capabilities`), like a 90 degree clockwise rotation or horizontal flip. To specify that you do not want any transformation, simply specify the current transformation.
+我们可以为交换链中的图像指定一个受支持的的变换操作（`capabilities` 的 `supported_transforms` 中记录了受支持的变换），例如 90 度顺时针旋转或水平翻转。如果你不想进行任何变换，只需指定当前变换 `current_transform` 即可。
 
 ```rust,noplaypen
     .composite_alpha(vk::CompositeAlphaFlagsKHR::OPAQUE)
 ```
 
-The `composite_alpha` method specifies if the alpha channel should be used for blending with other windows in the window system. You'll almost always want to simply ignore the alpha channel, hence `vk::CompositeAlphaFlagsKHR::OPAQUE`.
+`composite_alpha` 方法指定是否应该使用 alpha 通道与窗口系统中的其他窗口进行混合。你几乎总是希望忽略 alpha 通道，因此使用 `vk::CompositeAlphaFlagsKHR::OPAQUE`。
 
 ```rust,noplaypen
     .present_mode(present_mode)
     .clipped(true)
 ```
 
-The `present_mode` member speaks for itself. If the `clipped` member is set to `true` then that means that we don't care about the color of pixels that are obscured, for example because another window is in front of them. Unless you really need to be able to read these pixels back and get predictable results, you'll get the best performance by enabling clipping.
+`present_mode` 的含义不言而喻。`clipped` 被设置为 `true` 来表示我们不关心被遮挡像素 —— 例如被窗口系统中其他窗口遮挡 —— 的颜色。除非你真的需要能够读取这些像素并获得可预测的结果，否则启用裁剪可以获得最佳性能。
 
 ```rust,noplaypen
     .old_swapchain(vk::SwapchainKHR::null());
 ```
 
-That leaves one last method, `old_swapchain`. With Vulkan it's possible that your swapchain becomes invalid or unoptimized while your application is running, for example because the window was resized. In that case the swapchain actually needs to be recreated from scratch and a reference to the old one must be specified in this method. This is a complex topic that we'll learn more about in a future chapter. For now we'll assume that we'll only ever create one swapchain. We could omit this method since the underlying field will default to a null handle, but we'll leave it in for completeness.
+还有最后一个方法，`old_swapchain`。你的交换链可能在应用程序运行时变得无效，或者不再是最优的 —— 例如当窗口大小改变的时候。在这种情况下，交换链实际上需要从头开始重建，而旧的交换链的引用必须在这个方法中指定。这是一个复杂的主题，我们将在以后的章节中讨论。现在我们假设我们只会创建一个交换链。我们可以省略这个调用，因为底层的字段默认就是一个空句柄，但为了完整起见，我们还是把它留在这里。
 
-Now add an `AppData` field to store the `vk::SwapchainKHR` object:
+现在，向 `AppData` 中添加一个 `vk::SwapchainKHR` 字段来保存交换链对象：
 
 ```rust,noplaypen
 struct AppData {
@@ -407,13 +404,13 @@ struct AppData {
 }
 ```
 
-Creating the swapchain is now as simple as calling `create_swapchain_khr`:
+创建交换链就像调用 `create_swapchain_khr` 方法一样简单：
 
 ```rust,noplaypen
 data.swapchain = device.create_swapchain_khr(&info, None)?;
 ```
 
-The parameters are the swapchain creation info and optional custom allocators. No surprises there. It should be cleaned up in `App::destroy` before the device:
+毫无疑问，参数是交换链的创建信息和可选的自定义分配器。没有什么意外的。创建出的交换链需要在 `App::destroy` 中，在设备被销毁前清理掉：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -422,15 +419,15 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-Now run the application to ensure that the swapchain is created successfully! If at this point you get an access violation error in `vkCreateSwapchainKHR` or see a message like `Failed to find 'vkGetInstanceProcAddress' in layer SteamOverlayVulkanLayer.dll`, then see the [FAQ entry](../faq.html) about the Steam overlay layer.
+现在运行程序，确保交换链创建成功。如果你在调用 `vkCreateSwapchainKHR` 的时候遇到了访问冲突错误，或者看到类似 `Failed to find 'vkGetInstanceProcAddress' in layer SteamOverlayVulkanLayer.dll` 的消息，那么请参考[常见问题](../faq.html)中关于 Steam 覆盖层的条目。
 
-Try removing the `.image_extent(extent)` line from where you are building the `vk::SwapchainCreateInfoKHR` struct with validation layers enabled. You'll see that one of the validation layers immediately catches the mistake and some helpful messages are printed which call out the illegal value provided for `image_extent`:
+现在，不妨试试在校验层启用的情况下，在构造 `vk::SwapchainCreationInfoKHR` 结构体时去掉 `.image_extent(extent)` 这一行。你会发现，其中一个校验层立即就捕获到了错误，并打印出了一些有用的信息，指出 `image_extent` 的值非法：
 
 ![](../images/swapchain_validation_layer.png)
 
-## Retrieving the swapchain images
+## 获取交换链图像
 
-The swapchain has been created now, so all that remains is retrieving the handles of the `vk::Image`s in it. We'll reference these during rendering operations in later chapters. Add an `AppData` field to store the handles:
+交换链已经创建出来了，现在我们还要获取交换链中的图像 `vk::Image` 的句柄。我们将在后面的章节中使用这些句柄来创建渲染目标。我们将在 `AppData` 中添加一个 `swapchain_images` 字段来保存这些句柄：
 
 ```rust,noplaypen
 struct AppData {
@@ -439,15 +436,15 @@ struct AppData {
 }
 ```
 
-The images were created by the implementation for the swapchain and they will be automatically cleaned up once the swapchain has been destroyed, therefore we don't need to add any cleanup code.
+这些图像会随着交换链被创建出来，并且当交换链被销毁时被自动清理掉，因此我们不需要添加任何清理代码。
 
-I'm adding the code to retrieve the handles to the end of the `create_swapchain` function, right after the `create_swapchain_khr` call.
+将下面的代码添加到 `create_swapchain` 函数的最后面，紧跟着 `create_swapchain_khr` 的调用，来获取这些句柄：
 
 ```rust,noplaypen
 data.swapchain_images = device.get_swapchain_images_khr(data.swapchain)?;
 ```
 
-One last thing, store the format and extent we've chosen for the swapchain images in `AppData` fields. We'll need them in future chapters.
+还有一件事，我们需要保存交换链中图像的格式和交换范围，因为我们将在后面的章节中用到它们。在 `AppData` 中添加两个字段：
 
 ```rust,noplaypen
 impl AppData {
@@ -459,11 +456,11 @@ impl AppData {
 }
 ```
 
-And then in `create_swapchain`:
+然后在 `create_swapchain` 中保存它们：
 
 ```rust,noplaypen
 data.swapchain_format = surface_format.format;
 data.swapchain_extent = extent;
 ```
 
-We now have a set of images that can be drawn onto and can be presented to the window. The next chapter will begin to cover how we can set up the images as render targets and then we start looking into the actual graphics pipeline and drawing commands!
+现在，我们有了一组可以绘制并呈现到屏幕上的图像。我们将在下一章中开始讨论如何将图像设置为渲染目标，然后开始使用图形管线和绘制命令来绘制图像！
