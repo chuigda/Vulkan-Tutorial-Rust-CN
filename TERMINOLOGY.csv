@@ -1,85 +1,86 @@
-英文,词性,属性,例句,翻译
-verbose,形容词,一般,,冗长
-redundant,形容词,一般,,冗余/多余
-aim at,动词,一般,,面向
-populate,动词,一般,,填充
-extension,名词,一般,,扩展
-invariants,名词,一般,,不变式
-conformant,形容词,一般,,合规的
-non-conformant,形容词,一般,,不合规的
-raw,形容词,一般,,原始的
-property,名词,一般,,属性
-
-bitmask,名词,程序设计概念,,掩码
-binding,名词,程序设计概念,,绑定
-builder,名词,程序设计概念,,生成器
-builder pattern,名词,程序设计概念,,生成器模式
-instance,名词,程序设计概念,,实例
-handle,名词,程序设计概念,,句柄
-pipeline,名词,程序设计概念,,管线
-registry,名词,程序设计概念,,注册表
-namespace,名词,程序设计概念,,名称空间
-enumeration,名词,程序设计概念,,枚举
-variant,名词,程序设计概念,,枚举变体
-signature,名词,程序设计概念,,（函数）签名
-call,名词,程序设计概念,,调用
-callback,名词,程序设计概念,,回调
-component,名词,程序设计概念,,组件
-console,名词,程序设计概念,,控制台
-terminal,名词,程序设计概念,,终端
-executable,名词,程序设计概念,,可执行文件
-event loop,名词,程序设计概念,,事件循环
-wrapper,名词,程序设计概念,,封装
-flag,名词,程序设计概念,,标志
-profiling,名词,程序设计概念,,分析
-backwards compatibility,名词,程序设计概念,,向后兼容性
-field,名词,程序设计概念,,字段
-method,名词,程序设计概念,,方法
-initializer,名词,程序设计概念,,初始化器
-platform-specific,形容词,程序设计概念,,平台特定的
-expose,动词,程序设计概念,It exposes a `vk::SurfaceKHR` object that represents an abstract type of surface to present rendered images to,暴露（接口，API 等）
-
-queue,名词,数据结构,,队列
-
-texture,名词,计算机图形学术语,,纹理
-material,名词,计算机图形学术语,,材质
-framebuffer,名词,计算机图形学术语,,帧缓冲
-vertex,名词,计算机图形学术语,,顶点
-fragment,名词,计算机图形学术语,,片元
-shader,名词,计算机图形学术语,,着色器
-geometry shader,名词,计算机图形学术语,,几何着色器
-viewport,名词,计算机图形学术语,,视口
-render,动词,计算机图形学术语,,渲染
-surface,名词,计算机图形学术语,,表面
-surface format,名词,计算机图形学术语,,表面格式
-graphics card,名词,计算机图形学术语,,显卡
-mesh,名词,计算机图形学术语,,网格
-tessellation,名词,计算机图形学术语,,细分曲面
-rasterization,名词,计算机图形学术语,,光栅化
-primitive,名词,计算机图形学术语,,图元
-discretize,动词,计算机图形学术语,,离散化
-depth test,名词,计算机图形学术语,,深度测试
-
-normal,名词,数学概念,,法向量、法线
-
-queue family,名词,Vulkan概念,,队列族
-queue families,名词,Vulkan概念,,队列族
-swapchain,名词,Vulkan概念,,交换链
-presentation,名词,Vulkan概念,,呈现
-present mode,名词,Vulkan概念,,呈现模式
-image view,名词,Vulkan概念,,图像视图
-render passes,名词,Vulkan概念,,渲染流程
-command pool,名词,Vulkan概念,,指令池
-command buffer,名词,Vulkan概念,,指令缓冲
-validation layer,名词,Vulkan概念,,校验层
-
-null-terminated C string,名词,C语言概念,,以空字符结尾的C字符串
-
-associated constant,名词,Rust概念,,关联常量
-lifetime,名词,Rust概念,,生存期
-prelude,名词,Rust概念,,不译
-crate,名词,Rust概念,,不译
-trait,名词,Rust概念,,不译
-
-issue,名词,Git概念,,问题
-pull request,名词,Git概念,,拉取请求
+英文,词性,属性,翻译,注释,例句,
+verbose,形容词,一般,冗长,,,
+redundant,形容词,一般,冗余/多余,,,
+aim at,动词,一般,面向,,,
+populate,动词,一般,填充,,,
+extension,名词,一般,扩展,,,
+invariants,名词,一般,不变式,,,
+conformant,形容词,一般,合规的,,,
+non-conformant,形容词,一般,不合规的,,,
+raw,形容词,一般,原始的,,,
+property,名词,一般,属性,,,
+,,,,,,
+bitmask,名词,程序设计概念,掩码,,,
+binding,名词,程序设计概念,绑定,,,
+builder,名词,程序设计概念,生成器,《GoF 设计模式》这么翻译的,,
+builder pattern,名词,程序设计概念,生成器模式,《GoF 设计模式》这么翻译的,,
+instance,名词,程序设计概念,实例,,,
+handle,名词,程序设计概念,句柄,,,
+pipeline,名词,程序设计概念,管线,,,
+registry,名词,程序设计概念,注册表,不一定是 Windows 注册表,,
+namespace,名词,程序设计概念,名称空间,,,
+enumeration,名词,程序设计概念,枚举,,,
+variant,名词,程序设计概念,枚举变体,,,
+signature,名词,程序设计概念,（函数）签名,,,
+call,名词,程序设计概念,调用,,,
+callback,名词,程序设计概念,回调,,,
+component,名词,程序设计概念,组件,,,
+console,名词,程序设计概念,控制台,,,
+terminal,名词,程序设计概念,终端,,,
+executable,名词,程序设计概念,可执行文件,,,
+event loop,名词,程序设计概念,事件循环,,,
+wrapper,名词,程序设计概念,封装,,,
+flag,名词,程序设计概念,标志,,,
+profiling,名词,程序设计概念,分析,,,
+backwards compatibility,名词,程序设计概念,向后兼容性,,,
+field,名词,程序设计概念,字段,,,
+method,名词,程序设计概念,方法,,,
+constructor,名词,程序设计概念,构造器,,,
+initializer,名词,程序设计概念,初始化器,原文中有时候会和 constructor 构造器混用，这种时候一律统一到 constructor,,
+platform-specific,形容词,程序设计概念,平台特定的,,,
+expose,动词,程序设计概念,暴露,接口/API 等,It exposes a `vk::SurfaceKHR` object that represents an abstract type of surface to present rendered images to,
+,,,,,,
+queue,名词,数据结构,队列,,,
+,,,,,,
+texture,名词,计算机图形学术语,纹理,,,
+material,名词,计算机图形学术语,材质,,,
+framebuffer,名词,计算机图形学术语,帧缓冲,,,
+vertex,名词,计算机图形学术语,顶点,,,
+fragment,名词,计算机图形学术语,片元,另一个翻译是片段，但我认为片元更好,,
+shader,名词,计算机图形学术语,着色器,,,
+geometry shader,名词,计算机图形学术语,几何着色器,,,
+viewport,名词,计算机图形学术语,视口,,,
+render,动词,计算机图形学术语,渲染,,,
+surface,名词,计算机图形学术语,表面,,,
+surface format,名词,计算机图形学术语,表面格式,,,
+graphics card,名词,计算机图形学术语,显卡,,,
+mesh,名词,计算机图形学术语,网格,,,
+tessellation,名词,计算机图形学术语,细分曲面,,,
+rasterization,名词,计算机图形学术语,光栅化,,,
+primitive,名词,计算机图形学术语,图元,,,
+discretize,动词,计算机图形学术语,离散化,,,
+depth test,名词,计算机图形学术语,深度测试,,,
+,,,,,,
+normal,名词,数学概念,法向量/法线,,,
+,,,,,,
+queue family,名词,Vulkan概念,队列族,C++ 版 Vulkan Tutorial 的翻译是这样的,,
+queue families,名词,Vulkan概念,队列族,,,
+swapchain,名词,Vulkan概念,交换链,,,
+presentation,名词,Vulkan概念,呈现,,,
+present mode,名词,Vulkan概念,呈现模式,,,
+image view,名词,Vulkan概念,图像视图,,,
+render passes,名词,Vulkan概念,渲染流程,,,
+command pool,名词,Vulkan概念,指令池,,,
+command buffer,名词,Vulkan概念,指令缓冲,,,
+validation layer,名词,Vulkan概念,校验层,C++ 版 Vulkan Tutorial 的翻译是这样的,,
+,,,,,,
+null-terminated C string,名词,C语言概念,以空字符结尾的C字符串,,,
+,,,,,,
+associated constant,名词,Rust概念,关联常量,,,
+lifetime,名词,Rust概念,生存期,我认为“生命周期”属于误译，显然生命周期应该指 Vue/React 的 lifecycle，而 Rust 的 lifetime 里没有“周”,,
+prelude,名词,Rust概念,不译,,,
+crate,名词,Rust概念,不译,,,
+trait,名词,Rust概念,不译,,,
+,,,,,,
+issue,名词,Git概念,问题,之后可能会回退,,
+pull request,名词,Git概念,拉取请求,之后可能会回退,,
