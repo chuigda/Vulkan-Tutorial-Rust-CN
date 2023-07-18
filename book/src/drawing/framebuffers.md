@@ -6,12 +6,12 @@
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/13_framebuffers.rs)
 
-我们在之前的几个章节中多次提到过帧缓冲区。而现在我们已经建立了渲染流程，就差一个跟交换链图片格式相同的帧缓冲区了。
+我们在之前的几个章节中多次提到过帧缓冲。而现在我们已经建立了渲染流程，就差一个跟交换链图片格式相同的帧缓冲了。
 
 <!-- TODO 无论如何，这一句读起来非常奇怪。之后需要参照 Vulkan Tutorial 原文反复确认。 -->
 在创建渲染流程时指定的附件需要被包装进帧缓冲对象 `vk::Framebuffer` 中进行绑定。一个帧缓冲对象引用了所有代表附件的 `vk::ImageView` 对象。在我们的例子中，我们只有一个颜色附件。但这并不意味着我们就只需要使用一张图像，因为我们需要为交换链中的每个图像都创建对应的帧缓冲，并在渲染时使用与从交换链取得的图像对应的帧缓冲。
 
-为此，我们在 `AppData` 中创建另一个 `Vec` 字段来存放帧缓冲区：
+为此，我们在 `AppData` 中创建另一个 `Vec` 字段来存放帧缓冲：
 
 ```rust,noplaypen
 struct AppData {
@@ -37,7 +37,7 @@ unsafe fn create_framebuffers(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-在 `create_framebuffers` 函数中，遍历交换链中所有图像视图，为每个图像视图创建一个帧缓冲区：
+在 `create_framebuffers` 函数中，遍历交换链中所有图像视图，为每个图像视图创建一个帧缓冲：
 
 ```rust,noplaypen
 unsafe fn create_framebuffers(device: &Device, data: &mut AppData) -> Result<()> {
@@ -61,7 +61,7 @@ unsafe fn create_framebuffers(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-如你所见，创建帧缓冲区的方式相当直白。首先我们需要指定帧缓冲要与哪个 `render_pass` 兼容。你只能在与一个帧缓冲兼容的渲染流程上使用它，这基本上就意味着渲染流程和帧缓冲有着相同数量和类型的附件。
+如你所见，创建帧缓冲的方式相当直白。首先我们需要指定帧缓冲要与哪个 `render_pass` 兼容。你只能在与一个帧缓冲兼容的渲染流程上使用它，这基本上就意味着渲染流程和帧缓冲有着相同数量和类型的附件。
 
 `attachments` 字段指定了应绑定到渲染流程的 `attachment` 数组所对应的附件描述的 `vk::ImageView` 对象。
 
