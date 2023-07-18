@@ -196,14 +196,14 @@ fn get_swapchain_surface_format(
 
 ### 呈现模式
 
-The presentation mode is arguably the most important setting for the swapchain, because it represents the actual conditions for showing images to the screen. There are four possible modes available in Vulkan:
+呈现模式可以说是交换链中最重要的设置，因为它决定了图像什么时候被交换到屏幕上。Vulkan 中有四种可能的呈现模式：
 
-* `vk::PresentModeKHR::IMMEDIATE` &ndash; Images submitted by your application are transferred to the screen right away, which may result in tearing.
-* `vk::PresentModeKHR::FIFO` &ndash; The swapchain is a queue where the display takes an image from the front of the queue when the display is refreshed and the program inserts rendered images at the back of the queue. If the queue is full then the program has to wait. This is most similar to vertical sync as found in modern games. The moment that the display is refreshed is known as "vertical blank".
-* `vk::PresentModeKHR::FIFO_RELAXED` &ndash; This mode only differs from the previous one if the application is late and the queue was empty at the last vertical blank. Instead of waiting for the next vertical blank, the image is transferred right away when it finally arrives. This may result in visible tearing.
-* `vk::PresentModeKHR::MAILBOX` &ndash; This is another variation of the second mode. Instead of blocking the application when the queue is full, the images that are already queued are simply replaced with the newer ones. This mode can be used to render frames as fast as possible while still avoiding tearing, resulting in fewer latency issues than standard vertical sync. This is commonly known as "triple buffering", although the existence of three buffers alone does not necessarily mean that the framerate is unlocked.
+* `vk::PresentModeKHR::IMMEDIATE` &ndash; 应用程序提交的图像会立即传输到屏幕上，这可能会导致撕裂。
+* `vk::PresentModeKHR::FIFO` &ndash; 交换链是一个队列，当显示器刷新时，显示器会从队列的前端取出一张图像，应用程序会在队列的后端插入渲染好的图像。如果队列已满，应用程序就必须等待。这种模式最类似于现代游戏中的垂直同步（vertical sync）。显示器刷新的时刻被称为“垂直空白”（vertical blank）。
+* `vk::PresentModeKHR::FIFO_RELAXED` &ndash; 这种模式与 `FIFO` 的区别在于，如果程序提交图像的速度比显示器刷新的速度慢，那么图像就会立即传输，而不是等待下一个垂直空白。这可能会导致撕裂。
+* `vk::PresentModeKHR::MAILBOX` &ndash; 这是 `FIFO` 模式的另一种变体。如果程序提交图像的速度比显示器刷新的速度快，当队列已满时，队列中的图像会直接被新的图像替换，而不会阻塞应用程序。这种模式可以用来尽可能快地渲染帧，同时避免撕裂，因而比标准的垂直同步有更少的延迟。这通常被称为“三重缓冲”，尽管仅靠三个缓冲区本身并不能让帧率不受限制。
 
-Only the `vk::PresentModeKHR::FIFO` mode is guaranteed to be available, so we'll again have to write a function that looks for the best mode that is available:
+只有 `vk::PresentModeKHR::FIFO` 模式是保证可用的，因此我们需要写一个函数来查找可用的最佳模式：
 
 ```rust,noplaypen
 fn get_swapchain_present_mode(
@@ -212,7 +212,7 @@ fn get_swapchain_present_mode(
 }
 ```
 
-I personally think that `vk::PresentModeKHR::MAILBOX` is a very nice trade-off if energy usage is not a concern. It allows us to avoid tearing while still maintaining a fairly low latency by rendering new images that are as up-to-date as possible right until the vertical blank. On mobile devices, where energy usage is more important, you will probably want to use `vk::PresentModeKHR::FIFO` instead. Now, let's look through the list to see if `vk::PresentModeKHR::MAILBOX` is available:
+我个人认为，如果能耗不是问题的话，`vk::PresentModeKHR::MAILBOX` 是一个非常好的折中方案。它既能避免撕裂，同时又能保持尽可能低的延迟，因为它会在垂直空白之前渲染尽可能新的图像。在移动设备上，能耗更重要，那时候你可能会想使用 `vk::PresentModeKHR::FIFO`。现在，让我们遍历 `present_modes` 列表，看看 `vk::PresentModeKHR::MAILBOX` 是否可用：
 
 ```rust,noplaypen
 fn get_swapchain_present_mode(
@@ -226,9 +226,9 @@ fn get_swapchain_present_mode(
 }
 ```
 
-### Swap extent
+### 交换范围
 
-That leaves only one major property, for which we'll add one last function:
+现在就剩交换范围一个属性了，我们再为它写一个函数：
 
 ```rust,noplaypen
 fn get_swapchain_extent(
@@ -237,6 +237,9 @@ fn get_swapchain_extent(
 ) -> vk::Extent2D {
 }
 ```
+
+<!-- TODO need refinement -->
+交换范围就是交换链中图像的分辨率，它几乎总是等于我们正在绘制的窗口的分辨率。可用的分辨率范围在 `vk::SurfaceCapabilitiesKHR` 结构体中定义。Vulkan 告诉我们要匹配窗口的分辨率，方法是在 `current_extent` 成员中设置宽度和高度。然而，有些窗口管理器允许我们在这里做一些改变，这是通过将 `current_extent` 中的宽度和高度设置为一个特殊值来指示的：`u32` 的最大值。在这种情况下，我们将选择最佳匹配窗口的分辨率，这个分辨率必须在 `min_image_extent` 和 `max_image_extent` 的范围内。
 
 The swap extent is the resolution of the swapchain images and it's almost always exactly equal to the resolution of the window that we're drawing to. The range of the possible resolutions is defined in the `vk::SurfaceCapabilitiesKHR` structure. Vulkan tells us to match the resolution of the window by setting the width and height in the `current_extent` member. However, some window managers do allow us to differ here and this is indicated by setting the width and height in `current_extent` to a special value: the maximum value of `u32`. In that case we'll pick the resolution that best matches the window within the `min_image_extent` and `max_image_extent` bounds.
 
