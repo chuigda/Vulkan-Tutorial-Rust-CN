@@ -17,7 +17,7 @@
 
 - [窗口表面](./presentation/window_surface.md)
 - [交换链](./presentation/swapchain.md)
-- [Image views](./presentation/image_views.md)
+- [图像视图](./presentation/image_views.md)
 
 # 管线
 

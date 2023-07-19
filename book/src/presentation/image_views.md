@@ -1,12 +1,16 @@
-# Image views
+# 图像视图 (Image views)
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/07_image_views.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/presentation/image_views.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-To use any `vk::Image`, including those in the swapchain, in the render pipeline we have to create a `vk::ImageView` object. An image view is quite literally a view into an image. It describes how to access the image and which part of the image to access, for example if it should be treated as a 2D texture depth texture without any mipmapping levels.
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/07_image_views.rs)
 
-In this chapter we'll write a `create_swapchain_image_views` function that creates a basic image view for every image in the swapchain so that we can use them as color targets later on.
+要在渲染管线中使用任何 `vk::Image` —— 包括交换链中的那些，我们都需要为其创建一个图像视图对象 `vk::ImageView`。图像视图就像它的名字所描述的那样，它描述了如何访问图像，以及访问图像的哪一部分。例如，图像视图可以用来表示“一张图像应该被视为一张没有 mipmap 级别（mipmapping levels）的二维纹理”。
 
-First add an `AppData` field to store the image views in:
+在本章中，我们会实现一个 `create_swapchain_image_views` 函数，来为交换链中的每张图像创建一个基本的图像视图，这样我们就可以在之后的章节中将它们用作渲染目标。
+
+首先，在 `AppData` 结构体中添加一个字段，用来存储图像视图：
 
 ```rust,noplaypen
 struct AppData {
@@ -16,7 +20,7 @@ struct AppData {
 
 ```
 
-Create the `create_swapchain_image_views` function and call it right after swapchain creation in `App::create`.
+创建一个 `create_swapchain_image_views` 函数，并在 `App::create` 中创建完交换链之后调用它：
 
 ```rust,noplaypen
 impl App {
@@ -36,7 +40,7 @@ unsafe fn create_swapchain_image_views(
 }
 ```
 
-What we next need to do is iterate over the swapchain images to create an image view for each:
+接着，我们实现 `create_swapchain_image_views` 函数，遍历交换链图像，并为每一张图像创建图像视图：
 
 ```rust,noplaypen
 unsafe fn create_swapchain_image_views(
@@ -55,7 +59,7 @@ unsafe fn create_swapchain_image_views(
 }
 ```
 
-For each image view we are creating we'll first need to define the color component mapping for the image view. This allows you to swizzle the color channels around. For example, you can map all of the channels to the red channel for a monochrome texture. You can also map constant values of `0` and `1` to a channel. In our case we'll stick to the default mapping.
+对于我们要创建的每一个图像视图，我们首先定义它的颜色分量映射。这允许你对颜色通道进行重新排序。例如，你可以将所有通道映射到红色通道，从而创建一个单色纹理。你也可以将常量值 `0` 和 `1` 映射到通道上。在我们的例子中，我们将使用默认的映射：
 
 ```rust,noplaypen
 let components = vk::ComponentMapping::builder()
@@ -65,7 +69,8 @@ let components = vk::ComponentMapping::builder()
     .a(vk::ComponentSwizzle::IDENTITY);
 ```
 
-Next we will define the subresource range for the image view which describes the image's purpose and which part of the image should be accessed. Our images will be used as color targets without any mipmapping levels or multiple layers.
+<!-- TODO subresource 这个翻译还有待考虑 -->
+接着，我们为图像视图定义子资源（subresource）范围，它描述了图像的用途以及应该访问图像的哪一部分。这里，我们的图像将被用作没有 mipmap 级别，也没有多个层次的颜色目标：
 
 ```rust,noplaypen
 let subresource_range = vk::ImageSubresourceRange::builder()
@@ -76,9 +81,9 @@ let subresource_range = vk::ImageSubresourceRange::builder()
     .layer_count(1);
 ```
 
-If you were working on a stereographic 3D application, then you would create a swapchain with multiple layers. You could then create multiple image views for each image representing the views for the left and right eyes by accessing different layers.
+如果你在编写一个立体 3D 应用，那么你可以创建一个包含多个层次的交换链图像视图。然后你可以访问不同的层次，并分别为左眼和右眼的视角创建各自的图像视图。
 
-We can now create a `vk::ImageViewCreateInfo` struct which provides the parameters for image view creation.
+现在，我们创建一个 `vk::ImageViewCreateInfo` 结构体来提供创建图像视图所需的参数：
 
 ```rust,noplaypen
 let info = vk::ImageViewCreateInfo::builder()
@@ -89,15 +94,15 @@ let info = vk::ImageViewCreateInfo::builder()
     .subresource_range(subresource_range);
 ```
 
-The `view_type` and `format` fields specify how the image data should be interpreted. The `view_type` field allows you to treat images as 1D textures, 2D textures, 3D textures, and cube maps.
+`view_type` 和 `format` 字段指定图像数据应该如何被解释。`view_type` 字段用于指定图像应该被视为一维纹理、二维纹理、三维纹理还是立方体贴图。
 
-Creating the image view is now a matter of calling `create_image_view`:
+接下来就只要调用 `create_image_view` 函数了：
 
 ```rust,noplaypen
 device.create_image_view(&info, None)
 ```
 
-Unlike images, the image views were explicitly created by us, so we need to add a similar loop to destroy them again in `App::destroy`:
+不同于交换链中的图像，图像视图是由我们显式创建的，所以我们需要在 `App::destroy` 中添加一个类似的循环来销毁它们：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -108,4 +113,4 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-An image view is sufficient to start using an image as a texture, but it's not quite ready to be used as a render target just yet. That requires one more step of indirection, known as a framebuffer. But first we'll have to set up the graphics pipeline.
+图像视图已经足以让我们把图像作为纹理使用了，但它还不能用作渲染目标。这还需要一个额外的间接步骤 —— *帧缓冲*（framebuffer）。但在这之前我们需要先建立图形管线。
