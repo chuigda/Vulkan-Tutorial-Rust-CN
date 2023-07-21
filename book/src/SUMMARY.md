@@ -22,7 +22,7 @@
 # 管线
 
 - [介绍](./pipeline/introduction.md)
-- [Shader modules](./pipeline/shader_modules.md)
+- [着色器模块](./pipeline/shader_modules.md)
 - [Fixed functions](./pipeline/fixed_functions.md)
 - [Render passes](./pipeline/render_passes.md)
 - [Conclusion](./pipeline/conclusion.md)
