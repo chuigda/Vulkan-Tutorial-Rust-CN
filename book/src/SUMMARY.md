@@ -23,7 +23,7 @@
 
 - [介绍](./pipeline/introduction.md)
 - [着色器模块](./pipeline/shader_modules.md)
-- [Fixed functions](./pipeline/fixed_functions.md)
+- [固定功能](./pipeline/fixed_functions.md)
 - [Render passes](./pipeline/render_passes.md)
 - [Conclusion](./pipeline/conclusion.md)
 
