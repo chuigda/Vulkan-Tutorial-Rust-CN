@@ -1,37 +1,49 @@
-# Fixed functions
+# 固定功能
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/10_fixed_functions.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/pipeline/fixed_functions.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-The older graphics APIs provided default state for most of the stages of the graphics pipeline. In Vulkan you have to be explicit about everything, from viewport size to color blending function. In this chapter we'll fill in all of the structures to configure these fixed-function operations.
+**本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/10_fixed_functions.rs)
 
-## Vertex input
+旧的图形学 API 在渲染管线中为大部分阶段提供了默认状态。而在 Vulkan 中，你必须显式指定一切 —— 从视口大小到颜色混合函数。在本章中，我们会创建并填充配置这些固定功能操作所需的所有结构体。
 
-The `vk::PipelineVertexInputStateCreateInfo` structure describes the format of the vertex data that will be passed to the vertex shader. It describes this in roughly two ways:
+## 顶点输入
 
-* Bindings &ndash; spacing between data and whether the data is per-vertex or per-instance (see [instancing](https://en.wikipedia.org/wiki/Geometry_instancing))
-* Attribute descriptions &ndash; type of the attributes passed to the vertex shader, which binding to load them from and at which offset
+`vk::PipelineVertexInputStateCreationInfo` 结构体大致上通过两种方式描述顶点数据的格式：
 
-Because we're hard coding the vertex data directly in the vertex shader, we'll leave this structure with the defaults to specify that there is no vertex data to load for now. We'll get back to it in the vertex buffer chapter.
+* 绑定（Bindings） &ndash; 数据之间的间隔，以及数据是逐顶点（per-vertex）还是逐个实例（per-instance）的（参见[实例化](https://en.wikipedia.org/wiki/Geometry_instancing)）
+* 属性描述（Attribute descriptions） &ndash; 顶点着色器接收的属性的类型，从哪个绑定中加载数据，以及从哪个偏移量开始加载
+
+因为我们已经在顶点着色器中硬编码了数据，我们会将这个结构体的所有字段都保留默认值，表明我们不需要加载数据。我们会在顶点缓冲章节重新审视这个结构体。
 
 ```rust,noplaypen
 let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();
 ```
 
-The `vertex_binding_descriptions` and `vertex_attribute_descriptions` fields for this struct that could have been set here would be slices of structs that describe the aforementioned details for loading vertex data. Add this structure to the `create_pipeline` function right after the `vk::PipelineShaderStageCreateInfo` structs.
+在 `create_pipeline` 函数中，我们会在 `vk::PipelineShaderStageCreateInfo` 结构体之后添加这个结构体。
 
-## Input assembly
+<!--
+The `vertex_binding_descriptions` and `vertex_attribute_descriptions` fields for this struct that could have been set here would be slices of structs that describe the aforementioned details for loading vertex data.
 
-The `vk::PipelineInputAssemblyStateCreateInfo` struct describes two things: what kind of geometry will be drawn from the vertices and if primitive restart should be enabled. The former is specified in the `topology` member and can have values like:
+这一句就不翻译了，免得读者误解。
+-->
 
-* `vk::PrimitiveTopology::POINT_LIST` &ndash; points from vertices
-* `vk::PrimitiveTopology::LINE_LIST` &ndash; line from every 2 vertices without reuse
-* `vk::PrimitiveTopology::LINE_STRIP` &ndash; the end vertex of every line is used as start vertex for the next line
-* `vk::PrimitiveTopology::TRIANGLE_LIST` &ndash; triangle from every 3 vertices without reuse
-* `vk::PrimitiveTopology::TRIANGLE_STRIP` &ndash; the second and third vertex of every triangle are used as first two vertices of the next triangle
+## 输入装配
 
-Normally, the vertices are loaded from the vertex buffer by index in sequential order, but with an *element buffer* you can specify the indices to use yourself. This allows you to perform optimizations like reusing vertices. If you set the `primitive_restart_enable` member to `true`, then it's possible to break up lines and triangles in the `_STRIP` topology modes by using a special index of `0xFFFF` or `0xFFFFFFFF`.
+`vk::PipelineInputAssemblyStateCreateInfo` 结构体指定了两件事：从顶点中绘制什么样的几何图形，以及是否启用了图元重启（primitive restart）。前者由 `topology` 字段指定，可以有以下值：
 
-We intend to draw triangles throughout this tutorial, so we'll stick to the following data for the structure:
+* `vk::PrimitiveTopology::POINT_LIST` &ndash; 根据输入顶点绘制点
+* `vk::PrimitiveTopology::LINE_LIST` &ndash; 每两个顶点绘制一条线，不重复使用顶点
+* `vk::PrimitiveTopology::LINE_STRIP` &ndash; 每两个顶点绘制一条线，每条线的终点是下一条线的起点
+* `vk::PrimitiveTopology::TRIANGLE_LIST` &ndash; 每三个顶点绘制一个三角形，不重复使用顶点
+* `vk::PrimitiveTopology::TRIANGLE_STRIP` &ndash; 每三个顶点绘制一个三角形，每个三角形的第二个和第三个顶点是下一个三角形的第一和第二个顶点
+
+通常情况下，我们从顶点缓冲中加载的顶点都是按索引顺序排列的，但你也可以使用*元素缓冲（element buffer）*自行指定索引顺序。这就允许你进行一些优化，例如复用顶点。
+
+如果你将 `primitive_restart_enable` 字段设置为 `true`，那么你就可以使用特殊的索引 `0xFFFF` 或 `0xFFFFFFFF` 来打断 `_STRIP` 拓扑模式下的线和三角形。
+
+我们的目的是绘制三角形，所以我们按照以下方式填充结构体：
 
 ```rust,noplaypen
 let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
@@ -39,9 +51,9 @@ let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
     .primitive_restart_enable(false);
 ```
 
-## Viewports and scissors
+## 视口和裁剪
 
-A viewport basically describes the region of the framebuffer that the output will be rendered to. This will almost always be `(0, 0)` to `(width, height)` and in this tutorial that will also be the case.
+视口用于描述渲染结果将被输出到的帧缓冲区域。视口几乎总是从 `(0, 0)` 到 `(width, height)`，在本教程中也是如此。
 
 ```rust,noplaypen
 let viewport = vk::Viewport::builder()
@@ -53,15 +65,16 @@ let viewport = vk::Viewport::builder()
     .max_depth(1.0);
 ```
 
-Remember that the size of the swapchain and its images may differ from the `WIDTH` and `HEIGHT` of the window. The swapchain images will be used as framebuffers later on, so we should stick to their size.
+交换链的尺寸和交换链图像的尺寸并不总是相同。因为我们之后是要将交换链图像用作帧缓冲，所以我们应该使用图像的尺寸。
 
-The `min_depth` and `max_depth` values specify the range of depth values to use for the framebuffer. These values must be within the `[0.0, 1.0]` range, but `min_depth` may be higher than `max_depth`. If you aren't doing anything special, then you should stick to the standard values of `0.0` and `1.0`.
+`min_depth` 和 `max_depth` 值指定了帧缓冲的深度值范围。这些值必须在 `[0.0, 1.0]` 范围内，但 `min_depth` 可以比 `max_depth` 更大。如果你没在整什么骚活，那么你应该使用标准值 `0.0` 和 `1.0`。
 
-While viewports define the transformation from the image to the framebuffer, scissor rectangles define in which regions pixels will actually be stored. Any pixels outside the scissor rectangles will be discarded by the rasterizer. They function like a filter rather than a transformation. The difference is illustrated below. Note that the left scissor rectangle is just one of the many possibilities that would result in that image, as long as it's larger than the viewport.
+视口定义了图像到帧缓冲的映射关系，而裁剪矩形（scissor rectangles）则定义了哪些像素会被实际地存储到帧缓冲中。与其说是变换，裁剪矩形更像是一个过滤器。下图展示了视口和裁剪矩形的区别。注意左边的裁剪矩形只是产生这张图像的可能性之一，只要它比视口大就行。
+<!-- 最后一句不是很通顺 -->
 
 ![](../images/viewports_scissors.png)
 
-In this tutorial we simply want to draw to the entire framebuffer, so we'll specify a scissor rectangle that covers it entirely:
+在本教程中，我们只想填充整个帧缓冲区域，所以我们会指定一个覆盖整个帧缓冲区域的裁剪矩形：
 
 ```rust,noplaypen
 let scissor = vk::Rect2D::builder()
@@ -69,7 +82,7 @@ let scissor = vk::Rect2D::builder()
     .extent(data.swapchain_extent);
 ```
 
-Now this viewport and scissor rectangle need to be combined into a viewport state using the `vk::PipelineViewportStateCreateInfo` struct. It is possible to use multiple viewports and scissor rectangles on some graphics cards, so its members reference an array of them. Using multiple requires enabling a GPU feature (see logical device creation).
+视口和裁剪矩形的信息需要用 `vk::PipelineViewportStateCreateInfo` 结构体来组合在一起。在某些显卡上，你可以使用多个视口和裁剪矩形，所以这个结构体的成员是一个数组。使用多个视口需要启用一个 GPU 特性（参见逻辑设备创建）。
 
 ```rust,noplaypen
 let viewports = &[viewport];
@@ -79,9 +92,9 @@ let viewport_state = vk::PipelineViewportStateCreateInfo::builder()
     .scissors(scissors);
 ```
 
-## Rasterizer
+## 光栅化
 
-The rasterizer takes the geometry that is shaped by the vertices from the vertex shader and turns it into fragments to be colored by the fragment shader. It also performs [depth testing](https://en.wikipedia.org/wiki/Z-buffering), [face culling](https://en.wikipedia.org/wiki/Back-face_culling) and the scissor test, and it can be configured to output fragments that fill entire polygons or just the edges (wireframe rendering). All this is configured using the `vk::PipelineRasterizationStateCreateInfo` structure.
+光栅化程序将来自顶点着色器的顶点构成的几何图元交给片元着色器。它也负责进行[深度测试](https://en.wikipedia.org/wiki/Z-buffering)、[背面剔除（face culling）](https://en.wikipedia.org/wiki/Back-face_culling)和剪裁测试（scissor test），并且可以配置为输出填充整个多边形的片元还是只输出多边形的边缘（线框渲染）。所有这些都可以通过 `vk::PipelineRasterizationStateCreateInfo` 结构体来配置。
 
 ```rust,noplaypen
 let rasterization_state = vk::PipelineRasterizationStateCreateInfo::builder()
@@ -89,48 +102,48 @@ let rasterization_state = vk::PipelineRasterizationStateCreateInfo::builder()
     // continued...
 ```
 
-If `depth_clamp_enable` is set to `true`, then fragments that are beyond the near and far planes are clamped to them as opposed to discarding them. This is useful in some special cases like shadow maps. Using this requires enabling a GPU feature.
+如果 `depth_clamp_enable` 被设为 `true`，在近平面和远平面以外的片元都会被截断到这两个平面上，而不是被丢弃。这在一些特殊情况下很有用，例如生成阴影贴图的时候。使用这个选项需要启用一个 GPU 特性。
 
 ```rust,noplaypen
     .rasterizer_discard_enable(false)
 ```
 
-If `rasterizer_discard_enable` is set to `true`, then geometry never passes through the rasterizer stage. This basically disables any output to the framebuffer.
+如果 `rasterizer_discard_enable` 被设为 `true`，那么几何图元就永远不会通过光栅化程序阶段。这基本上就禁用了对帧缓冲的任何输出。
 
 ```rust,noplaypen
     .polygon_mode(vk::PolygonMode::FILL)
 ```
 
-The `polygon_mode` determines how fragments are generated for geometry. The following modes are available:
+`polygon_mode` 字段决定了几何图元如何生成片元：
 
-* `vk::PolygonMode::FILL` &ndash; fill the area of the polygon with fragments
-* `vk::PolygonMode::LINE` &ndash; polygon edges are drawn as lines
-* `vk::PolygonMode::POINT` &ndash; polygon vertices are drawn as points
+* `vk::PolygonMode::FILL` &ndash; 用片元填充多边形的区域
+* `vk::PolygonMode::LINE` &ndash; 用线段绘制多边形的边缘
+* `vk::PolygonMode::POINT` &ndash; 用点绘制多边形的顶点
 
-Using any mode other than fill requires enabling a GPU feature.
+使用填充以外的模式都需要启用一个 GPU 特性。
 
 ```rust,noplaypen
     .line_width(1.0)
 ```
 
-The `line_width` member is straightforward, it describes the thickness of lines in terms of number of fragments. The maximum line width that is supported depends on the hardware and any line thicker than `1.0` requires you to enable the `wide_lines` GPU feature.
+`line_width` 成员非常直白，它以图元为单位指定线条的宽度。支持的最大线宽取决于硬件，任何比 `1.0` 更宽的线条都需要启用一个 GPU 特性。
 
 ```rust,noplaypen
     .cull_mode(vk::CullModeFlags::BACK)
     .front_face(vk::FrontFace::CLOCKWISE)
 ```
 
-The `cull_mode` variable determines the type of face culling to use. You can disable culling, cull the front faces, cull the back faces or both. The `front_face` variable specifies the vertex order for faces to be considered front-facing and can be clockwise or counterclockwise.
+`cull_mode` 变量决定了使用哪种面剔除。你可以禁用剔除、剔除正面、剔除背面或同时剔除正面和背面。`front_face` 变量用于指定正面的顶点顺序，可以是顺时针或逆时针。
 
 ```rust,noplaypen
     .depth_bias_enable(false);
 ```
 
-The rasterizer can alter the depth values by adding a constant value or biasing them based on a fragment's slope. This is sometimes used for shadow mapping, but we won't be using it. Just set `depth_bias_enable` to `false`.
+光栅化器可以通过添加一个常量值或者根据片元的斜率来改变深度值。这有时用于阴影贴图，但我们不会用到它。只需将 `depth_bias_enable` 设为 `false` 即可。
 
-## Multisampling
+## 多重采样（multisampling）
 
-The `vk::PipelineMultisampleStateCreateInfo` struct configures multisampling, which is one of the ways to perform [anti-aliasing](https://en.wikipedia.org/wiki/Multisample_anti-aliasing). It works by combining the fragment shader results of multiple polygons that rasterize to the same pixel. This mainly occurs along edges, which is also where the most noticeable aliasing artifacts occur. Because it doesn't need to run the fragment shader multiple times if only one polygon maps to a pixel, it is significantly less expensive than simply rendering to a higher resolution and then downscaling. Enabling it requires enabling a GPU feature.
+`vk::PipelineMultisampleStateCreateInfo` 结构体用于配置多重采样 —— 一种[抗锯齿](https://en.wikipedia.org/wiki/Multisample_anti-aliasing)的方式。它通过组合多个光栅化后的多边形的片元着色器结果来工作。这主要发生在边缘，也是锯齿伪影最明显的地方。因为如果只有一个多边形映射到一个像素，那么它就不需要运行多次片元着色器，所以它比简单地渲染到更高分辨率然后缩小要便宜得多。启用它需要启用一个 GPU 特性。
 
 ```rust,noplaypen
 let multisample_state = vk::PipelineMultisampleStateCreateInfo::builder()
@@ -138,34 +151,34 @@ let multisample_state = vk::PipelineMultisampleStateCreateInfo::builder()
     .rasterization_samples(vk::SampleCountFlags::_1);
 ```
 
-We'll revisit multisampling in a later chapter, for now let's keep it disabled.
+我们会在后面的章节再讨论多重采样，现在我们先将它禁用。
 
-## Depth and stencil testing
+## 深度测试和模板测试（stencil testing）
 
-If you are using a depth and/or stencil buffer, then you also need to configure the depth and stencil tests using `vk::PipelineDepthStencilStateCreateInfo`. We don't have one right now, so we can simply ignore it for now. We'll get back to it in the depth buffering chapter.
+如果需要进行深度测试和模板测试，那么除了需要配置深度缓冲和模板缓冲之外，你还需要通过 `vk::PipelineDepthStencilStateCreateInfo` 结构体配置管线。我们现在还不需要这些，所以我们可以忽略它们。我们会在深度缓冲章节再讨论它们。
 
-## Color blending
+## 颜色混合
 
-After a fragment shader has returned a color, it needs to be combined with the color that is already in the framebuffer. This transformation is known as color blending and there are two ways to do it:
+片元着色器返回的颜色需要与帧缓冲中已有的颜色进行混合。混合的方式有两种：
 
-* Mix the old and new value to produce a final color
-* Combine the old and new value using a bitwise operation
+* 混合新值和旧值以产生最终颜色
+* 使用位运算组合新值和旧值
 
-There are two types of structs to configure color blending. The first struct, `vk::PipelineColorBlendAttachmentState` contains the configuration per attached framebuffer and the second struct, `vk::PipelineColorBlendStateCreateInfo` contains the *global* color blending settings. In our case we only have one framebuffer:
+有两种结构体可以用于配置颜色混合。`vk::PipelineColorBlendAttachmentState` 可以对每个帧缓冲进行单独的颜色配置，而 `vk::PipelineColorBlendStateCreateInfo` 则可以进行*全局*的颜色混合配置。我们的例子里只有一个帧缓冲：
 
 ```rust,noplaypen
 let attachment = vk::PipelineColorBlendAttachmentState::builder()
     .color_write_mask(vk::ColorComponentFlags::all())
     .blend_enable(false)
-    .src_color_blend_factor(vk::BlendFactor::ONE)  // Optional
-    .dst_color_blend_factor(vk::BlendFactor::ZERO) // Optional
-    .color_blend_op(vk::BlendOp::ADD)              // Optional
-    .src_alpha_blend_factor(vk::BlendFactor::ONE)  // Optional
-    .dst_alpha_blend_factor(vk::BlendFactor::ZERO) // Optional
-    .alpha_blend_op(vk::BlendOp::ADD);             // Optional
+    .src_color_blend_factor(vk::BlendFactor::ONE)  // 可选
+    .dst_color_blend_factor(vk::BlendFactor::ZERO) // 可选
+    .color_blend_op(vk::BlendOp::ADD)              // 可选
+    .src_alpha_blend_factor(vk::BlendFactor::ONE)  // 可选
+    .dst_alpha_blend_factor(vk::BlendFactor::ZERO) // 可选
+    .alpha_blend_op(vk::BlendOp::ADD);             // 可选
 ```
 
-This per-framebuffer struct allows you to configure the first way of color blending. The operations that will be performed are best demonstrated using the following pseudocode:
+我们通过上面这个结构体为帧缓冲配置第一类颜色混合方式，这种方式的运算过程类似于下面的代码：
 
 ```rust,noplaypen
 if blend_enable {
@@ -180,16 +193,16 @@ if blend_enable {
 final_color = final_color & color_write_mask;
 ```
 
-If `blend_enable` is set to `false`, then the new color from the fragment shader is passed through unmodified. Otherwise, the two mixing operations are performed to compute a new color. The resulting color is AND'd with the `color_write_mask` to determine which channels are actually passed through.
+如果 `blend_enable` 被设为 `false`，那么片元着色器返回的新颜色会原封不动地传递到帧缓冲中。否则，这两种混合运算（`color_blend_op` 和 `alpha_blend_op`）会被执行，计算出一个新的颜色。最终的颜色会与 `color_write_mask` 进行位运算，以决定哪些通道会被实际地传递到帧缓冲中。
 
-The most common way to use color blending is to implement alpha blending, where we want the new color to be blended with the old color based on its opacity. The `final_color` should then be computed as follows:
+通常，我们使用颜色混合是为了进行阿尔法合成（alpha blending），基于透明度混合新旧颜色。这种情况下，`final_color` 的计算过程如下：
 
 ```c++
 final_color.rgb = new_alpha * new_color + (1 - new_alpha) * old_color;
 final_color.a = new_alpha.a;
 ```
 
-This can be accomplished with the following parameters:
+这可以通过以下参数实现：
 
 ```rust,noplaypen
 let attachment = vk::PipelineColorBlendAttachmentState::builder()
@@ -203,9 +216,9 @@ let attachment = vk::PipelineColorBlendAttachmentState::builder()
     .alpha_blend_op(vk::BlendOp::ADD);
 ```
 
-You can find all of the possible operations in the `vk::BlendFactor` and `vk::BlendOp` enumerations in the specification (or `vulkanalia`'s documentation).
+你可以在 Vulkan 规范里 `vk::BlendFactor` 和 `vk::BlendOp` 枚举的文档（或者 `vulkanalia` 的文档）中找到所有可能的运算。
 
-The second structure references the array of structures for all of the framebuffers and allows you to set blend constants that you can use as blend factors in the aforementioned calculations.
+第二种结构体（`vk::PipelineColorBlendStateCreateInfo`）引用了所有帧缓冲，并且允许你设置混合常量，你可以在混合运算中使用这些常量。
 
 ```rust,noplaypen
 let attachments = &[attachment];
@@ -216,11 +229,11 @@ let color_blend_state = vk::PipelineColorBlendStateCreateInfo::builder()
     .blend_constants([0.0, 0.0, 0.0, 0.0]);
 ```
 
-If you want to use the second method of blending (bitwise combination), then you should set `logic_op_enable` to `true`. The bitwise operation can then be specified in the `logic_op` field. Note that this will automatically disable the first method, as if you had set `blend_enable` to `false` for every attached framebuffer! The `color_write_mask` will also be used in this mode to determine which channels in the framebuffer will actually be affected. It is also possible to disable both modes, as we've done here, in which case the fragment colors will be written to the framebuffer unmodified.
+如果你想使用第二种混合方式（位运算结合），你应该把 `logic_op_enable` 设为 `true`。位运算操作可由 `logic_op` 字段指定。注意这会自动禁用第一种混合方式，就好像你把所有帧缓冲的 `blend_enable` 都置为了 `false`！`color_write_mask` 在这种模式下也会被用到，以决定哪些通道会被实际地传递到帧缓冲中。你也可以同时禁用这两种模式，就像我们这里做的一样，这样片元颜色就会原封不动地传递到帧缓冲中。
 
-## Dynamic state
+## 动态状态
 
-A limited amount of the state that we've specified in the previous structs *can* actually be changed without recreating the pipeline. Examples are the size of the viewport, line width and blend constants. If you want to do that, then you'll have to fill in a `vk::PipelineDynamicStateCreateInfo` structure like this:
+有一部分状态是可以在不重新创建管线的情况下改变的。例如视口的大小、线宽和混合常量。如果你想这么做，那么你需要填充一个 `vk::PipelineDynamicStateCreateInfo` 结构体：
 
 ```rust,noplaypen
 let dynamic_states = &[
@@ -232,15 +245,13 @@ let dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
     .dynamic_states(dynamic_states);
 ```
 
-This will cause the configuration of these values to be ignored and you will be required to specify the data at drawing time. We'll get back to this in a future chapter. This struct can be omitted if you don't have any dynamic state.
+这会使得这些值（视口和线宽）的设置被忽略，你需要在绘制时指定这些值。我们会在后面的章节再讨论这个结构体。如果你没有任何动态状态，那么你可以忽略这个结构体。
 
-## Pipeline layout
+## 管线布局
 
-You can use `uniform` values in shaders, which are globals similar to dynamic state variables that can be changed at drawing time to alter the behavior of your shaders without having to recreate them. They are commonly used to pass the transformation matrix to the vertex shader, or to create texture samplers in the fragment shader.
+你可以在着色器中使用 `uniform` 值，它们类似于动态状态变量，可以在不重新创建着色器的前提下，在绘制时改变着色器的行为。它们通常用于将变换矩阵或是纹理采样器传递给顶点着色器。尽管我们在本章中不会使用它们，但我们仍然需要在管线创建时指定一个空的管线布局。
 
-These uniform values need to be specified during pipeline creation by creating a `vk::PipelineLayout` object. Even though we won't be using them until a future chapter, we are still required to create an empty pipeline layout.
-
-Create an `AppData` field to hold this object, because we'll refer to it from other functions at a later point in time:
+在 `AppData` 中添加一个 `pipeline_layout` 字段，因为我们会在别的函数中用到它：
 
 ```rust,noplaypen
 struct AppData {
@@ -249,7 +260,7 @@ struct AppData {
 }
 ```
 
-And then create the object in the `create_pipeline` function just above the calls to `destroy_shader_module`:
+然后在 `create_pipeline` 函数中，在调用 `destroy_shader_module` 之前创建这个对象：
 
 ```rust,noplaypen
 let layout_info = vk::PipelineLayoutCreateInfo::builder();
@@ -257,7 +268,9 @@ let layout_info = vk::PipelineLayoutCreateInfo::builder();
 data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
 ```
 
-The structure also specifies *push constants*, which are another way of passing dynamic values to shaders that we may get into in a future chapter. The pipeline layout will be referenced throughout the program's lifetime, so it should be destroyed in `App::destroy`:
+这个结构体也用于指定*推式常量* —— 另一种给着色器传递动态值的方式，我们会在后面的章节中介绍。
+
+管线布局会在整个程序的生存期中被引用，所以它应该在 `App::destroy` 中被销毁：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -266,8 +279,8 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Conclusion
+## 结论
 
-That's it for all of the fixed-function state! It's a lot of work to set all of this up from scratch, but the advantage is that we're now nearly fully aware of everything that is going on in the graphics pipeline! This reduces the chance of running into unexpected behavior because the default state of certain components is not what you expect.
+这就是所有的固定功能状态！从零开始配置这些状态是一项很大的工作，但好处是我们现在几乎完全了解了图形管线中发生的一切！这降低了因为某些组件的默认状态与你期望的不同，而导致意外行为的可能性。
 
-There is however one more object to create before we can finally create the graphics pipeline and that is a render pass.
+我们还要创建一样东西来完成图形管线，那就是渲染流程（render pass）。
