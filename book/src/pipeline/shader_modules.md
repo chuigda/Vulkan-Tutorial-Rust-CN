@@ -8,33 +8,36 @@
 
 不同于以往的 API，Vulkan 中的着色器代码不是以 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) 或者 [HLSL](https://en.wikipedia.org/wiki/High-Level_Shading_Language) 这种形式指定的，而是以一种被称为 [SPIR-V](https://www.khronos.org/spir) 的字节码格式指定的。Vulkan 和 OpenCL（都是 Knronos 的 API）都使用这种字节码格式。这种格式既可以用于图形着色器，也可以用于计算着色器，不过本书中我们会关注其中与图形管线有关的部分。
 
-Unlike earlier APIs, shader code in Vulkan has to be specified in a bytecode format as opposed to human-readable syntax like [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) and [HLSL](https://en.wikipedia.org/wiki/High-Level_Shading_Language). This bytecode format is called [SPIR-V](https://www.khronos.org/spir) and is designed to be used with both Vulkan and OpenCL (both Khronos APIs). It is a format that can be used to write graphics and compute shaders, but we will focus on shaders used in Vulkan's graphics pipelines in this tutorial.
+字节码格式的优势在于，GPU 厂商编写的将着色器代码转换为本地代码的编译器可以简单得多。过去的经验表明，如果使用 GLSL 这种人类可读的语法，一些 GPU 厂商对标准的解释是相当灵活的。如果你恰好使用了这些厂商的 GPU，编写了一些非平凡（non-trivial）的着色器，那么你的代码可能会因为语法错误而被其他厂商的驱动程序拒绝，或者可能更糟，由于编译器的 bug，你的着色器可能会以不同的方式运行。使用 SPIR-V 这种直接的字节码格式，这种情况有望得到避免。
 
-The advantage of using a bytecode format is that the compilers written by GPU vendors to turn shader code into native code are significantly less complex. The past has shown that with human-readable syntax like GLSL, some GPU vendors were rather flexible with their interpretation of the standard. If you happen to write non-trivial shaders with a GPU from one of these vendors, then you'd risk other vendor's drivers rejecting your code due to syntax errors, or worse, your shader running differently because of compiler bugs. With a straightforward bytecode format like SPIR-V that will hopefully be avoided.
+不过，我们也不用手写字节码。Khronos 发行了他们的制造商无关的编译器，能够将 GLSL 编译为 SPIR-V 格式。该编译器能验证着色器代码符合标准，并生成 SPIR-V 二进制供你的程序使用。你也可以将这个编译期作为库引入你的程序，这样就能在运行时编译着色器代码了，不过在本教程中我们不这么做。
 
-However, that does not mean that we need to write this bytecode by hand. Khronos has released their own vendor-independent compiler that compiles GLSL to SPIR-V. This compiler is designed to verify that your shader code is fully standards compliant and produces one SPIR-V binary that you can ship with your program. You can also include this compiler as a library to produce SPIR-V at runtime, but we won't be doing that in this tutorial. Although we can use this compiler directly via `glslangValidator.exe`, we will be using `glslc.exe` by Google instead. The advantage of `glslc` is that it uses the same parameter format as well-known compilers like GCC and Clang and includes some extra functionality like *includes*. Both of them are already included in the Vulkan SDK, so you don't need to download anything extra.
+尽管我们可以直接通过 `glslangValidator.exe` 使用这个编译器，本教程中我们会使用由 Google 开发的 `glslc.exe`。`glslc` 的优势在于它与 GCC 和 Clang 这样的广为人知的编译器使用相同的命令行参数格式，并且支持一些额外的功能，例如 `#include`。这两个编译器都包含在 Vulkan SDK 中，所以你不需要额外下载任何东西。
 
-GLSL is a shading language with a C-style syntax. Programs written in it have a `main` function that is invoked for every object. Instead of using parameters for input and a return value as output, GLSL uses global variables to handle input and output. The language includes many features to aid in graphics programming, like built-in vector and matrix primitives. Functions for operations like cross products, matrix-vector products and reflections around a vector are included. The vector type is called `vec` with a number indicating the amount of elements. For example, a 3D position would be stored in a `vec3`. It is possible to access single components through fields like `.x`, but it's also possible to create a new vector from multiple components at the same time. For example, the expression `vec3(1.0, 2.0, 3.0).xy` would result in `vec2`. The constructors of vectors can also take combinations of vector objects and scalar values. For example, a `vec3` can be constructed with `vec3(vec2(1.0, 2.0), 3.0)`.
+GLSL 是一种使用类 C 语法的着色器语言。使用 GLSL 编写的程序包含了一个 main 函数，这一函数完成具体的运算操作。GLSL 使用全局变量进行输入输出，而不是使用参数和返回值。GLSL 语言本身包含了许多用于图形编程的特性，例如内建的向量和矩阵类型，用于叉乘和矩阵乘法的函数，以及用于计算反射向量的函数。
 
-As the previous chapter mentioned, we need to write a vertex shader and a fragment shader to get a triangle on the screen. The next two sections will cover the GLSL code of each of those and after that I'll show you how to produce two SPIR-V binaries and load them into the program.
+在 GLSL 中，向量类型使用 `vec` 加上一个表示向量元素的数字来命名。例如，一个三维空间中的位置可以用 `vec` 存储。可以通过 `.x` 这样的字段访问向量的单个分量，也可以通过一次性指定多个分量来创建一个新的向量。例如，表达式 `vec3(1.0, 2.0, 3.0).xy` 的结果是 `vec2`。向量的构造函数可以接受向量对象和标量值的组合。例如，可以使用 `vec3(vec2(1.0, 2.0), 3.0)` 来构造一个 `vec3`。
 
-## Vertex shader
+如我们在之前的章节中所提到的，要绘制一个三角形，我们需要编写一个顶点着色器和一个片元着色器。接下来的两节中我们会分别介绍这两个着色器的 GLSL 代码，之后我们会展示如何生成两个 SPIR-V 二进制文件，并将它们加载到程序中。
 
-The vertex shader processes each incoming vertex. It takes its attributes, like world position, color, normal and texture coordinates as input. The output is the final position in clip coordinates and the attributes that need to be passed on to the fragment shader, like color and texture coordinates. These values will then be interpolated over the fragments by the rasterizer to produce a smooth gradient.
+## 顶点着色器
 
-A *clip coordinate* is a four dimensional vector from the vertex shader that is subsequently turned into a *normalized device coordinate* by dividing the whole vector by its last component. These normalized device coordinates are [homogeneous coordinates](https://en.wikipedia.org/wiki/Homogeneous_coordinates) that map the framebuffer to a [-1, 1] by [-1, 1] coordinate system that looks like the following:
+顶点着色器处理每个传入的顶点。它以顶点的属性 —— 例如世界坐标、颜色、法线和纹理坐标 —— 作为输入，输出最终的裁剪坐标（clip coordinates）和需要传递给片元着色器的属性，例如颜色和纹理坐标。这些值将由光栅化器（rasterizer）在片元上进行插值，从而产生平滑的渐变。
+
+
+*裁剪坐标*是一个顶点着色器输出的四维向量，它的四个分量会被除以第四个分量，从而产生一个*标准化设备坐标*（normalized device coordinate）。这些归一化设备坐标是 [齐次坐标](https://en.wikipedia.org/wiki/Homogeneous_coordinates)（homogeneous coordinates），它将帧缓冲映射到一个 `[-1, 1] × [-1, 1]` 的坐标系中，如下图所示：
 
 ![](../images/normalized_device_coordinates.svg)
 
-You should already be familiar with these if you have dabbled in computer graphics before. If you have used OpenGL before, then you'll notice that the sign of the Y coordinates is now flipped. The Z coordinate now uses the same range as it does in Direct3D, from 0 to 1.
+如果你之前涉足过计算机图形学，你应该不会对这些东西感到陌生。而如果你曾使用过 OpenGL，那么你会注意到这里的 Y 轴和 OpenGL 是相反的，而 Z 轴则使用和 Direct3D 相同的范围，即从 `0` 到 `1`。
 
-For our first triangle we won't be applying any transformations, we'll just specify the positions of the three vertices directly as normalized device coordinates to create the following shape:
+对于我们的第一个三角形，我们不会应用任何变换，而是直接指定三个顶点的标准化设备坐标，从而创建如下图所示的形状：
 
 ![](../images/triangle_coordinates.svg)
 
-We can directly output normalized device coordinates by outputting them as clip coordinates from the vertex shader with the last component set to `1`. That way the division to transform clip coordinates to normalized device coordinates will not change anything.
+我们可以直接从顶点着色器输出标准化设备坐标 —— 只需要通过裁剪坐标将它们从顶点着色器输出，并将最后一个分量设置为 `1`，这样，将裁剪坐标转换为标准化设备坐标的除法就不会改变任何东西。
 
-Normally these coordinates would be stored in a vertex buffer, but creating a vertex buffer in Vulkan and filling it with data is not trivial. Therefore I've decided to postpone that until after we've had the satisfaction of seeing a triangle pop up on the screen. We're going to do something a little unorthodox in the meanwhile: include the coordinates directly inside the vertex shader. The code looks like this:
+通常情况下，这些坐标应该存储在顶点缓冲（vertex buffer）中，但在 Vulkan 中创建并填充顶点缓冲并不是什么轻松的事。为了尽快让我们看到三角形，我们暂时将这些坐标直接包含在顶点着色器中。代码如下：
 
 ```glsl
 #version 450
@@ -50,11 +53,11 @@ void main() {
 }
 ```
 
-The `main` function is invoked for every vertex. The built-in `gl_VertexIndex` variable contains the index of the current vertex. This is usually an index into the vertex buffer, but in our case it will be an index into a hardcoded array of vertex data. The position of each vertex is accessed from the constant array in the shader and combined with dummy `z` and `w` components to produce a position in clip coordinates. The built-in variable `gl_Position` functions as the output.
+`main` 函数会对每个顶点执行一次。GLSL 内建的 `gl_VertexIndex` 中存储了当前顶点的索引，这一索引通常是用来引用顶点缓冲中定点数据的，不过这里我们用它来索引一个硬编码的顶点数据数组。每个顶点的位置从着色器中的常量数组中获取，并与 `z` 和 `w` 分量组合，从而产生一个裁剪坐标。最后，我们将顶点的位置通过 `gl_Position` 内建变量输出。
 
-## Fragment shader
+## 片元着色器
 
-The triangle that is formed by the positions from the vertex shader fills an area on the screen with fragments. The fragment shader is invoked on these fragments to produce a color and depth for the framebuffer (or framebuffers). A simple fragment shader that outputs the color red for the entire triangle looks like this:
+由顶点着色器输出的顶点位置组成的三角形将会填充屏幕上一定范围内片元。片元着色器会对每个片元运行，输出帧缓冲上对应位置的颜色和深度。一个简单的将整个三角形填充为红色的片元着色器如下所示：
 
 ```glsl
 #version 450
@@ -66,15 +69,15 @@ void main() {
 }
 ```
 
-The `main` function is called for every fragment just like the vertex shader `main` function is called for every vertex. Colors in GLSL are 4-component vectors with the R, G, B and alpha channels within the [0, 1] range. Unlike `gl_Position` in the vertex shader, there is no built-in variable to output a color for the current fragment. You have to specify your own output variable for each framebuffer where the `layout(location = 0)` modifier specifies the index of the framebuffer. The color red is written to this `outColor` variable that is linked to the first (and only) framebuffer at index `0`.
+类似于顶点着色器的 `main` 函数，片元着色器的 `main` 函数会对每个片元执行一次。GLSL 中的颜色是一个四维向量，四个分量分别对应 R、G、B 和 alpha 四个通道，每个分量的取值范围都是 `[0, 1]`。不同于顶点着色器中的 `gl_Position`，片元着色器中没有用于输出颜色的内建变量。你必须为每个帧缓冲指定一个输出变量，并用`layout` 指定帧缓冲的索引。这里，我们将红色写入到 `outColor` 变量中，这一变量与索引为 `0` 的帧缓冲（也是唯一的帧缓冲）绑定。
 
-## Per-vertex colors
+## 逐顶点着色
 
-Making the entire triangle red is not very interesting, wouldn't something like the following look a lot nicer?
+整个三角形都是红色，一点都不好玩。你不觉得下面这样看起来更有趣吗？
 
 ![](../images/triangle_coordinates_colors.png)
 
-We have to make a couple of changes to both shaders to accomplish this. First off, we need to specify a distinct color for each of the three vertices. The vertex shader should now include an array with colors just like it does for positions:
+我们对连个着色器进行一些修改来实现这个效果。首先，我们为每个顶点指定各自的颜色。在顶点着色器中加入这样一个颜色数组：
 
 ```glsl
 vec3 colors[3] = vec3[](
@@ -84,7 +87,7 @@ vec3 colors[3] = vec3[](
 );
 ```
 
-Now we just need to pass these per-vertex colors to the fragment shader so it can output their interpolated values to the framebuffer. Add an output for color to the vertex shader and write to it in the `main` function:
+接着，我们将这些顶点的颜色传递给片元着色器，片元着色器就能将插值后的颜色输出到帧缓冲。在顶点着色器中添加一个颜色输出变量，并在 `main` 函数中写入它：
 
 ```glsl
 layout(location = 0) out vec3 fragColor;
@@ -95,7 +98,7 @@ void main() {
 }
 ```
 
-Next, we need to add a matching input in the fragment shader:
+接着，我们在片元着色器中加入一个对应的输入变量：
 
 ```glsl
 layout(location = 0) in vec3 fragColor;
@@ -105,13 +108,13 @@ void main() {
 }
 ```
 
-The input variable does not necessarily have to use the same name, they will be linked together using the indexes specified by the `location` directives. The `main` function has been modified to output the color along with an alpha value. As shown in the image above, the values for `fragColor` will be automatically interpolated for the fragments between the three vertices, resulting in a smooth gradient.
+这个输入变量不一定要和顶点着色器中的输出变量使用相同的颜色，因为它们会根据 `location` 指令指定的索引被链接到一起。`main` 函数现在它会输出从 `fragColor` 读取的颜色和 alpha 值。如上图所示，`fragColor` 的值会自动在三个顶点之间进行插值，从而产生平滑的渐变。
 
-## Compiling the shaders
+## 编译着色器
 
-Create a directory called `shaders` in the root directory of your project (adjacent to the `src` directory) and store the vertex shader in a file called `shader.vert` and the fragment shader in a file called `shader.frag` in that directory. GLSL shaders don't have an official extension, but these two are commonly used to distinguish them.
+在你工程的根目录里创建一个名为 `shader` 的文件夹（与 `src` 文件夹相邻），并将顶点着色器保存到 `shader.vert` 文件中，将片元着色器保存到 `shader.frag` 文件中。GLSL 着色器没有官方的文件扩展名，但是 `.vert` 和 `.frag` 这两个扩展名比较常用。
 
-The contents of `shader.vert` should be:
+`shader.vert` 的内容如下：
 
 ```glsl
 #version 450
@@ -136,7 +139,7 @@ void main() {
 }
 ```
 
-And the contents of `shader.frag` should be:
+而 `shader.frag` 的内容如下：
 
 ```glsl
 #version 450
@@ -150,11 +153,11 @@ void main() {
 }
 ```
 
-We're now going to compile these into SPIR-V bytecode using the `glslc` program.
+接下来，我们使用 `glslc` 程序将这些着色器编译为 SPIR-V 字节码。
 
 **Windows**
 
-Create a `compile.bat` file with the following contents:
+创建一个包含以下命令的 `compile.bat` 文件：
 
 ```bash
 C:/VulkanSDK/x.x.x.x/Bin32/glslc.exe shader.vert -o vert.spv
@@ -162,30 +165,34 @@ C:/VulkanSDK/x.x.x.x/Bin32/glslc.exe shader.frag -o frag.spv
 pause
 ```
 
-Replace the path to `glslc.exe` with the path to where you installed the Vulkan SDK. Double click the file to run it.
+把 `glslc.exe` 的路径替换为你安装 Vulkan SDK 的路径，双击这个文件来运行它。
 
 **Linux**
 
-Create a `compile.sh` file with the following contents:
+创建一个包含以下命令的 `compile.sh` 文件：
 
 ```bash
 /home/user/VulkanSDK/x.x.x.x/x86_64/bin/glslc shader.vert -o vert.spv
 /home/user/VulkanSDK/x.x.x.x/x86_64/bin/glslc shader.frag -o frag.spv
 ```
 
-Replace the path to `glslc` with the path to where you installed the Vulkan SDK. Make the script executable with `chmod +x compile.sh` and run it.
+将 `glslc` 的路径替换为你安装 Vulkan SDK 的路径。使用 `chmod +x compile.sh` 命令将这个脚本变得可执行，然后运行它。
 
-**End of platform-specific instructions**
+<div style="color: gray; user-select: none">
+我是一条可爱的分割线，诶嘿诶嘿地爬 _(ÒωÓ๑ゝ∠)_
+</div>
 
-These two commands tell the compiler to read the GLSL source file and output a SPIR-V bytecode file using the `-o` (output) flag.
+这两条命令告诉编译器从 GLSL 源文件中读取代码，并输出一个 SPIR-V 字节码文件。
 
-If your shader contains a syntax error then the compiler will tell you the line number and problem, as you would expect. Try leaving out a semicolon for example and run the compile script again. Also try running the compiler without any arguments to see what kinds of flags it supports. It can, for example, also output the bytecode into a human-readable format so you can see exactly what your shader is doing and any optimizations that have been applied at this stage.
+如果你的着色器代码中有语法问题，编译器会告诉你问题所在。你可以试着故意遗漏一个逗号然后重新运行编译脚本。
 
-Compiling shaders on the commandline is one of the most straightforward options and it's the one that we'll use in this tutorial, but it's also possible to compile shaders directly from your own code. The Vulkan SDK includes [libshaderc](https://github.com/google/shaderc), which is a library to compile GLSL code to SPIR-V from within your program.
+你也可以在不带任何参数的情况下运行编译器，这样就能看到它支持的命令行参数。例如，它可以输出人类可读的字节码，这样你就能看到你的着色器在做什么，以及编译器对它做了哪些优化。
 
-## Loading a shader
+用命令行编译着色器是比较直观的方式，本教程中我们会一直沿用这种方式，不过你也可以在你的应用程序中直接编译着色器。Vulkan SDK 包含了 [libshaderc](https://github.com/google/shaderc)，它是一个库，你的程序可以用它在运行时直接将 GLSL 代码编译为 SPIR-V 字节码。
 
-Now that we have a way of producing SPIR-V shaders, it's time to bring them into our program to plug them into the graphics pipeline at some point. We'll start by using [`include_bytes!`](https://doc.rust-lang.org/stable/std/macro.include_bytes.html) from the Rust standard library to include the compiled SPIR-V bytecode for the shaders in our executable.
+## 加载着色器
+
+现在我们有了创建 SPIR-V 着色器的方式，是时候把它们引入我们的程序中，并插入渲染管线了。我们会使用 Rust 标准库中的 [`include_bytes!`](https://doc.rust-lang.org/stable/std/macro.include_bytes.html) 宏来将编译后的 SPIR-V 字节码包含进我们的程序中：
 
 ```rust,noplaypen
 unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
@@ -196,9 +203,9 @@ unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
 }
 ```
 
-## Creating shader modules
+## 创建着色器模块
 
-Before we can pass the code to the pipeline, we have to wrap it in a `vk::ShaderModule` object. Let's create a helper function `create_shader_module` to do that.
+我们需要将着色器代码包装在一个 `vk::ShaderModule` 对象中才能将其传递给管线。让我们创建一个辅助函数 `create_shader_module` 来完成这一工作：
 
 ```rust,noplaypen
 unsafe fn create_shader_module(
@@ -208,9 +215,16 @@ unsafe fn create_shader_module(
 }
 ```
 
-The function will take a slice containing the bytecode as parameter and create a `vk::ShaderModule` from it using our logical device.
+这个函数接受一个包含字节码的切片作为参数，并使用我们的逻辑设备，用字节码创建一个 `vk::ShaderModule` 对象。
 
+<!-- Chuigda: 我认为原文作者这里写的有问题，这完全就是在吃 malloc 的特性，一点稳定性都没有。
+我认为这地方应该至少 memcpy 一波
+我之后会给原作者开 PR 讨论这个问题，现在先这么翻译。 -->
+创建着色器模块很简单，只要指定字节码切片的长度和字节码切片本身就行。这些信息被包含在 `vk::ShaderModuleCreateInfo` 结构体中。唯一的问题是，字节码的长度是以字节为单位指定的，但是这个结构体中的字节码切片是 `&[u32]` 而不是 `&[u8]`。因此，我们需要先将 `&[u8]` 转换为 `&[u32]`。我们将使用 [`slice::align_to`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.align_to) 来完成这一转换，它可以将一个切片转换为一个包含不同大小和/或对齐要求的类型的切片。然而，`include_bytes!` 返回的 `&[u8]` 可能不满足我们的对齐要求，所以我们首先将它复制到一个 `Vec` 中。
+
+<!--
 Creating a shader module is simple, we only need to specify the length of our bytecode slice and the bytecode slice itself. This information is specified in a `vk::ShaderModuleCreateInfo` structure. The one catch is that the size of the bytecode is specified in bytes, but the bytecode slice expected by this struct is a `&[u32]` instead of a `&[u8]`. Therefore we will first need to convert our `&[u8]` into an `&[u32]`. We will accomplish this with [`slice::align_to`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.align_to) which can be used to convert a slice into a slice containing a type with a different size and/or alignment requirements. However, the `&[u8]` returned by `include_bytes!` may not meet our alignment requirements, so we'll first copy it into a `Vec`.
+-->
 
 ```rust,noplaypen
 let bytecode = Vec::<u8>::from(bytecode);
@@ -220,9 +234,9 @@ if !prefix.is_empty() || !suffix.is_empty() {
 }
 ```
 
-The middle slice returned by this method (`code`) is a `&[u32]` and is guaranteed to be correctly aligned. Any `u8`s in our `bytecode` slice that fell outside this alignment guarantee will appear in the first or third slices returned (`prefix` and `suffix`). We'll require that both of these slices are empty to ensure that our entire `bytecode` slice has been converted to a `&[u32]` though you shouldn't have to worry about this failure case in practice.
+`align_to` 方法返回的中间部分切片（`code`）具有 `&[u32]` 类型，并且一定具有正确的对齐。我们的 `bytecode` 切片中的任何 `u8`，如果不满足这一对齐要求，都会出现在返回的第一个或第三个切片中（`prefix` 和 `suffix`）。我们要求这两个切片都为空，以确保我们的整个 `bytecode` 切片都已经转换为 `&[u32]`，不过在实践中你不用担心这种失败情况。<!-- 屁咧 -->
 
-We can then construct a `vk::ShaderModuleCreateInfo` and use it to call `create_shader_module` to create the shader module:
+接着我们创建 `vk::ShaderModuleCreateInfo` 并用它调用 `create_shader_module` 来创建着色器模块：
 
 ```rust,noplaypen
 let info = vk::ShaderModuleCreateInfo::builder()
@@ -232,9 +246,9 @@ let info = vk::ShaderModuleCreateInfo::builder()
 Ok(device.create_shader_module(&info, None)?)
 ```
 
-The parameters are the same as those in previous object creation functions: the create info structure and the optional custom allocators.
+这里的参数还是跟之前的对象创建函数一样：创建信息结构体和可选的自定义分配器。
 
-Shader modules are just a thin wrapper around the shader bytecode that we've previously loaded from a file and the functions defined in it. The compilation and linking of the SPIR-V bytecode to machine code for execution by the GPU doesn't happen until the graphics pipeline is created. That means that we're allowed to destroy the shader modules again as soon as pipeline creation is finished, which is why we'll make them local variables in the `create_pipeline` function instead of fields in `AppData`:
+着色器模块只是对我们从文件加载的着色器字节码的轻度封装。在图形管线创建的时候，这些 SPIR-V 字节码才会被编译链接为可以执行的机器码。也就是说，我们可以在渲染管线之后马上销毁着色器模块，这就使得我们可以把着色器模块写成 `create_pipeline` 函数中的局部变量，而不用放到 `AppData` 结构体中：
 
 ```rust,noplaypen
 unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
@@ -247,7 +261,7 @@ unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
     // ...
 ```
 
-The cleanup should then happen at the end of the function by adding two calls to `destroy_shader_module`. All of the remaining code in this chapter will be inserted before these lines.
+清理工作应该放在函数的最后，我们在这里添加两个对 `destroy_shader_module` 的调用。本章剩下的代码都会插入到这两行代码之前。
 
 ```rust,noplaypen
     // ...
@@ -259,11 +273,11 @@ The cleanup should then happen at the end of the function by adding two calls to
 }
 ```
 
-## Shader stage creation
+## 创建着色器阶段
 
-To actually use the shaders we'll need to assign them to a specific pipeline stage through `vk::PipelineShaderStageCreateInfo` structures as part of the actual pipeline creation process.
+要使用这些着色器，我们要在创建管线的时候通过 `vk::PipelineShaderStageCreationInfo` 将它们分配给特定的管线阶段。
 
-We'll start by filling in the structure for the vertex shader, again in the `create_pipeline` function.
+我们从顶点着色器开始，在 `create_pipeline` 函数中添加以下代码：
 
 ```rust,noplaypen
 let vert_stage = vk::PipelineShaderStageCreateInfo::builder()
@@ -272,13 +286,13 @@ let vert_stage = vk::PipelineShaderStageCreateInfo::builder()
     .name(b"main\0");
 ```
 
-The first step is telling Vulkan in which pipeline stage the shader is going to be used. There is a variant for each of the programmable stages described in the previous chapter.
+第一步告诉 Vulkan 着色器将会在哪个管线阶段使用。每个可编程阶段都有一个对应的枚举变体。<!-- 我们在上一章中已经介绍过了。—— 个屁 -->
 
-The next two fields specify the shader module containing the code, and the function to invoke, known as the *entrypoint*. That means that it's possible to combine multiple fragment shaders into a single shader module and use different entry points to differentiate between their behaviors. In this case we'll stick to the standard `main`, however.
+接下来的两个字段指定了包含代码的着色器模块，以及要执行的函数，也就是*入口点*。这意味着你可以将多个片元着色器组合到一个着色器模块中，并使用不同的入口点来区分它们的行为。在这里我们仍然使用标准的 `main`。
 
-There is one more (optional) member, `specialization_info`, which we won't be using here, but is worth discussing. It allows you to specify values for shader constants. You can use a single shader module where its behavior can be configured at pipeline creation by specifying different values for the constants used in it. This is more efficient than configuring the shader using variables at render time, because the compiler can do optimizations like eliminating `if` statements that depend on these values. If you don't have any constants like that, then you can just skip setting it as we are doing here.
+还有一个可选的成员 `specialization_info`，这里我们不会用到它，但是值得讨论一下。它允许你为着色器常量指定值。你可以使用单个着色器模块，在管线创建的时候通过为其中的常量指定不同的值来配置它的行为。这比在渲染时使用变量来配置着色器更高效，因为编译器可以做一些优化，例如消除依赖于这些值的 `if` 语句。如果你没有这样的常量，那么你可以像我们这里一样跳过设置它。
 
-Modifying the structure to suit the fragment shader is easy:
+仿照着再写一段用于片元着色器的代码就很简单了：
 
 ```rust,noplaypen
 let frag_stage = vk::PipelineShaderStageCreateInfo::builder()
@@ -287,4 +301,4 @@ let frag_stage = vk::PipelineShaderStageCreateInfo::builder()
     .name(b"main\0");
 ```
 
-That's all there is to describing the programmable stages of the pipeline. In the next chapter we'll look at the fixed-function stages.
+这就是描述管线的可编程阶段的全部内容。在下一章中，我们会配置管线的固定功能阶段。
