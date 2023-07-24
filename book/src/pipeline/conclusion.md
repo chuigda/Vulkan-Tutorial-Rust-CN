@@ -1,15 +1,18 @@
-# Conclusion
+# 总结
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/12_graphics_pipeline_complete.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/pipeline/conclusion.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-We can now combine all of the structures and objects from the previous chapters to create the graphics pipeline! Here's the types of objects we have now, as a quick recap:
+**本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/12_graphics_pipeline_complete.rs)
 
-* Shader stages &ndash; the shader modules that define the functionality of the programmable stages of the graphics pipeline
-* Fixed-function state &ndash; all of the structures that define the fixed-function stages of the pipeline, like input assembly, rasterizer, viewport and color blending
-* Pipeline layout &ndash; the uniform and push values referenced by the shader that can be updated at draw time
-* Render pass &ndash; the attachments referenced by the pipeline stages and their usage
+现在我们可以开始组合前几章中创建的所有结构和对象来创建图形管线了！回顾一下我们现在有的对象:
 
-All of these combined fully define the functionality of the graphics pipeline, so we can now begin filling in the `vk::GraphicsPipelineCreateInfo` structure at the end of the `create_pipeline` function (but before the shader modules are destroyed). But before the calls to `DeviceV1_0:::destroy_shader_module` because these are still to be used during the creation.
+* 着色器阶段 &ndash; 着色器单元定义的图形管线中的可编程阶段
+* 固定功能状态 &ndash; 管线中所有定义固定功能阶段的结构，例如输入组装、光栅化器、视口和颜色混合
+* 管线布局 &ndash; 定义着色器引用的可以在绘制时更新的 `uniform` 值和推式常量
+
+这些对象定义了图形管线的方方面面。现在我们可以在 `create_pipeline` 函数的末尾（但要在着色器模块销毁之前）开始填充 `vk::GraphicsPipelineCreateInfo` 了。
 
 ```rust,noplaypen
 let stages = &[vert_stage, frag_stage];
@@ -18,7 +21,7 @@ let info = vk::GraphicsPipelineCreateInfo::builder()
     // continued...
 ```
 
-We start by providing an array of the `vk::PipelineShaderStageCreateInfo` structs.
+我们首先提供一个 `vk::PipelineShaderStageCreateInfo` 结构体的数组。
 
 ```rust,noplaypen
     .vertex_input_state(&vertex_input_state)
@@ -29,29 +32,29 @@ We start by providing an array of the `vk::PipelineShaderStageCreateInfo` struct
     .color_blend_state(&color_blend_state)
 ```
 
-Then we reference all of the structures describing the fixed-function stage.
+接着我们引用所有描述固定功能阶段的结构体。
 
 ```rust,noplaypen
     .layout(data.pipeline_layout)
 ```
 
-After that comes the pipeline layout, which is a Vulkan handle rather than a struct reference.
+然后是管线布局。
 
 ```rust,noplaypen
     .render_pass(data.render_pass)
     .subpass(0);
 ```
 
-And finally we have the reference to the render pass and the index of the sub pass where this graphics pipeline will be used. It is also possible to use other render passes with this pipeline instead of this specific instance, but they have to be *compatible* with `render_pass`. The requirements for compatibility are described [here](https://www.khronos.org/registry/vulkan/specs/1.2/html/vkspec.html#renderpass-compatibility), but we won't be using that feature in this tutorial.
+最后引用之前创建的渲染流程，以及图形管线将要使用的子流程在子流程数组中的索引。在这个渲染管线上使用其他的渲染流程也是可以的，但这些渲染流程之间必须*相互兼容*。[这里](https://www.khronos.org/registry/vulkan/specs/1.2/html/vkspec.html#renderpass-compatibility)给出了关于兼容性的描述，不过本教程中我们不会使用这个特性。
 
 ```rust,noplaypen
-    .base_pipeline_handle(vk::Pipeline::null()) // Optional.
-    .base_pipeline_index(-1)                    // Optional.
+    .base_pipeline_handle(vk::Pipeline::null()) // 可选.
+    .base_pipeline_index(-1)                    // 可选.
 ```
 
-There are actually two more parameters: `base_pipeline_handle` and `base_pipeline_index`. Vulkan allows you to create a new graphics pipeline by deriving from an existing pipeline. The idea of pipeline derivatives is that it is less expensive to set up pipelines when they have much functionality in common with an existing pipeline and switching between pipelines from the same parent can also be done quicker. You can either specify the handle of an existing pipeline with `base_pipeline_handle` or reference another pipeline that is about to be created by index with `base_pipeline_index`. Right now there is only a single pipeline, so we'll simply specify a null handle and an invalid index. These values are only used if the `vk::PipelineCreateFlags::DERIVATIVE` flag is also specified in the `flags` field of `vk::GraphicsPipelineCreateInfo`.
+实际上还有两个参数：`base_pipeline_handle` 和 `base_pipeline_index`。Vulkan 允许你派生一个现有的图形管线来创建新的图形管线。管线派生的意义在于，如果新的管线和旧的管线有很多相似之处，这样做就能减少很多开销；在同一个亲代（parent）派生出的图形管线之间切换也更快。你可以使用 `base_pipeline_handle` 通过句柄来指定一个现有的管线，或者使用 `base_pipeline_index` 通过索引来指定一个即将创建的管线。现在我们只有一个管线，所以我们会简单地指定一个空句柄和一个无效索引。只有在 `vk::GraphicsPipelineCreateInfo` 的 `flags` 字段中也指定了 `vk::PipelineCreateFlags::DERIVATIVE` 标志时，这些值才会被使用。
 
-Now prepare for the final step by creating a field in `AppData` to hold the `vk::Pipeline` object:
+现在，在 `AppData` 中添加一个字段来存储 `vk::Pipeline` 对象：
 
 ```rust,noplaypen
 struct AppData {
@@ -60,18 +63,18 @@ struct AppData {
 }
 ```
 
-And finally create the graphics pipeline:
+然后在 `App::create` 中创建图形管线：
 
 ```rust,noplaypen
 data.pipeline = device.create_graphics_pipelines(
     vk::PipelineCache::null(), &[info], None)?.0[0];
 ```
 
-The `create_graphics_pipelines` function actually has more parameters than the usual object creation functions in Vulkan. It is designed to take multiple `vk::GraphicsPipelineCreateInfo` objects and create multiple `vk::Pipeline` objects in a single call.
+`create_graphics_pipelines` 函数的参数比 Vulkan 中通常的对象创建函数要多。它被设计为可以一次性接受多个 `vk::GraphicsPipelineCreateInfo` 对象并创建多个 `vk::Pipeline` 对象。
 
-The first parameter, for which we've passed the `vk::PipelineCache::null()` argument, references an optional `vk::PipelineCache` object. A pipeline cache can be used to store and reuse data relevant to pipeline creation across multiple calls to `create_graphics_pipelines` and even across program executions if the cache is stored to a file. This makes it possible to significantly speed up pipeline creation at a later time.
+第一个参数是一个对 `vk::PipelineCache` 的引用，这个参数是可选的，我们为其传递 `vk::PipelineCache::null()`。管线缓存可以用来在多次调用 `create_graphics_pipelines` 时存储和重用管线创建相关的数据，甚至可以在程序执行结束后从文件中读取缓存。这样可以显著提高管线创建的速度。
 
-The graphics pipeline is required for all common drawing operations, so it should also only be destroyed at the end of the program in `App::destroy`:
+图形管线会在所有的绘制操作中使用，所以它也应该在 `App::destroy` 中被销毁：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -80,4 +83,4 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-Now run your program to confirm that all this hard work has resulted in a successful pipeline creation! We are already getting quite close to seeing something pop up on the screen. In the next couple of chapters we'll set up the actual framebuffers from the swapchain images and prepare the drawing commands.
+现在运行程序，来确定*我们一直以来的努力并非全部白费*。现在，我们离看到屏幕上有东西出现不远了。在接下来的几章中，我们将设置交换链图像的实际帧缓冲，并准备绘制命令。
