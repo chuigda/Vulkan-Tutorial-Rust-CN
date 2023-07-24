@@ -1,8 +1,12 @@
-# Render passes
+# 渲染流程
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/11_render_passes.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/pipeline/render_passes.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-Before we can finish creating the pipeline, we need to tell Vulkan about the framebuffer attachments that will be used while rendering. We need to specify how many color and depth buffers there will be, how many samples to use for each of them and how their contents should be handled throughout the rendering operations. All of this information is wrapped in a *render pass* object, for which we'll create a new `^create_render_pass` function. Call this function from `App::create` before `create_pipeline`.
+**本章代码** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/11_render_passes.rs)
+
+在创建渲染管线之前，我们还需要设置渲染过程中将会使用的帧缓冲附件（framebuffer attachments）。我们需要指定有多少颜色和深度缓冲，每个缓冲使用多少样本数，以及渲染操作将如何处理缓冲中的内容。所有这些信息都会被装进一个*渲染流程*对象中。我们将会创建一个新的函数 `create_render_pass`，并在 `App::create` 中 `create_pipeline` 之前调用它：
 
 ```rust,noplaypen
 impl App {
@@ -23,9 +27,9 @@ unsafe fn create_render_pass(
 }
 ```
 
-## Attachment description
+## 附件描述
 
-In our case we'll have just a single color buffer attachment represented by one of the images from the swapchain. This will be represented by a `vk::AttachmentDescription` which we will build in `^create_render_pass`.
+在我们的场景中，我们只需要一个颜色附件。我们将会在 `AppData` 中创建一个 `vk::RenderPass` 字段来存放渲染流程对象：
 
 ```rust,noplaypen
 let color_attachment = vk::AttachmentDescription::builder()
@@ -34,55 +38,55 @@ let color_attachment = vk::AttachmentDescription::builder()
     // continued...
 ```
 
-The `format` of the color attachment should match the format of the swapchain images, and we're not doing anything with multisampling yet, so we'll stick to 1 sample.
+颜色附件的 `format` 字段需要与交换链图像的格式匹配。我们现在不会进行多重采样，所以我们只用 1 个样本。
 
 ```rust,noplaypen
     .load_op(vk::AttachmentLoadOp::CLEAR)
     .store_op(vk::AttachmentStoreOp::STORE)
 ```
 
-The `load_op` and `store_op` determine what to do with the data in the attachment before rendering and after rendering. We have the following choices for `load_op`:
+`load_op` 和 `store_op` 决定在渲染之前和之后对附件中的数据做什么。对于 `load_op` 我们有以下三种选择：
 
-* `vk::AttachmentLoadOp::LOAD` &ndash; Preserve the existing contents of the attachment
-* `vk::AttachmentLoadOp::CLEAR` &ndash; Clear the values to a constant at the start
-* `vk::AttachmentLoadOp::DONT_CARE` &ndash; Existing contents are undefined; we don't care about them
+* `vk::AttachmentLoadOp::LOAD` &ndash; 保留附件中已有的内容
+* `vk::AttachmentLoadOp::CLEAR` &ndash; 在渲染开始前将附件清空，为每个像素设置一个常量值
+* `vk::AttachmentLoadOp::DONT_CARE` &ndash; 附件中已有的内容是未定义的，我们不关心它们
 
-In our case we're going to use the clear operation to clear the framebuffer to black before drawing a new frame. There are only two possibilities for the `store_op`:
+在我们的场景下，我们希望在渲染新帧之前将帧缓冲清空为黑色。而 `store_op` 只有两种选择：
 
-* `vk::AttachmentStoreOp::STORE` &ndash; Rendered contents will be stored in memory and can be read later
-* `vk::AttachmentStoreOp::DONT_CARE` &ndash; Contents of the framebuffer will be undefined after the rendering operation
+* `vk::AttachmentStoreOp::STORE` &ndash; 渲染的内容将会被存储起来，以便之后读取
+* `vk::AttachmentStoreOp::DONT_CARE` &ndash; 渲染结束后帧缓冲中的内容是未定义的
 
-We're interested in seeing the rendered triangle on the screen, so we're going with the store operation here.
+我们希望在屏幕上看到渲染出来的三角形，所以我们选择 `store_op`。
 
 ```rust,noplaypen
     .stencil_load_op(vk::AttachmentLoadOp::DONT_CARE)
     .stencil_store_op(vk::AttachmentStoreOp::DONT_CARE)
 ```
 
-The `load_op` and `store_op` apply to color and depth data, and `stencil_load_op` / `stencil_store_op` apply to stencil data. Our application won't do anything with the stencil buffer, so the results of loading and storing are irrelevant.
+`load_op` 和 `store_op` 对颜色和深度数据生效，而 `stencil_load_op` 和 `stencil_store_op` 对模板数据生效。我们的应用不会使用模板缓冲，所以加载和存储的结果并不重要。
 
 ```rust,noplaypen
     .initial_layout(vk::ImageLayout::UNDEFINED)
     .final_layout(vk::ImageLayout::PRESENT_SRC_KHR);
 ```
 
-Textures and framebuffers in Vulkan are represented by `vk::Image` objects with a certain pixel format, however the layout of the pixels in memory can change based on what you're trying to do with an image.
+在 Vulkan 中，纹理和帧缓冲是以具有特定像素格式的 `vk::Image` 对象来表示的。不过你可以根据你在用图像做的事情改变图像中像素的布局。
 
-Some of the most common layouts are:
+一些常见的布局包括：
 
-* `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` &ndash; Images used as color attachment
-* `vk::ImageLayout::PRESENT_SRC_KHR` &ndash; Images to be presented in the swapchain
-* `vk::ImageLayout::TRANSFER_DST_OPTIMAL` &ndash; Images to be used as destination for a memory copy operation
+* `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` &ndash; 图像会被用作颜色附件
+* `vk::ImageLayout::PRESENT_SRC_KHR` &ndash; 图像被用在交换链中进行呈现操作
+* `vk::ImageLayout::TRANSFER_DST_OPTIMAL` &ndash; 图像用作赋值操作的目标
 
-We'll discuss this topic in more depth in the texturing chapter, but what's important to know right now is that images need to be transitioned to specific layouts that are suitable for the operation that they're going to be involved in next.
+我们会在纹理章节中对这一主题进行更深入的探讨，不过现在我们只要知道图像需要先被转换到特定的布局，以便进行下一步的操作。
 
-The `initial_layout` specifies which layout the image will have before the render pass begins. The `final_layout` specifies the layout to automatically transition to when the render pass finishes. Using `vk::ImageLayout::UNDEFINED` for `initial_layout` means that we don't care what previous layout the image was in. The caveat of this special value is that the contents of the image are not guaranteed to be preserved, but that doesn't matter since we're going to clear it anyway. We want the image to be ready for presentation using the swapchain after rendering, which is why we use `vk::ImageLayout::PRESENT_SRC_KHR` as `final_layout`.
+`initial_layout` 指定图像在渲染流程开始前所具有的布局，而 `final_layout` 指定图像在渲染流程结束后将会自动转换到的布局。我们将 `initial_layout` 设置为 `vk::ImageLaout::UNDEFINED`，表明我们不关心图像输入时的布局。这也意味着图像中的内容不一定会被保留，但没关系，反正我们也打算清空它了。而在渲染之后，我们希望图像可以被在交换链上呈现，所以我们将 `final_layout` 设置为 `vk::ImageLayout::PRESENT_SRC_KHR`。
 
-## Subpasses and attachment references
+## 子流程与附件引用
 
-A single render pass can consist of multiple subpasses. Subpasses are subsequent rendering operations that depend on the contents of framebuffers in previous passes, for example a sequence of post-processing effects that are applied one after another. If you group these rendering operations into one render pass, then Vulkan is able to reorder the operations and conserve memory bandwidth for possibly better performance. For our very first triangle, however, we'll stick to a single subpass.
+一个渲染流程可以由多个子流程组成。子流程是一系列的渲染操作，每个渲染操作都依赖于之前的子流程处理后帧缓冲中的内容。例如，许多后处理（post-processing）效果就是前面的处理结果上叠加一系列操作来实现的。如果你将这些渲染操作组合成一个渲染流程，Vulkan 就可以对这些操作进行重新排序，以便更好地利用内存带宽来提高性能。不过在我们的第一个三角形程序中，我们只需要一个子流程。
 
-Every subpass references one or more of the attachments that we've described using the structure in the previous sections. These references are themselves `vk::AttachmentReference` structs that look like this:
+每个子流程都要引用一个或多个附件，这些附件通过 `vk::AttachmentReference` 结构体指定：
 
 ```rust,noplaypen
 let color_attachment_ref = vk::AttachmentReference::builder()
@@ -90,9 +94,9 @@ let color_attachment_ref = vk::AttachmentReference::builder()
     .layout(vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL);
 ```
 
-The `attachment` parameter specifies which attachment to reference by its index in the attachment descriptions array. Our array consists of a single `vk::AttachmentDescription`, so its index is `0`. The `layout` specifies which layout we would like the attachment to have during a subpass that uses this reference. Vulkan will automatically transition the attachment to this layout when the subpass is started. We intend to use the attachment to function as a color buffer and the `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` layout will give us the best performance, as its name implies.
+`attachment` 参数通过附件描述符数组的索引指定要引用哪个附件。我们的附件描述数组中只有一个 `vk::AttachmentDescription`，所以我们将索引置为 `0`。`layout` 用于指定子流程开始时附件的布局，Vulkan 会在子流程开始时自动将附件转换到这个布局。我们打算将附件用作颜色缓冲，所以 `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` 布局会给我们最好的性能，正如它的名字所说的那样。
 
-The subpass is described using a `vk::SubpassDescription` structure:
+子流程使用 `vk::SubpassDescription` 结构体来描述：
 
 ```rust,noplaypen
 let color_attachments = &[color_attachment_ref];
@@ -101,20 +105,20 @@ let subpass = vk::SubpassDescription::builder()
     .color_attachments(color_attachments);
 ```
 
-Vulkan may also support compute subpasses in the future, so we have to be explicit about this being a graphics subpass. Then we specify the reference to the color attachment.
+Vulkan 在将来也可能支持计算子流程，所以我们需要明确指定这是一个图形子流程。然后我们指定对颜色附件的引用。
 
-The index of the attachment in this array is directly referenced from the fragment shader with the `layout(location = 0) out vec4 outColor` directive!
+这里设置的颜色附着将会被片段着色器使用，对应我们在片段着色器中的 `layout(location = 0) out vec4 outColor` 指令。
 
-The following other types of attachments can be referenced by a subpass:
+以下类型的附件也可以被子流程使用：
 
-* `input_attachments` &ndash; Attachments that are read from a shader
-* `resolve_attachments` &ndash; Attachments used for multisampling color attachments
-* `depth_stencil_attachment` &ndash; Attachment for depth and stencil data
-* `preserve_attachments` &ndash; Attachments that are not used by this subpass, but for which the data must be preserved
+* `input_attachments` &ndash; 可以被着色器读取的附件
+* `resolve_attachments` &ndash; 用于多重采样颜色附件的附件
+* `depth_stencil_attachment` &ndash; 用于深度和模板数据的附件
+* `preserve_attachments` &ndash; 子流程不会使用的附件，但其中的数据必须被保留
 
-## Render pass
+## 渲染流程
 
-Now that the attachment and a basic subpass referencing it have been described, we can create the render pass itself. Create a new class member variable to hold the `vk::RenderPass` object right above the `pipeline_layout` field in `AppData`:
+现在，我们已经设置好了附件和与之关联的子流程，我们可以开始创建渲染流程了。在 `AppData` 中 `pipeline_layout` 字段的上面添加一个成员变量来存储 `vk::RenderPass` 对象：
 
 ```rust,noplaypen
 struct AppData {
@@ -124,7 +128,7 @@ struct AppData {
 }
 ```
 
-The render pass object can then be created by filling in the `vk::RenderPassCreateInfo` structure with an array of attachments and subpasses. The `vk::AttachmentReference` objects reference attachments using the indices of this array.
+接着，我们就可以用附件和子流程数组填充 `vk::RenderPassCreateInfo` 结构体，来创建渲染渲染对象了：
 
 ```rust,noplaypen
 let attachments = &[color_attachment];
@@ -136,6 +140,8 @@ let info = vk::RenderPassCreateInfo::builder()
 data.render_pass = device.create_render_pass(&info, None)?;
 ```
 
+和管线布局一样，渲染流程会在整个程序中被使用，所以我们只在 `App::destroy` 中清理它：
+
 Just like the pipeline layout, the render pass will be referenced throughout the program, so it should only be cleaned up at the end in `App::destroy`:
 
 ```rust,noplaypen
@@ -146,4 +152,4 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-That was a lot of work, but in the next chapter it all comes together to finally create the graphics pipeline object!
+到此为止我们已经做了很多工作，在下一章中，我们会将这些工作整合起来，最终创建出图形管线对象！
