@@ -1,10 +1,16 @@
-# Command buffers
+# 指令缓冲（Command buffers）
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/14_command_buffers.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/drawing/command_buffers.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-Commands in Vulkan, like drawing operations and memory transfers, are not executed directly using function calls. You have to record all of the operations you want to perform in command buffer objects. The advantage of this is that all of the hard work of setting up the drawing commands can be done in advance and in multiple threads. After that, you just have to tell Vulkan to execute the commands in the main loop.
+**本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/14_command_buffers.rs)
 
-## Command pools
+Vulkan 中的指令 —— 例如绘制操作和内存传输操作 —— 并不是直接通过调用函数来执行的。你需要把你想执行的操作记录在指令缓冲对象中。这样做的优势在于绘制指令可以提前配置好，并且可以在多个线程中配置指令。在配置完指令缓冲之后，你只要在主循环中高速 Vulkan 执行这些指令就可以了。
+
+## 指令池（Command pools）
+
+在创建指令缓冲之前，我们需要先创建一个指令池。指令池管理着用于存储指令缓冲的内存，我们将从指令池中分配指令缓冲。在 `AppData` 中添加一个新的字段 `vk::CommandPool` 来存储指令池：
 
 We have to create a command pool before we can create command buffers. Command pools manage the memory that is used to store the buffers and command buffers are allocated from them. Add a new `AppData` field to store a `vk::CommandPool`:
 
@@ -15,7 +21,7 @@ struct AppData {
 }
 ```
 
-Then create a new function `^create_command_pool` and call it from `App::create` after the framebuffers were created.
+接着创建一个新的函数 `create_command_pool` 并在 `App::create` 中创建完帧缓冲后调用它：
 
 ```rust,noplaypen
 impl App {
@@ -36,31 +42,31 @@ unsafe fn create_command_pool(
 }
 ```
 
-Command pool creation only takes two parameters:
+创建指令池只需要两个参数：
 
 ```rust,noplaypen
 let indices = QueueFamilyIndices::get(instance, data, data.physical_device)?;
 
 let info = vk::CommandPoolCreateInfo::builder()
-    .flags(vk::CommandPoolCreateFlags::empty()) // Optional.
+    .flags(vk::CommandPoolCreateFlags::empty()) // 可选
     .queue_family_index(indices.graphics);
 ```
 
-Command buffers are executed by submitting them on one of the device queues, like the graphics and presentation queues we retrieved. Each command pool can only allocate command buffers that are submitted on a single type of queue. We're going to record commands for drawing, which is why we've chosen the graphics queue family.
+指令缓冲是通过提交到一个设备队列来执行的。每个指令池只能提交到单一类型的队列。这里我们要记录绘制指令，所以我们选择图形队列族。
 
-There are three possible flags for command pools:
+指令池可以有三个标志：
 
-* `vk::CommandPoolCreateFlags::TRANSIENT` &ndash; Hint that command buffers are rerecorded with new commands very often (may change memory allocation behavior)
-* `vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER` &ndash; Allow command buffers to be rerecorded individually, without this flag they all have to be reset together
-* `vk::CommandPoolCreateFlags::PROTECTED` &ndash; Creates "protected" command buffers which are stored in ["protected" memory](https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/vkspec.html#memory-protected-access-rules) where Vulkan prevents unauthorized operations from accessing the memory
+* `vk::CommandPoolCreateFlags::TRANSIENT` &ndash; 指令缓冲会经常被重新记录（可能会改变内存分配行为）
+* `vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER` &ndash; 允许单独重新记录指令缓冲，如果没有这个标志，所有指令缓冲都必须一起重置
+* `vk::CommandPoolCreateFlags::PROTECTED` &ndash; 创建“受保护”的指令缓冲，它们存储在[“受保护”内存](https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/vkspec.html#memory-protected-access-rules)中，Vulkan 会阻止对该内存未授权的访问
 
-We will only record the command buffers at the beginning of the program and then execute them many times in the main loop and we don't need to protect our triangle with DRM, so we're not going to use any of these flags.
+我们只在程序开始的时候记录指令缓冲，然后在主循环中重复执行它们，并且我们也不需要使用 DRM 来保护我们的三角形，所以我们不使用任何标志。
 
 ```rust,noplaypen
 data.command_pool = device.create_command_pool(&info, None)?;
 ```
 
-Commands will be used throughout the program to draw things on the screen, so the pool should only be destroyed at the end:
+从指令池分配的指令缓冲会在整个程序中被使用，所以我们在 `destroy` 函数中销毁它：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -69,7 +75,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Command buffer allocation
+## 分配指令缓冲
 
 We can now start allocating command buffers and recording drawing commands in them. Because one of the drawing commands involves binding the right `vk::Framebuffer`, we'll actually have to record a command buffer for every image in the swapchain once again. To that end, create a list of `vk::CommandBuffer` objects as an `AppData` field. Command buffers will be automatically freed when their command pool is destroyed, so we don't need any explicit cleanup.
 

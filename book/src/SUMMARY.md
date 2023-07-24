@@ -30,7 +30,7 @@
 # Drawing
 
 - [帧缓冲](./drawing/framebuffers.md)
-- [Command buffers](./drawing/command_buffers.md)
+- [指令缓冲](./drawing/command_buffers.md)
 - [Rendering and presentation](./drawing/rendering_and_presentation.md)
 
 # Swapchain
