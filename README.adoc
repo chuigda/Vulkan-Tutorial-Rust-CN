@@ -5,5 +5,6 @@
 原文链接: link:https://kylemayes.github.io/vulkanalia/introduction.html[kylemayes.github.io/vulkanalia]
 
 感谢:
-  - link:https://github.com/KyleMayes/vulkanalia[Vulkanalia]
-  - link:https://github.com/fangcun010/VulkanTutorialCN[Vulkan 中文教程]
+
+* link:https://github.com/KyleMayes/vulkanalia[Vulkanalia]
+* link:https://github.com/fangcun010/VulkanTutorialCN[Vulkan 中文教程]
