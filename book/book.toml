@@ -14,7 +14,7 @@ edition = "edition2018"
 
 [output.html]
 
-git-repository-url = "https://github.com/KyleMayes/vulkanalia"
+git-repository-url = "https://github.com/chuigda/Vulkan-Tutorial-Rust-CN"
 
 [preprocessor.vk]
 
