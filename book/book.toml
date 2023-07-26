@@ -1,9 +1,9 @@
 [book]
 
-title = "Vulkan 教程 (Rust)"
+title = "Vulkan 教程（Rust）"
 authors = ["Kyle Mayes", "Chuigda WhiteGive (翻译者)"]
 
-description = "Vulkan Tutorial (Rust) 的中文翻译"
+description = "Vulkan 教程（Rust）的中文翻译"
 
 language = "zh"
 multilingual = false
