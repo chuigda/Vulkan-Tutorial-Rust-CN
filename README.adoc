@@ -1,4 +1,4 @@
-= (WIP) Vulkan 教程 (Rust) 的中文翻译
+= (WIP) Vulkan 教程（Rust）的中文翻译
 
 在线阅读: link:https://vk.7dg.tech[vk.7dg.tech]
 
