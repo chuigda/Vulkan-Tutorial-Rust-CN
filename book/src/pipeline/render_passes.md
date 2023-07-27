@@ -107,7 +107,7 @@ let subpass = vk::SubpassDescription::builder()
 
 Vulkan 在将来也可能支持计算子流程，所以我们需要明确指定这是一个图形子流程。然后我们指定对颜色附件的引用。
 
-这里设置的颜色附着将会被片段着色器使用，对应我们在片段着色器中的 `layout(location = 0) out vec4 outColor` 指令。
+这里设置的颜色附着将会被片元着色器使用，对应我们在片元着色器中的 `layout(location = 0) out vec4 outColor` 指令。
 
 以下类型的附件也可以被子流程使用：
 
