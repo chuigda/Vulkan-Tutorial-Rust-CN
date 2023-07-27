@@ -1,9 +1,9 @@
 [book]
 
-title = "Vulkan 教程 (Rust)"
-authors = ["Kyle Mayes", "Chuigda WhiteGive (translator)"]
+title = "Vulkan 教程（Rust）"
+authors = ["Kyle Mayes", "Chuigda WhiteGive (翻译者)"]
 
-description = "A Vulkan tutorial for Rust."
+description = "Vulkan 教程（Rust）的中文翻译"
 
 language = "zh"
 multilingual = false
@@ -14,7 +14,7 @@ edition = "edition2018"
 
 [output.html]
 
-git-repository-url = "https://github.com/KyleMayes/vulkanalia"
+git-repository-url = "https://github.com/chuigda/Vulkan-Tutorial-Rust-CN"
 
 [preprocessor.vk]
 
