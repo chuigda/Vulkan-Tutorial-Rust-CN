@@ -6,7 +6,7 @@
 
 **本章代码** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/11_render_passes.rs)
 
-在创建渲染管线之前，我们还需要设置渲染过程中将会使用的帧缓冲附件（framebuffer attachments）。我们需要指定有多少颜色和深度缓冲，每个缓冲使用多少样本数，以及渲染操作将如何处理缓冲中的内容。所有这些信息都会被装进一个*渲染流程*对象中。我们将会创建一个新的函数 `create_render_pass`，并在 `App::create` 中 `create_pipeline` 之前调用它：
+在创建渲染管线之前，我们还需要设置渲染过程中将会使用的帧缓冲附件（framebuffer attachments）。我们需要指定有多少个颜色缓冲和深度缓冲，每个缓冲使用多少样本数，以及渲染操作将如何处理缓冲中的内容。所有这些信息都会被装进一个*渲染流程*对象中。我们将会创建一个新的函数 `create_render_pass`，并在 `App::create` 中 `create_pipeline` 之前调用它：
 
 ```rust,noplaypen
 impl App {
@@ -29,7 +29,7 @@ unsafe fn create_render_pass(
 
 ## 附件描述
 
-在我们的场景中，我们只需要一个颜色附件。我们将会在 `AppData` 中创建一个 `vk::RenderPass` 字段来存放渲染流程对象：
+在我们的场景中，我们只需要一个颜色附件。我们会在 `create_render_pass` 函数中创建一个 `vk::AttachmentDescription` 来表示它：
 
 ```rust,noplaypen
 let color_attachment = vk::AttachmentDescription::builder()
@@ -56,7 +56,7 @@ let color_attachment = vk::AttachmentDescription::builder()
 * `vk::AttachmentStoreOp::STORE` &ndash; 渲染的内容将会被存储起来，以便之后读取
 * `vk::AttachmentStoreOp::DONT_CARE` &ndash; 渲染结束后帧缓冲中的内容是未定义的
 
-我们希望在屏幕上看到渲染出来的三角形，所以我们选择 `store_op`。
+我们希望在屏幕上看到渲染出来的三角形，所以我们选择 `STORE`。
 
 ```rust,noplaypen
     .stencil_load_op(vk::AttachmentLoadOp::DONT_CARE)
@@ -70,7 +70,7 @@ let color_attachment = vk::AttachmentDescription::builder()
     .final_layout(vk::ImageLayout::PRESENT_SRC_KHR);
 ```
 
-在 Vulkan 中，纹理和帧缓冲是以具有特定像素格式的 `vk::Image` 对象来表示的。不过你可以根据你在用图像做的事情改变图像中像素的布局。
+在 Vulkan 中，纹理和帧缓冲是以具有特定像素格式的 `vk::Image` 对象来表示的。不过你可以根据你在对图像做的事情改变内存中像素的布局。
 
 一些常见的布局包括：
 
