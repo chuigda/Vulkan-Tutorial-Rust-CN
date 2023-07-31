@@ -1,12 +1,16 @@
-# Vertex buffer creation
+# 顶点缓冲区创建
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/18_vertex_buffer.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/vertex_buffer_creation.html>
+>
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-Buffers in Vulkan are regions of memory used for storing arbitrary data that can be read by the graphics card. They can be used to store vertex data, which we'll do in this chapter, but they can also be used for many other purposes that we'll explore in future chapters. Unlike the Vulkan objects we've been dealing with so far, buffers do not automatically allocate memory for themselves. The work from the previous chapters has shown that the Vulkan API puts the programmer in control of almost everything and memory management is one of those things.
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/18_vertex_buffer.rs)
 
-## Buffer creation
+在Vulkan中，缓冲区是用于存储可被图形卡读取的任意数据的内存区域。它们可以用于存储顶点数据，这正是我们将在本章中所做的，但它们也可以用于许多其他目的，这些将在以后的章节中探讨。与我们到目前为止处理过的Vulkan对象不同，缓冲区不会自动为自己分配内存。前面章节中的工作已经表明，Vulkan API将程序员置于几乎所有事物的控制下，内存管理就是其中之一。
 
-Create a new function `create_vertex_buffer` and call it from `App::create` right before `create_command_buffers`.
+## 缓冲区创建
+
+首先，我们创建一个名为 `create_vertex_buffer` 的新函数，并在 `App::create` 函数中，在 `create_command_buffers` 之前调用它。
 
 ```rust,noplaypen
 impl App {
@@ -27,7 +31,7 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-Creating a buffer requires us to fill a `vk::BufferCreateInfo` structure.
+创建缓冲区需要填充一个 `vk::BufferCreateInfo` 结构体。
 
 ```rust,noplaypen
 let buffer_info = vk::BufferCreateInfo::builder()
@@ -35,27 +39,27 @@ let buffer_info = vk::BufferCreateInfo::builder()
     // continued...
 ```
 
-The first field of the struct is `size`, which specifies the size of the buffer in bytes. Calculating the byte size of the vertex data is straightforward with `size_of`.
+结构体的第一个字段是 `size` ，它指定缓冲区的大小，以字节为单位。使用 `size_of` 可以很容易地计算出顶点数据的字节大小。
 
 ```rust,noplaypen
     .usage(vk::BufferUsageFlags::VERTEX_BUFFER)
 ```
 
-The second field is `usage`, which indicates for which purposes the data in the buffer is going to be used. It is possible to specify multiple purposes using a bitwise or. Our use case will be a vertex buffer, we'll look at other types of usage in future chapters.
+结构体的第二个字段是 `usage`，它表示缓冲区中的数据将用于哪些目的。可以使用按位或指定多个目的。我们的用例是用于顶点缓冲区，关于其他类型的用法将在以后的章节中讨论。
 
 ```rust,noplaypen
     .sharing_mode(vk::SharingMode::EXCLUSIVE);
 ```
 
-Just like the images in the swapchain, buffers can also be owned by a specific queue family or be shared between multiple at the same time. The buffer will only be used from the graphics queue, so we can stick to exclusive access.
+和交换链中的图像一样，缓冲区也可以由特定队列族拥有，或者在多个队列之间共享。由于缓冲区仅将在图形队列中使用，因此我们可以使用独占访问。
 
 ```rust,noplaypen
     .flags(vk::BufferCreateFlags::empty()); // Optional.
 ```
 
-The `flags` parameter is used to configure sparse buffer memory, which is not relevant right now. You can omit the builder method for this field which will set it to the default value (an empty set of flags).
+`flags` 参数用于配置稀疏缓冲区内存，这在当前情况下并不相关。您可以省略此字段的构建方法，从而将其设置为默认值（空标志集）。
 
-We can now create the buffer with `create_buffer`. First, define an `AppData` field to hold the buffer handle and call it `vertex_buffer`.
+现在，我们可以使用 `create_buffer` 创建缓冲区。首先，定义一个 `AppData` 字段来保存缓冲区句柄，并称其为 `vertex_buffer`。
 
 ```rust,noplaypen
 struct AppData {
@@ -64,7 +68,7 @@ struct AppData {
 }
 ```
 
-Next add the call to `create_buffer`:
+接下来添加对 `create_buffer` 的调用：
 
 ```rust,noplaypen
 unsafe fn create_vertex_buffer(
@@ -83,7 +87,7 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-The buffer should be available for use in rendering commands until the end of the program and it does not depend on the swapchain, so we'll clean it up in the original `App::destroy` method:
+缓冲区应该在渲染命令中可用，直到程序结束，且它不依赖于交换链，因此我们将在原始的 `App::destroy` 方法中清理它：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -93,21 +97,21 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Memory requirements
+## 内存需求
 
-The buffer has been created, but it doesn't actually have any memory assigned to it yet. The first step of allocating memory for the buffer is to query its memory requirements using the aptly named `get_buffer_memory_requirements` command.
+缓冲区已经创建了，但实际上还没有为其分配任何内存。为缓冲区分配内存的第一步是使用名为 `get_buffer_memory_requirements` 的命令查询其内存需求。
 
 ```rust,noplaypen
 let requirements = device.get_buffer_memory_requirements(data.vertex_buffer);
 ```
 
-The `vk::MemoryRequirements` struct this command returns has three fields:
+这个命令返回的 `vk::MemoryRequirements` 结构体有三个字段：
 
-* `size` &ndash; The size of the required amount of memory in bytes, may differ from `bufferInfo.size`.
-* `alignment` &ndash; The offset in bytes where the buffer begins in the allocated region of memory, depends on `buffer_info.usage` and `buffer_info.flags`.
-* `memory_type_bits` &ndash; Bit field of the memory types that are suitable for the buffer.
+* `size` &ndash; 所需内存大小（以字节为单位），可能与 `bufferInfo.size` 不同。
+* `alignment` &ndash; 缓冲区在内存分配的区域中开始的偏移量（以字节为单位），取决于 `buffer_info.usage` 和 `buffer_info.flags`。
+* `memory_type_bits` &ndash; 适用于缓冲区的内存类型的位字段。
 
-Graphics cards can offer different types of memory to allocate from. Each type of memory varies in terms of allowed operations and performance characteristics. We need to combine the requirements of the buffer and our own application requirements to find the right type of memory to use. Let's create a new function `get_memory_type_index` for this purpose.
+显卡可以提供不同类型的内存供分配。每种类型的内存在允许的操作和性能特性方面各不相同。我们需要将缓冲区的需求和我们自己的应用程序需求结合起来，找到合适的内存类型。为此，我们创建一个新函数 `get_memory_type_index`。
 
 ```rust,noplaypen
 unsafe fn get_memory_type_index(
@@ -119,15 +123,15 @@ unsafe fn get_memory_type_index(
 }
 ```
 
-First we need to query info about the available types of memory using `get_physical_device_memory_properties`.
+首先，我们需要使用 `get_physical_device_memory_properties` 查询有关可用内存类型的信息。
 
 ```rust,noplaypen
 let memory = instance.get_physical_device_memory_properties(data.physical_device);
 ```
 
-The returned `vk::PhysicalDeviceMemoryProperties` structure has two arrays `memory_types` and `memory_heaps`. Memory heaps are distinct memory resources like dedicated VRAM and swap space in RAM for when VRAM runs out. The different types of memory exist within these heaps. Right now we'll only concern ourselves with the type of memory and not the heap it comes from, but you can imagine that this can affect performance.
+返回的 `vk::PhysicalDeviceMemoryProperties` 结构体有两个数组 `memory_types` 和 `memory_heaps`。内存堆是不同的内存资源，比如专用的VRAM和用于VRAM耗尽时的RAM交换空间。不同类型的内存存在于这些堆中。现在我们只关注内存类型而不是它来自的堆，但可以想象这可能会影响性能。
 
-Let's first find a memory type that is suitable for the buffer itself:
+首先，让我们找到一个适合缓冲区本身的内存类型：
 
 ```rust,noplaypen
 (0..memory.memory_type_count)
@@ -135,11 +139,11 @@ Let's first find a memory type that is suitable for the buffer itself:
     .ok_or_else(|| anyhow!("Failed to find suitable memory type."))
 ```
 
-The `memory_type_bits` field from the `requirements` parameter will be used to specify the bit field of memory types that are suitable. That means that we can find the index of a suitable memory type by simply iterating over them and checking if the corresponding bit is set to `1`.
+`requirements` 参数中的 `memory_type_bits` 字段将用于指定适合的内存类型的位字段。这意味着我们可以通过简单地迭代并检查相应的位是否设置为 `1` 来找到适合的内存类型的索引。
 
-However, we're not just interested in a memory type that is suitable for the vertex buffer. We also need to be able to write our vertex data to that memory. The `memory_types` array consists of `vk::MemoryType` structs that specify the heap and properties of each type of memory. The properties define special features of the memory, like being able to map it so we can write to it from the CPU. This property is indicated with `vk::MemoryPropertyFlags::HOST_VISIBLE`, but we also need to use the `vk::MemoryPropertyFlags::HOST_COHERENT` property. We'll see why when we map the memory.
+然而，我们不仅对适合顶点缓冲区的内存类型感兴趣，我们还需要能够将顶点数据写入该内存。`memory_types` 数组由指定每种内存类型的堆和属性的`vk::MemoryType` 结构体组成。属性定义了内存的特殊功能，例如是否可以从CPU映射它以便我们可以从CPU写入数据。这个属性通过 `vk::MemoryPropertyFlags::HOST_VISIBLE` 来指示，但我们还需要使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 属性。我们将在映射内存时看到为什么需要这样做。
 
-We can now modify the loop to also check for the support of this property:
+现在，我们可以修改循环以检查此属性的支持：
 
 ```rust,noplaypen
 (0..memory.memory_type_count)
@@ -151,11 +155,11 @@ We can now modify the loop to also check for the support of this property:
     .ok_or_else(|| anyhow!("Failed to find suitable memory type."))
 ```
 
-If there is a memory type suitable for the buffer that also has all of the properties we need, then we return its index, otherwise we return an error.
+如果存在适合缓冲区的内存类型，并且该内存类型具有我们所需的所有属性，则返回其索引；否则返回错误。
 
-## Memory allocation
+## 内存分配
 
-We now have a way to determine the right memory type, so we can actually allocate the memory by filling in the `vk::MemoryAllocateInfo` structure.
+现在我们有一种确定正确内存类型的方法，因此我们可以通过填充 `vk::MemoryAllocateInfo` 结构体来实际分配内存。
 
 ```rust,noplaypen
 let memory_info = vk::MemoryAllocateInfo::builder()
@@ -168,7 +172,7 @@ let memory_info = vk::MemoryAllocateInfo::builder()
     )?);
 ```
 
-Memory allocation is now as simple as specifying the size and type, both of which are derived from the memory requirements of the vertex buffer and the desired property. Create an `AppData` field to store the handle to the memory:
+内存分配现在就是简单地指定大小和类型，这两者都来自于顶点缓冲区的内存需求和所需的属性。创建一个 `AppData` 字段来存储内存的句柄：
 
 ```rust,noplaypen
 struct AppData {
@@ -178,21 +182,21 @@ struct AppData {
 }
 ```
 
-Populate that new field by calling `allocate_memory`:
+通过调用 `allocate_memory` 来填充这个新字段：
 
 ```rust,noplaypen
 data.vertex_buffer_memory = device.allocate_memory(&memory_info, None)?;
 ```
 
-If memory allocation was successful, then we can now associate this memory with the buffer using `bind_buffer_memory`:
+如果内存分配成功，那么我们现在可以使用 `bind_buffer_memory` 将此内存与缓冲区关联：
 
 ```rust,noplaypen
 device.bind_buffer_memory(data.vertex_buffer, data.vertex_buffer_memory, 0)?;
 ```
 
-The first two parameters are self-explanatory and the third parameter is the offset within the region of memory. Since this memory is allocated specifically for this the vertex buffer, the offset is simply `0`. If the offset is non-zero, then it is required to be divisible by `requirements.alignment`.
+前两个参数不言自明，第三个参数是在内存区域内的偏移量。由于此内存专门为该顶点缓冲区分配，因此偏移量只是 `0` 。如果偏移量为非零值，则必须可被 `requirements.alignment` 整除。
 
-Of course, just like dynamic memory allocation in C, the memory should be freed at some point. Memory that is bound to a buffer object may be freed once the buffer is no longer used, so let's free it after the buffer has been destroyed:
+当然，就像在C中动态内存分配一样，内存应该在某个时候被释放。绑定到缓冲区对象的内存在缓冲区不再使用时可以被释放，所以让我们在缓冲区被销毁后释放它：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -203,9 +207,9 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Filling the vertex buffer
+## 填充顶点缓冲区
 
-It is now time to copy the vertex data to the buffer. This is done by [mapping the buffer memory](https://en.wikipedia.org/wiki/Memory-mapped_I/O) into CPU accessible memory with `map_memory`.
+现在是时候将顶点数据复制到缓冲区了。这是通过将缓冲区内存映射到CPU可访问的内存中来完成的，可以使用 `map_memory` 命令。
 
 ```rust,noplaypen
 let memory = device.map_memory(
@@ -216,33 +220,33 @@ let memory = device.map_memory(
 )?;
 ```
 
-This command allows us to access a region of the specified memory resource defined by an offset and size. The offset and size here are `0` and `buffer_info.size`, respectively. It is also possible to specify the special value `vk::WHOLE_SIZE` to map all of the memory. The last parameter can be used to specify flags, but there aren't any available yet in the current API. It must be set to an empty set of flags. The returned value is the pointer to the mapped value.
+该命令允许我们访问由偏移量和大小定义的指定内存资源的区域。在这里，偏移量和大小分别为 `0` 和 `buffer_info.size`。还可以使用特殊值 `vk::WHOLE_SIZE` 来映射所有内存。最后一个参数可用于指定标志，但当前API中还没有任何可用的标志。它必须设置为空标志集。返回的值是映射值的指针。
 
-Before we continue, we'll need to be able copy memory from our vertex list to the mapped memory. Add this import to your program:
+在继续之前，我们需要能够将顶点列表的内存复制到映射内存中。在程序中添加这个导入：
 
 ```rust,noplaypen
 use std::ptr::copy_nonoverlapping as memcpy;
 ```
 
-Now we can copy the vertex data into the buffer memory and then unmap it again using `unmap_memory`.
+现在我们可以将顶点数据复制到缓冲区内存中，然后使用 `unmap_memory` 将其取消映射。
 
 ```rust,noplaypen
 memcpy(VERTICES.as_ptr(), memory.cast(), VERTICES.len());
 device.unmap_memory(data.vertex_buffer_memory);
 ```
 
-Unfortunately the driver may not immediately copy the data into the buffer memory, for example because of caching. It is also possible that writes to the buffer are not visible in the mapped memory yet. There are two ways to deal with that problem:
+不幸的是，驱动程序可能不会立即将数据复制到缓冲区内存中，例如因为缓存的原因。还有可能写入缓冲区的数据尚未在映射内存中可见。有两种方法可以解决这个问题：
 
-* Use a memory heap that is host coherent, indicated with `vk::MemoryPropertyFlags::HOST_COHERENT`
-* Call `flush_mapped_memory_ranges` after writing to the mapped memory, and call `invalidate_mapped_memory_ranges` before reading from the mapped memory
+* 使用内存堆是主机一致的，使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 表示
+* 在写入映射内存后调用 `flush_mapped_memory_ranges`，在从映射内存读取之前调用 `invalidate_mapped_memory_ranges`
 
-We went for the first approach, which ensures that the mapped memory always matches the contents of the allocated memory. Do keep in mind that this may lead to slightly worse performance than explicit flushing, but we'll see why that doesn't matter in the next chapter.
+我们采用了第一种方法，这样可以确保映射内存始终与分配的内存内容相匹配。请记住，这可能会导致稍微较差的性能，但我们将在下一章看到为什么这没关系。
 
-Flushing memory ranges or using a coherent memory heap means that the driver will be aware of our writes to the buffer, but it doesn't mean that they are actually visible on the GPU yet. The transfer of data to the GPU is an operation that happens in the background and the specification simply [tells us](https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-submission-host-writes) that it is guaranteed to be complete as of the next call to `queue_submit`.
+刷新内存范围或使用一致性内存堆意味着驱动程序将知道我们对缓冲区的写入，但并不意味着它们实际上已经在GPU上可见。数据传输到GPU是在后台进行的操作，规范仅告诉我们，它在下一次 `queue_submit` 调用时是保证完成的。
 
-## Binding the vertex buffer
+## 绑定顶点缓冲区
 
-All that remains now is binding the vertex buffer during rendering operations. We're going to extend the `create_command_buffers` function to do that.
+现在，唯一剩下的任务是在渲染操作期间绑定顶点缓冲区。我们将扩展 `create_command_buffers` 函数来完成这个任务。
 
 ```rust,noplaypen
 // ...
@@ -251,13 +255,13 @@ device.cmd_draw(*command_buffer, VERTICES.len() as u32, 1, 0, 0);
 // ...
 ```
 
-The `cmd_bind_vertex_buffers` command is used to bind vertex buffers to bindings, like the one we set up in the previous chapter. The second parameter specifies the index of the vertex input binding we are using. The last two parameters specify the vertex buffers to bind and the byte offsets to start reading vertex data from. You should also change the call to `cmd_draw` to pass the number of vertices in the buffer as opposed to the hardcoded number `3`.
+`cmd_bind_vertex_buffers` 命令用于将顶点缓冲区绑定到绑定点，就像我们在上一章中设置的那样。第二个参数指定我们正在使用的顶点输入绑定的索引。最后两个参数指定要绑定的顶点缓冲区和从中开始读取顶点数据的字节偏移量。您还应该更改对 `cmd_draw` 的调用，将缓冲区中的顶点数传递给该函数，而不是硬编码的数字 `3`。
 
-Now run the program and you should see the familiar triangle again:
+现在运行程序，您应该再次看到熟悉的三角形：
 
-![](../images/triangle.png)
+![三角形](../images/triangle.png)
 
-Try changing the color of the top vertex to white by modifying the `VERTICES` list:
+通过修改 `VERTICES` 列表，将顶点的颜色更改为白色，可以尝试修改三角形的顶点颜色：
 
 ```rust,noplaypen
 lazy_static! {
@@ -269,8 +273,8 @@ lazy_static! {
 }
 ```
 
-Run the program again and you should see the following:
+再次运行程序，您应该会看到以下效果：
 
-![](../images/triangle_white.png)
+![白色三角](../images/triangle_white.png)
 
-In the next chapter we'll look at a different way to copy vertex data to a vertex buffer that results in better performance, but takes some more work.
+在下一章中，我们将介绍一种不同的将顶点数据复制到顶点缓冲区的方法，这将导致更好的性能，但需要更多的工作。
