@@ -273,7 +273,7 @@ unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
 }
 ```
 
-## 创建着色器阶段
+## 创建着色器阶段（shader stages）
 
 要使用这些着色器，我们要在创建管线的时候通过 `vk::PipelineShaderStageCreationInfo` 将它们分配给特定的管线阶段。
 
