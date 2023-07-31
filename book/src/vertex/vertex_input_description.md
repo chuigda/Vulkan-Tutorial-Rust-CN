@@ -1,12 +1,16 @@
-# Vertex input description
+# 顶点输入描述
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/17_vertex_input.rs) | [shader.vert](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.vert) | [shader.frag](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.frag)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/vertex_input_description.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-In the next few chapters, we're going to replace the hardcoded vertex data in the vertex shader with a vertex buffer in memory. We'll start with the easiest approach of creating a CPU visible buffer copying the vertex data into it directly, and after that we'll see how to use a staging buffer to copy the vertex data to high performance memory.
+**本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/17_vertex_input.rs) | [shader.vert](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.vert) | [shader.frag](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.frag)
 
-## Vertex shader
+在接下来的几章中，我们将用内存中的顶点缓冲替换顶点着色器中的硬编码顶点数据。我们将从最简单的方法开始，即创建一个CPU可见的缓冲区，并直接将顶点数据复制到其中。之后，我们将学习如何使用暂存缓冲区将顶点数据复制到高性能内存中。
 
-First change the vertex shader to no longer include the vertex data in the shader code itself. The vertex shader takes input from a vertex buffer using the `in` keyword.
+## 顶点着色器
+
+首先修改顶点着色器，不再在着色器代码本身中包含顶点数据。顶点着色器将使用 `in` 关键字从顶点缓冲区中获取输入。
 
 ```glsl
 #version 450
@@ -22,20 +26,20 @@ void main() {
 }
 ```
 
-The `inPosition` and `inColor` variables are *vertex attributes*. They're properties that are specified per-vertex in the vertex buffer, just like we manually specified a position and color per vertex using the two arrays. Make sure to recompile the vertex shader!
+`inPosition` 和 `inColor` 变量是*顶点属性*。它们是在顶点缓冲区中为每个顶点指定的属性，就像我们之前手动使用两个数组为每个顶点指定了位置和颜色一样。确保重新编译顶点着色器！
 
-Just like `fragColor`, the `layout(location = x)` annotations assign indices to the inputs that we can later use to reference them. It is important to know that some types, like `dvec3` 64 bit vectors, use multiple *slots*. That means that the index after it must be at least 2 higher:
+与 `fragColor` 类似，`layout(location = x)` 注解为输入变量分配了索引，我们稍后可以用它们来引用这些变量。重要的是要知道，某些类型（例如 dvec3 64位向量）使用多个*槽位*。这意味着在它之后的索引必须至少比前一个高2：
 
 ```glsl
 layout(location = 0) in dvec3 inPosition;
 layout(location = 2) in vec3 inColor;
 ```
 
-You can find more info about the layout qualifier in the [OpenGL wiki](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)).
+你可以在[OpenGL wiki](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL))中找到关于布局限定符的更多信息。
 
-## Vertex data
+## 顶点数据
 
-We're moving the vertex data from the shader code to an array in the code of our program. We'll start by adding a few more imports to our program.
+我们将从着色器代码中将顶点数据移到程序代码的数组中。首先，向我们的程序添加几个导入项。
 
 ```rust,noplaypen
 use std::mem::size_of;
@@ -44,9 +48,9 @@ use nalgebra_glm as glm;
 use lazy_static::lazy_static;
 ```
 
-`size_of` will be used to calculate the size of the vertex data we'll be defining while `nalgebra-glm` defines the vector types we need. The `lazy_static!` macro will be used to define the vertex data since the vector constructors in `nalgebra-glm` are not yet `const fn`s.
+`size_of` 函数将用于计算我们将要定义的顶点数据的大小，而 `nalgebra-glm` 则定义了我们需要的向量类型。`lazy_static!` 宏将用于定义顶点数据，因为 `nalgebra-glm` 中的向量构造函数尚不是 `const fn`。
 
-Next, create a new `#[repr(C)]` structure called `Vertex` with the two attributes that we're going to use in the vertex shader inside it and add a simple constructor:
+接下来，创建一个新的 `#[repr(C)]` 结构体叫 `Vertex` ，其中包含我们将在顶点着色器中使用的两个属性，并添加一个简单的构造函数：
 
 ```rust,noplaypen
 #[repr(C)]
@@ -63,7 +67,7 @@ impl Vertex {
 }
 ```
 
-`nalgebra-glm` conveniently provides us with Rust types that exactly match the vector types used in the shader language.
+`nalgebra-glm` 提供了与着色器语言中使用的向量类型完全匹配的 Rust 类型。
 
 ```rust,noplaypen
 lazy_static! {
@@ -75,13 +79,13 @@ lazy_static! {
 }
 ```
 
-Now use the `Vertex` structure to specify a list of vertex data. We're using exactly the same position and color values as before, but now they're combined into one array of vertices. This is known as *interleaving* vertex attributes.
+现在，使用 `Vertex` 结构体来指定顶点数据列表。我们使用了与之前完全相同的位置和颜色值，但现在它们被合并为一个顶点数组。这被称为*交织*顶点属性。
 
-## Binding descriptions
+## 绑定描述
 
-The next step is to tell Vulkan how to pass this data format to the vertex shader once it's been uploaded into GPU memory. There are two types of structures needed to convey this information.
+接下来的步骤是告诉 Vulkan 在顶点数据上传到 GPU 内存后如何将这些数据格式传递给顶点着色器。我们需要两种类型的结构来传递这些信息。
 
-The first structure is `vk::VertexInputBindingDescription` and we'll add a method to the `Vertex` struct to populate it with the right data.
+第一个结构是 `vk::VertexInputBindingDescription`，我们将为 `Vertex` 结构体添加一个方法来填充它。
 
 ```rust,noplaypen
 impl Vertex {
@@ -90,7 +94,7 @@ impl Vertex {
 }
 ```
 
-A vertex binding describes at which rate to load data from memory throughout the vertices. It specifies the number of bytes between data entries and whether to move to the next data entry after each vertex or after each instance.
+顶点绑定描述了从内存中加载数据的速率，它指定了数据条目之间的字节数，以及是在每个顶点后移动到下一个数据条目，还是在每个实例后移动到下一个数据条目。
 
 ```rust,noplaypen
 vk::VertexInputBindingDescription::builder()
@@ -100,16 +104,16 @@ vk::VertexInputBindingDescription::builder()
     .build()
 ```
 
-All of our per-vertex data is packed together in one array, so we're only going to have one binding. The `binding` parameter specifies the index of the binding in the array of bindings. The `stride` parameter specifies the number of bytes from one entry to the next, and the `input_rate` parameter can have one of the following values:
+我们的每个顶点的数据都被紧密地打包在一个数组中，因此我们只会有一个绑定。`binding` 参数指定绑定在绑定数组中的索引。`stride` 参数指定从一个条目到下一个条目的字节数，而 `input_rate` 参数可以有以下值之一：
 
-* `vk::VertexInputRate::VERTEX` &ndash; Move to the next data entry after each vertex
-* `vk::VertexInputRate::INSTANCE` &ndash; Move to the next data entry after each instance
+* `vk::VertexInputRate::VERTEX` &ndash; 在每个顶点后移动到下一个数据条目
+* `vk::VertexInputRate::INSTANCE` &ndash; 在每个实例后移动到下一个数据条目
 
-We're not going to use instanced rendering, so we'll stick to per-vertex data.
+由于我们不会使用实例渲染，因此我们将使用每个顶点的数据。
 
-## Attribute descriptions
+## 属性描述
 
-The second structure that describes how to handle vertex input is `vk::VertexInputAttributeDescription`. We're going to add another helper method to `Vertex` to fill in these structs.
+第二个描述顶点输入的结构是 `vk::VertexInputAttributeDescription` 。我们将为 `Vertex` 结构体添加另一个辅助方法来填充这些结构。
 
 ```rust,noplaypen
 impl Vertex {
@@ -118,7 +122,7 @@ impl Vertex {
 }
 ```
 
-As the function prototype indicates, there are going to be two of these structures. An attribute description struct describes how to extract a vertex attribute from a chunk of vertex data originating from a binding description. We have two attributes, position and color, so we need two attribute description structs.
+如函数原型所示，这将有两个这样的结构体。属性描述结构描述了如何从由绑定描述产生的顶点数据块中提取顶点属性。我们有两个属性，位置和颜色，因此我们需要两个属性描述结构。
 
 ```rust,noplaypen
 let pos = vk::VertexInputAttributeDescription::builder()
@@ -129,22 +133,22 @@ let pos = vk::VertexInputAttributeDescription::builder()
     .build();
 ```
 
-The `binding` parameter tells Vulkan from which binding the per-vertex data comes. The `location` parameter references the `location` directive of the input in the vertex shader. The input in the vertex shader with location `0` is the position, which has two 32-bit float components.
+`binding` 参数告诉 Vulkan 顶点数据来自哪个绑定。`location` 参数引用了顶点着色器中输入的 `location` 指令。顶点着色器中位置的输入位置是 `0`，它有两个32位浮点分量。
 
-The `format` parameter describes the type of data for the attribute. A bit confusingly, the formats are specified using the same enumeration as color formats. The following shader types and formats are commonly used together:
+`format` 参数描述属性的数据类型。有点混淆的是，格式是使用与颜色格式相同的枚举来指定的。以下着色器类型和格式通常一起使用：
 
 * `f32` &ndash; `vk::Format::R32_SFLOAT`&nbsp;
 * `glm::Vec2` &ndash; `vk::Format::R32G32_SFLOAT`&nbsp;
 * `glm::Vec3` &ndash; `vk::Format::R32G32B32_SFLOAT`&nbsp;
 * `glm::Vec4` &ndash; `vk::Format::R32G32B32A32_SFLOAT`&nbsp;
 
-As you can see, you should use the format where the amount of color channels matches the number of components in the shader data type. It is allowed to use more channels than the number of components in the shader, but they will be silently discarded. If the number of channels is lower than the number of components, then the BGA components will use default values of `(0, 0, 1)`. The color type (`SFLOAT`, `UINT`, `SINT`) and bit width should also match the type of the shader input. See the following examples:
+如你所见，应使用颜色通道数量与着色器数据类型中组件数量相匹配的格式。允许使用比着色器中组件数量多的通道，但它们将被静默丢弃。如果通道数量低于组件数量，则 BGA 组件将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度还应与着色器输入的类型匹配。请参阅以下示例：
 
-* `glm::IVec2` &ndash; `vk::Format::R32G32_SINT`, a 2-component vector of `i32`s
-* `glm::UVec4` &ndash; `vk::Format::R32G32B32A32_UINT`, a 4-component vector of `u32`s
-* `f64` &ndash; `vk::Format::R64_SFLOAT`, a double-precision (64-bit) float
+* `glm::IVec2` &ndash; `vk::Format::R32G32_SINT`，包含 `i32` 的 2 分量向量
+* `glm::UVec4` &ndash; `vk::Format::R32G32B32A32_UINT`，包含 `u32` 的 4 分量向量
+* `f64` &ndash; `vk::Format::R64_SFLOAT`，双精度（64位）浮点数
 
-The `format` parameter implicitly defines the byte size of attribute data and the `offset` parameter specifies the number of bytes since the start of the per-vertex data to read from. The binding is loading one `Vertex` at a time and the position attribute (`pos`) is at an offset of `0` bytes from the beginning of this struct.
+`format` 参数隐式地定义了属性数据的字节大小，而 `offset` 参数指定从顶点数据开始的字节数。绑定每次加载一个 `Vertex` ，位置属性 ( `pos` ) 从该结构体的开始处偏移 `0` 字节。
 
 ```rust,noplaypen
 let color = vk::VertexInputAttributeDescription::builder()
@@ -155,17 +159,19 @@ let color = vk::VertexInputAttributeDescription::builder()
     .build();
 ```
 
-The color attribute is described in much the same way.
+颜色属性的描述方式基本相同。
 
-Lastly, construct the array to return from the helper method:
+最后，构造要从辅助方法返回的数组：
 
 ```rust,noplaypen
 [pos, color]
 ```
 
-## Pipeline vertex input
+## 管线顶点输入
 
-We now need to set up the graphics pipeline to accept vertex data in this format by referencing the structures in `create_pipeline`. Find the `vertex_input_state` struct and modify it to reference the two descriptions:
+现在，我们需要设置图形管线，以便通过引用 `create_pipeline` 中的结构接受这种格式的顶点数据。
+
+找到 `vertex_input_state` 结构并修改它，以引用这两个描述：
 
 ```rust,noplaypen
 let binding_descriptions = &[Vertex::binding_description()];
@@ -175,4 +181,4 @@ let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
     .vertex_attribute_descriptions(&attribute_descriptions);
 ```
 
-The pipeline is now ready to accept vertex data in the format of the `vertices` container and pass it on to our vertex shader. If you run the program now with validation layers enabled, you'll see that it complains that there is no vertex buffer bound to the binding. The next step is to create a vertex buffer and move the vertex data to it so the GPU is able to access it.
+现在，管线已准备好接受 `vertices` 容器格式的顶点数据，并将其传递给我们的顶点着色器。如果你现在启用了验证层并运行程序，你会看到它抱怨没有绑定到绑定点的顶点缓冲区。接下来的步骤是创建一个顶点缓冲区，并将顶点数据移到其中，以便 GPU 能够访问它。
