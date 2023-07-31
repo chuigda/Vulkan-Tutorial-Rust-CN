@@ -1,4 +1,4 @@
-# 顶点缓冲创建
+# 创建顶点缓冲
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/vertex_buffer_creation.html>
 >
@@ -6,9 +6,9 @@
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/18_vertex_buffer.rs)
 
-在Vulkan中，缓冲是用于存储可被图形卡读取的任意数据的内存区域。它们可以用于存储顶点数据，这正是我们将在本章中所做的，但它们也可以用于许多其他目的，这些将在以后的章节中探讨。与我们到目前为止处理过的Vulkan对象不同，缓冲不会自动为自己分配内存。前面章节中的工作已经表明，Vulkan API将程序员置于几乎所有事物的控制下，内存管理就是其中之一。
+在 Vulkan 中，缓冲是用于存储可被显卡读取的任意数据的内存区域。我们会在本章中用它们来存储顶点数据，但它们也可以用于许多其他目的，这些将在以后的章节中探讨。与我们到目前为止见过的 Vulkan 对象不同，缓冲不会自动为自己分配内存。前面章节中的工作已经表明，Vulkan API 将几乎所有事物置于程序员的控制下，内存管理就是其中之一。
 
-## 缓冲创建
+## 创建缓冲
 
 首先，我们创建一个名为 `create_vertex_buffer` 的新函数，并在 `App::create` 函数中，在 `create_command_buffers` 之前调用它。
 
@@ -39,27 +39,27 @@ let buffer_info = vk::BufferCreateInfo::builder()
     // continued...
 ```
 
-结构体的第一个字段是 `size` ，它指定缓冲的大小，以字节为单位。使用 `size_of` 可以很容易地计算出顶点数据的字节大小。
+结构体的第一个字段是 `size` ，它指定缓冲的大小，以字节为单位。使用 `size_of` 可以很容易地计算出顶点数据的大小。
 
 ```rust,noplaypen
     .usage(vk::BufferUsageFlags::VERTEX_BUFFER)
 ```
 
-结构体的第二个字段是 `usage`，它表示缓冲中的数据将用于哪些目的。可以使用按位或指定多个目的。我们的用例是用于顶点缓冲，关于其他类型的用法将在以后的章节中讨论。
+结构体的第二个字段是 `usage`，它表示缓冲中的数据将用于哪些目的。使用按位或可以指定多个目的。在当前的场景下我们会将缓冲用作顶点缓冲，关于其他类型的用法将在以后的章节中讨论。
 
 ```rust,noplaypen
     .sharing_mode(vk::SharingMode::EXCLUSIVE);
 ```
 
-和交换链中的图像一样，缓冲也可以由特定队列族拥有，或者在多个队列之间共享。由于缓冲仅将在图形队列中使用，因此我们可以使用独占访问。
+和交换链中的图像一样，缓冲也既可以由特定的队列族拥有，或者在多个队列族之间共享。由于缓冲仅将在图形队列中使用，因此我们可以使用独占访问。
 
 ```rust,noplaypen
-    .flags(vk::BufferCreateFlags::empty()); // Optional.
+    .flags(vk::BufferCreateFlags::empty()); // 可选
 ```
 
-`flags` 参数用于配置稀疏缓冲内存，这在当前情况下并不相关。您可以省略此字段的构建方法，从而将其设置为默认值（空标志集）。
+`flags` 参数用于配置稀疏缓冲内存（sparse buffer memory），现在我们还不用关心这个。你可以省略这个字段，它会被自动设置为默认值（空标志集）。
 
-现在，我们可以使用 `create_buffer` 创建缓冲。首先，定义一个 `AppData` 字段来保存缓冲句柄，并称其为 `vertex_buffer`。
+现在，我们可以使用 `create_buffer` 创建缓冲。首先在 `AppData` 中添加一个 `vertex_buffer` 字段来保存缓冲句柄。
 
 ```rust,noplaypen
 struct AppData {
@@ -68,7 +68,7 @@ struct AppData {
 }
 ```
 
-接下来添加对 `create_buffer` 的调用：
+接下来在 `create_vertex_buffer` 中调用 `create_buffer`：
 
 ```rust,noplaypen
 unsafe fn create_vertex_buffer(
@@ -87,7 +87,7 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-缓冲应该在渲染命令中可用，直到程序结束，且它不依赖于交换链，因此我们将在原始的 `App::destroy` 方法中清理它：
+缓冲应该在程序结束之前在渲染命令中保持可用，并且缓冲不依赖于交换链，因此我们将在 `App::destroy` 方法中清理它：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -99,7 +99,7 @@ unsafe fn destroy(&mut self) {
 
 ## 内存需求
 
-缓冲已经创建了，但实际上还没有为其分配任何内存。为缓冲分配内存的第一步是使用名为 `get_buffer_memory_requirements` 的命令查询其内存需求。
+缓冲已经创建了，但实际上我们还没有为其分配任何内存。为缓冲分配内存的第一步是使用 `get_buffer_memory_requirements` 命令查询其内存需求。
 
 ```rust,noplaypen
 let requirements = device.get_buffer_memory_requirements(data.vertex_buffer);
@@ -107,11 +107,11 @@ let requirements = device.get_buffer_memory_requirements(data.vertex_buffer);
 
 这个命令返回的 `vk::MemoryRequirements` 结构体有三个字段：
 
-* `size` &ndash; 所需内存大小（以字节为单位），可能与 `bufferInfo.size` 不同。
+* `size` &ndash; 所需内存大小（以字节为单位），可能与 `buffer_info.size` 不同。
 * `alignment` &ndash; 缓冲在内存分配的区域中开始的偏移量（以字节为单位），取决于 `buffer_info.usage` 和 `buffer_info.flags`。
-* `memory_type_bits` &ndash; 适用于缓冲的内存类型的位字段。
+* `memory_type_bits` &ndash; 适用于缓冲的内存类型。
 
-显卡可以提供不同类型的内存供分配。每种类型的内存在允许的操作和性能特性方面各不相同。我们需要将缓冲的需求和我们自己的应用程序需求结合起来，找到合适的内存类型。为此，我们创建一个新函数 `get_memory_type_index`。
+显卡可以分配不同类型的内存，每种类型的内存在允许的操作和性能特性方面各不相同。我们需要将缓冲的需求（`vk::MemoryRequirements`）和我们应用程序的需求结合起来，找到合适的内存类型。为此，我们创建一个新函数 `get_memory_type_index`。
 
 ```rust,noplaypen
 unsafe fn get_memory_type_index(
@@ -123,13 +123,13 @@ unsafe fn get_memory_type_index(
 }
 ```
 
-首先，我们需要使用 `get_physical_device_memory_properties` 查询有关可用内存类型的信息。
+首先，我们需要使用 `get_physical_device_memory_properties` 查询设备上可用的内存类型。
 
 ```rust,noplaypen
 let memory = instance.get_physical_device_memory_properties(data.physical_device);
 ```
 
-返回的 `vk::PhysicalDeviceMemoryProperties` 结构体有两个数组 `memory_types` 和 `memory_heaps`。内存堆是不同的内存资源，比如专用的VRAM和用于VRAM耗尽时的RAM交换空间。不同类型的内存存在于这些堆中。现在我们只关注内存类型而不是它来自的堆，但可以想象这可能会影响性能。
+返回的 `vk::PhysicalDeviceMemoryProperties` 结构体有两个数组 `memory_types` 和 `memory_heaps`。内存堆是不同的内存资源，比如专用的 VRAM 和在 VRAM 耗尽时 RAM 中的交换空间。这些堆中有不同类型的内存。现在我们只关注内存类型，而不关注内存来自哪个堆，但你应该能想到不同的堆会影响性能。
 
 首先，让我们找到一个适合缓冲本身的内存类型：
 
@@ -139,9 +139,9 @@ let memory = instance.get_physical_device_memory_properties(data.physical_device
     .ok_or_else(|| anyhow!("Failed to find suitable memory type."))
 ```
 
-`requirements` 参数中的 `memory_type_bits` 字段将用于指定适合的内存类型的位字段。这意味着我们可以通过简单地迭代并检查相应的位是否设置为 `1` 来找到适合的内存类型的索引。
+`requirements` 参数中的 `memory_type_bits` 字段将被用于指定适合的内存类型。这意味着我们可以通过简单地迭代并检查相应的位是否设置为 `1` 来找到适合的内存类型的索引。
 
-然而，我们不仅对适合顶点缓冲的内存类型感兴趣，我们还需要能够将顶点数据写入该内存。`memory_types` 数组由指定每种内存类型的堆和属性的`vk::MemoryType` 结构体组成。属性定义了内存的特殊功能，例如是否可以从CPU映射它以便我们可以从CPU写入数据。这个属性通过 `vk::MemoryPropertyFlags::HOST_VISIBLE` 来指示，但我们还需要使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 属性。我们将在映射内存时看到为什么需要这样做。
+然而，内存类型不仅要对顶点缓冲合适，我们还需要能够将顶点数据写入该内存。`memory_types` 数组由指定每种内存类型的堆和属性的`vk::MemoryType` 结构体组成。属性定义了内存的特殊功能，例如是否可以从 CPU 映射它以便我们从 CPU 写入数据。这个属性通过 `vk::MemoryPropertyFlags::HOST_VISIBLE` 来指示。我们还需要使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 属性。我们将在映射内存时看到为什么需要这样做。
 
 现在，我们可以修改循环以检查此属性的支持：
 
@@ -159,7 +159,7 @@ let memory = instance.get_physical_device_memory_properties(data.physical_device
 
 ## 内存分配
 
-现在我们有一种确定正确内存类型的方法，因此我们可以通过填充 `vk::MemoryAllocateInfo` 结构体来实际分配内存。
+现在我们已经有了确定正确内存类型的方法，我们可以填充 `vk::MemoryAllocateInfo` 结构体来实际分配内存了。
 
 ```rust,noplaypen
 let memory_info = vk::MemoryAllocateInfo::builder()
@@ -172,7 +172,7 @@ let memory_info = vk::MemoryAllocateInfo::builder()
     )?);
 ```
 
-内存分配现在就是简单地指定大小和类型，这两者都来自于顶点缓冲的内存需求和所需的属性。创建一个 `AppData` 字段来存储内存的句柄：
+内存分配就是简单地指定大小和类型，这两者都来自于顶点缓冲的内存需求和所需的属性。在 `AppData` 中添加一个字段来存储内存句柄：
 
 ```rust,noplaypen
 struct AppData {
@@ -182,21 +182,21 @@ struct AppData {
 }
 ```
 
-通过调用 `allocate_memory` 来填充这个新字段：
+调用 `allocate_memory` 来填充这个新字段：
 
 ```rust,noplaypen
 data.vertex_buffer_memory = device.allocate_memory(&memory_info, None)?;
 ```
 
-如果内存分配成功，那么我们现在可以使用 `bind_buffer_memory` 将此内存与缓冲关联：
+如果内存分配成功，我们就可以使用 `bind_buffer_memory` 将内存与缓冲关联起来：
 
 ```rust,noplaypen
 device.bind_buffer_memory(data.vertex_buffer, data.vertex_buffer_memory, 0)?;
 ```
 
-前两个参数不言自明，第三个参数是在内存区域内的偏移量。由于此内存专门为该顶点缓冲分配，因此偏移量只是 `0` 。如果偏移量为非零值，则必须可被 `requirements.alignment` 整除。
+前两个参数不言自明，第三个参数是在内存区域内的偏移量。由于此内存专门为该顶点缓冲分配，因此偏移量只是 `0` 。如果我们要提供非零的偏移量，则这个值必须可被 `requirements.alignment` 整除。
 
-当然，就像在C中动态内存分配一样，内存应该在某个时候被释放。绑定到缓冲对象的内存在缓冲不再使用时可以被释放，所以让我们在缓冲被销毁后释放它：
+当然，就像在 C 语言中动态内存分配一样，内存应该在某个时候被释放。绑定到缓冲对象的内存在缓冲不再被使用时可以被释放，所以让我们在缓冲被销毁后释放它：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -209,7 +209,7 @@ unsafe fn destroy(&mut self) {
 
 ## 填充顶点缓冲
 
-现在是时候将顶点数据复制到缓冲了。这是通过将缓冲内存映射到CPU可访问的内存中来完成的，可以使用 `map_memory` 命令。
+现在是时候将顶点数据复制到缓冲了，这是使用 `map_memory` 函数通过将缓冲内存映射到 CPU 可访问的内存中来完成的。
 
 ```rust,noplaypen
 let memory = device.map_memory(
@@ -220,9 +220,9 @@ let memory = device.map_memory(
 )?;
 ```
 
-该命令允许我们访问由偏移量和大小定义的指定内存资源的区域。在这里，偏移量和大小分别为 `0` 和 `buffer_info.size`。还可以使用特殊值 `vk::WHOLE_SIZE` 来映射所有内存。最后一个参数可用于指定标志，但当前API中还没有任何可用的标志。它必须设置为空标志集。返回的值是映射值的指针。
+该函数允许我们访问由偏移量和大小指定的内存区域。在这里，偏移量和大小分别为 `0` 和 `buffer_info.size`。还可以使用特殊值 `vk::WHOLE_SIZE` 来映射所有内存。最后一个参数可用于指定标志，但当前 API 中还没有任何可用的标志。它必须设置为空标志集。返回的值是映射值的指针。
 
-在继续之前，我们需要能够将顶点列表的内存复制到映射内存中。在程序中添加这个导入：
+在继续之前，我们需要一个用来将顶点列表的内存复制到映射内存中的函数。在程序中添加这个导入：
 
 ```rust,noplaypen
 use std::ptr::copy_nonoverlapping as memcpy;
