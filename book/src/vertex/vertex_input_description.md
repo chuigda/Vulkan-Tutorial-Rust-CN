@@ -1,4 +1,4 @@
-# 顶点输入描述
+# 描述顶点输入
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/vertex_input_description.html>
 > 
@@ -6,7 +6,7 @@
 
 **本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/17_vertex_input.rs) | [shader.vert](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.vert) | [shader.frag](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.frag)
 
-在接下来的几章中，我们将用内存中的顶点缓冲替换顶点着色器中的硬编码顶点数据。我们将从最简单的方法开始，即创建一个CPU可见的缓冲区，并直接将顶点数据复制到其中。之后，我们将学习如何使用暂存缓冲区将顶点数据复制到高性能内存中。
+在接下来的几章中，我们将用内存中的顶点缓冲替换顶点着色器中硬编码的顶点数据。我们将从最简单的方法开始，即创建一个对 CPU 可见的缓冲，并直接将顶点数据复制到其中。之后，我们将学习如何使用暂存缓冲区将顶点数据复制到高性能内存中。
 
 ## 顶点着色器
 
@@ -26,16 +26,16 @@ void main() {
 }
 ```
 
-`inPosition` 和 `inColor` 变量是*顶点属性*。它们是在顶点缓冲区中为每个顶点指定的属性，就像我们之前手动使用两个数组为每个顶点指定了位置和颜色一样。确保重新编译顶点着色器！
+`inPosition` 和 `inColor` 变量是*顶点属性*。它们是在顶点缓冲区中为每个顶点指定的属性，就像我们之前手动使用两个数组为每个顶点指定了位置和颜色一样。记得重新编译顶点着色器！
 
-与 `fragColor` 类似，`layout(location = x)` 注解为输入变量分配了索引，我们稍后可以用它们来引用这些变量。重要的是要知道，某些类型（例如 dvec3 64位向量）使用多个*槽位*。这意味着在它之后的索引必须至少比前一个高2：
+与 `fragColor` 类似，`layout(location = x)` 注解为输入变量分配了索引，我们稍后可以用索引来引用这些变量。重要的是要知道，某些类型（例如 64 位的 `dvec3` 向量）使用多个*槽位*。这意味着在它之后的索引必须至少 +2：
 
 ```glsl
 layout(location = 0) in dvec3 inPosition;
 layout(location = 2) in vec3 inColor;
 ```
 
-你可以在[OpenGL wiki](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL))中找到关于布局限定符的更多信息。
+你可以在 [OpenGL wiki](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)) 中找到关于布局限定符的更多信息。
 
 ## 顶点数据
 
@@ -50,7 +50,7 @@ use lazy_static::lazy_static;
 
 `size_of` 函数将用于计算我们将要定义的顶点数据的大小，而 `nalgebra-glm` 则定义了我们需要的向量类型。`lazy_static!` 宏将用于定义顶点数据，因为 `nalgebra-glm` 中的向量构造函数尚不是 `const fn`。
 
-接下来，创建一个新的 `#[repr(C)]` 结构体叫 `Vertex` ，其中包含我们将在顶点着色器中使用的两个属性，并添加一个简单的构造函数：
+接下来，创建一个名为 `Vertex` 的 `#[repr(C)]` 结构体，其中包含我们将在顶点着色器中使用的两个属性，并添加一个简单的构造函数：
 
 ```rust,noplaypen
 #[repr(C)]
@@ -79,13 +79,13 @@ lazy_static! {
 }
 ```
 
-现在，使用 `Vertex` 结构体来指定顶点数据列表。我们使用了与之前完全相同的位置和颜色值，但现在它们被合并为一个顶点数组。这被称为*交织*顶点属性。
+现在我们可以使用 `Vertex` 结构体来定义顶点数据了。我们使用了与之前完全相同的位置和颜色值，但现在顶点位置和颜色数据被合并进一个顶点数组中。这种定义顶点数据的方式也被称为*交错顶点属性*（interleaving vertex attributes）。
 
 ## 绑定描述
 
-接下来的步骤是告诉 Vulkan 在顶点数据上传到 GPU 内存后如何将这些数据格式传递给顶点着色器。我们需要两种类型的结构来传递这些信息。
+接下来的步骤是告诉 Vulkan 在顶点数据上传到 GPU 内存后如何将这些数据传递给顶点着色器。我们需要两种结构体来传递这些信息。
 
-第一个结构是 `vk::VertexInputBindingDescription`，我们将为 `Vertex` 结构体添加一个方法来填充它。
+第一种结构体是顶点绑定 `vk::VertexInputBindingDescription`，我们为 `Vertex` 结构体添加一个方法来填充它：
 
 ```rust,noplaypen
 impl Vertex {
@@ -94,7 +94,8 @@ impl Vertex {
 }
 ```
 
-顶点绑定描述了从内存中加载数据的速率，它指定了数据条目之间的字节数，以及是在每个顶点后移动到下一个数据条目，还是在每个实例后移动到下一个数据条目。
+<!-- 我真不知道这里这个 rate 是啥，但至少跟速率毫无关系 -->
+顶点绑定描述了从内存中加载数据的方式：它指定了数据条目之间的字节数，以及是在每个顶点后移动到下一个数据条目，还是在每个实例后移动到下一个数据条目。
 
 ```rust,noplaypen
 vk::VertexInputBindingDescription::builder()
@@ -109,11 +110,11 @@ vk::VertexInputBindingDescription::builder()
 * `vk::VertexInputRate::VERTEX` &ndash; 在每个顶点后移动到下一个数据条目
 * `vk::VertexInputRate::INSTANCE` &ndash; 在每个实例后移动到下一个数据条目
 
-由于我们不会使用实例渲染，因此我们将使用每个顶点的数据。
+由于我们不会使用实例化渲染（instanced rendering），因此我们将使用每个顶点的数据。
 
 ## 属性描述
 
-第二个描述顶点输入的结构是 `vk::VertexInputAttributeDescription` 。我们将为 `Vertex` 结构体添加另一个辅助方法来填充这些结构。
+第二种结构体是 `vk::VertexInputAttributeDescription`，它用于描述顶点输入。我们将为 `Vertex` 结构体添加另一个辅助方法来填充这些结构。
 
 ```rust,noplaypen
 impl Vertex {
@@ -122,7 +123,7 @@ impl Vertex {
 }
 ```
 
-如函数原型所示，这将有两个这样的结构体。属性描述结构描述了如何从由绑定描述产生的顶点数据块中提取顶点属性。我们有两个属性，位置和颜色，因此我们需要两个属性描述结构。
+如函数原型所示，我们将会创建两个这样的结构体。这个结构体描述了如何从顶点绑定产生的顶点数据块中提取顶点属性。我们有两个属性：位置和颜色，因此我们需要两个结构体。
 
 ```rust,noplaypen
 let pos = vk::VertexInputAttributeDescription::builder()
@@ -133,22 +134,22 @@ let pos = vk::VertexInputAttributeDescription::builder()
     .build();
 ```
 
-`binding` 参数告诉 Vulkan 顶点数据来自哪个绑定。`location` 参数引用了顶点着色器中输入的 `location` 指令。顶点着色器中位置的输入位置是 `0`，它有两个32位浮点分量。
+`binding` 参数告诉 Vulkan 顶点数据来自哪个绑定。`location` 参数引用了顶点着色器中输入的 `location` 指令。顶点着色器中顶点位置的 `location` 是 `0`，它有两个 32 位浮点分量。
 
-`format` 参数描述属性的数据类型。有点混淆的是，格式是使用与颜色格式相同的枚举来指定的。以下着色器类型和格式通常一起使用：
+`format` 参数描述属性的数据类型。有点混淆的是，`format` 字段使用与颜色格式相同的枚举类型。以下是常见的着色器类型和对应的颜色格式枚举：
 
 * `f32` &ndash; `vk::Format::R32_SFLOAT`&nbsp;
 * `glm::Vec2` &ndash; `vk::Format::R32G32_SFLOAT`&nbsp;
 * `glm::Vec3` &ndash; `vk::Format::R32G32B32_SFLOAT`&nbsp;
 * `glm::Vec4` &ndash; `vk::Format::R32G32B32A32_SFLOAT`&nbsp;
 
-如你所见，应使用颜色通道数量与着色器数据类型中组件数量相匹配的格式。允许使用比着色器中组件数量多的通道，但它们将被静默丢弃。如果通道数量低于组件数量，则 BGA 组件将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度还应与着色器输入的类型匹配。请参阅以下示例：
+如你所见，颜色格式的颜色通道数量应与着色器数据类型中组件数量相匹配。使用通道数量比着色器中组件数量多的颜色格式也是可以的，但多余的通道将被静默丢弃。如果通道数量少于组件数量，则 BGA 组件将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度也应与着色器数据类型匹配。请参阅以下示例：
 
 * `glm::IVec2` &ndash; `vk::Format::R32G32_SINT`，包含 `i32` 的 2 分量向量
 * `glm::UVec4` &ndash; `vk::Format::R32G32B32A32_UINT`，包含 `u32` 的 4 分量向量
 * `f64` &ndash; `vk::Format::R64_SFLOAT`，双精度（64位）浮点数
 
-`format` 参数隐式地定义了属性数据的字节大小，而 `offset` 参数指定从顶点数据开始的字节数。绑定每次加载一个 `Vertex` ，位置属性 ( `pos` ) 从该结构体的开始处偏移 `0` 字节。
+`format` 参数隐式地定义了属性数据的字节大小，而 `offset` 参数指定从顶点数据开始的字节数：绑定每次加载一个 `Vertex`，位置属性（`pos`）从该结构体的开始处偏移 `0` 字节。
 
 ```rust,noplaypen
 let color = vk::VertexInputAttributeDescription::builder()
