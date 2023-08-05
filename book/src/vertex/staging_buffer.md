@@ -6,11 +6,11 @@
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/19_staging_buffer.rs)
 
-目前我们所拥有的顶点缓冲可以正常工作，但是从CPU访问的内存类型可能不是显卡本身读取最优缓冲的类型。最优内存具有`vk::MemoryPropertyFlags::DEVICE_LOCAL`标志，通常在显卡上无法由 CPU 访问。在这一章中，我们将创建两个顶点缓冲。首先是位于 CPU 可访问内存中的*暂存缓冲*，用于将顶点数组中的数据上传至其中；然后是位于设备本地内存中的最终顶点缓冲。接着，我们将使用缓冲复制指令将数据从暂存缓冲复制到实际的顶点缓冲中。
+目前我们的顶点缓冲可以正常工作，但是能直接从 CPU 访问的内存对于从显卡读取而言可能并不是最优的。最优内存具有 `vk::MemoryPropertyFlags::DEVICE_LOCAL` 标志，通常位于独立显卡上，无法由 CPU 访问。在本章中，我们将创建两个顶点缓冲。首先是位于 CPU 可访问内存中的*暂存缓冲*，用于将顶点数组中的数据上传至其中；然后是位于设备本地内存中的最终顶点缓冲。接着，我们将使用缓冲复制指令将数据从暂存缓冲复制到实际的顶点缓冲中。
 
 ## 传输队列
 
-缓冲复制指令需要一个支持传输操作的队列族，这可以通过使用 `vk::QueueFlags::TRANSFER` 来指示。好消息是，任何具有 `vk::QueueFlags::GRAPHICS` 或 `vk::QueueFlags::COMPUTE` 能力的队列族已经隐式地支持 `vk::QueueFlags::TRANSFER` 操作。在这些情况下，实现不需要在 `queue_flags` 中显式列出这个标志。
+缓冲复制指令需要一个支持传输操作的队列族，这种队列族具有 `vk::QueueFlags::TRANSFER` 标志。好消息是，任何具有 `vk::QueueFlags::GRAPHICS` 或 `vk::QueueFlags::COMPUTE` 能力的队列族已经隐式地支持 `vk::QueueFlags::TRANSFER` 操作。在这种情况下，实现不需要在 `queue_flags` 中显式列出这个标志。
 
 如果你愿意接受挑战，你仍然可以尝试为传输操作使用不同的队列族。这将需要你对程序进行以下修改：
 
@@ -24,7 +24,7 @@
 
 ## 抽象化缓冲创建
 
-由于我们在本章将创建多个缓冲，将缓冲创建移动到一个辅助函数中是个不错的主意。创建一个名为 `^create_buffer` 的新函数，并将 `create_vertex_buffer` 中的代码（除了映射部分）迁移到该函数中。
+由于我们将在本章中创建多个缓冲，将缓冲创建操作移动到一个辅助函数中是个不错的主意。创建一个名为 `create_buffer` 的新函数，并将 `create_vertex_buffer` 中的代码（除了映射部分）迁移到该函数中：
 
 ```rust,noplaypen
 unsafe fn create_buffer(
@@ -61,9 +61,9 @@ unsafe fn create_buffer(
 }
 ```
 
-确保添加缓冲大小、使用方式以及内存属性的参数，以便我们可以使用此函数创建许多不同类型的缓冲。
+确保添加缓冲大小、用法以及内存属性的参数，以便我们可以使用此函数创建多种不同类型的缓冲。
 
-现在，你可以从 `create_vertex_buffer` 中删除缓冲创建和内存分配的代码，只需调用 `^create_buffer` 即可：
+现在，你可以从 `create_vertex_buffer` 中删除缓冲创建和内存分配的代码，改为调用 `create_buffer`：
 
 ```rust,noplaypen
 unsafe fn create_vertex_buffer(
@@ -100,11 +100,11 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-运行程序，确保顶点缓冲仍然可以正常工作。
+运行程序，确保顶点缓冲仍然正常工作。
 
 ## 使用暂存缓冲
 
-现在，我们要修改 `create_vertex_buffer`，使其只使用一个主机可见缓冲作为临时缓冲，同时使用一个设备本地缓冲作为实际的顶点缓冲。
+现在，我们要修改 `create_vertex_buffer`，使其只将主机可见的缓冲作为临时缓冲，并将一个设备本地缓冲用作实际的顶点缓冲。
 
 ```rust,noplaypen
 unsafe fn create_vertex_buffer(
@@ -150,14 +150,14 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-我们现在使用一个新的 `staging_buffer` 和 `staging_buffer_memory` 来进行顶点数据的映射和复制。在本章中，我们将使用两个新的缓冲使用标志：
+我们现在使用一个新的 `staging_buffer` 和 `staging_buffer_memory` 来进行顶点数据的映射和复制。在本章中，我们将使用两个新的缓冲用法标志：
 
-* `vk::BufferUsageFlags::TRANSFER_SRC` &ndash; 缓冲可以用作内存传输操作的源。
-* `vk::BufferUsageFlags::TRANSFER_DST` &ndash; 缓冲可以用作内存传输操作的目标。
+* `vk::BufferUsageFlags::TRANSFER_SRC` &ndash; 缓冲可以作为内存传输操作的源。
+* `vk::BufferUsageFlags::TRANSFER_DST` &ndash; 缓冲可以作为内存传输操作的目标。
 
-`vertex_buffer` 现在是从设备本地内存类型分配的，这通常意味着我们不能使用 `map_memory`。然而，我们可以从 `staging_buffer` 复制数据到 `vertex_buffer`。我们必须通过为 `staging_buffer` 指定传输源标志，为 `vertex_buffer` 指定传输目标标志，以及为顶点缓冲指定使用标志，来表示我们的意图。
+`vertex_buffer` 现在是从设备本地内存类型分配的，这通常意味着我们不能使用 `map_memory`。然而，我们可以从 `staging_buffer` 复制数据到 `vertex_buffer`。我们必须为 `staging_buffer` 指定传输源标志，为 `vertex_buffer` 指定传输目标标志和顶点缓冲用法标志，来表示我们的意图。
 
-接下来，我们将编写一个名为 `copy_buffer` 的函数，用于从一个缓冲复制内容到另一个缓冲。
+接下来，我们将编写一个名为 `copy_buffer` 的函数，用于将内容从一个缓冲复制到另一个缓冲。
 
 ```rust,noplaypen
 unsafe fn copy_buffer(
@@ -192,7 +192,7 @@ unsafe fn copy_buffer(
 }
 ```
 
-然后立即开始记录指令缓冲：
+然后开始记录指令缓冲：
 
 ```rust,noplaypen
 let info = vk::CommandBufferBeginInfo::builder()
@@ -201,20 +201,20 @@ let info = vk::CommandBufferBeginInfo::builder()
 device.begin_command_buffer(command_buffer, &info)?;
 ```
 
-我们将只使用一次性指令缓冲，并在复制操作完成之前等待函数返回。使用 `vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT` 标志可以向驱动程序表明我们的意图，这是一个很好的实践。
+我们将只使用这个指令缓冲一次，并在复制操作完成之前等待函数返回。使用 `vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT` 标志可以向驱动程序表明我们的意图，这是一个很好的实践。
 
 ```rust,noplaypen
 let regions = vk::BufferCopy::builder().size(size);
 device.cmd_copy_buffer(command_buffer, source, destination, &[regions]);
 ```
 
-缓冲的内容通过 `cmd_copy_buffer` 指令进行传输。该指令需要源缓冲和目标缓冲作为参数，以及一个用于复制的区域数组。区域在 `vk::BufferCopy` 结构中定义，其中包括源缓冲偏移量、目标缓冲偏移量和大小。需要注意的是，与 `map_memory` 指令不同，这里不能指定 `vk::WHOLE_SIZE`。
+缓冲的内容通过 `cmd_copy_buffer` 指令进行传输。该指令需要源缓冲和目标缓冲作为参数，以及一个用于复制的区域数组。区域由 `vk::BufferCopy` 结构体定义，结构体中包括源缓冲偏移量、目标缓冲偏移量和大小。需要注意的是，与 `map_memory` 指令不同，这里不能指定 `vk::WHOLE_SIZE`。
 
 ```rust,noplaypen
 device.end_command_buffer(command_buffer)?;
 ```
 
-这个指令缓冲仅包含复制指令，因此我们可以在复制指令之后停止记录。现在执行该指令缓冲以完成传输操作：
+这个指令缓冲仅包含复制指令，因此我们在复制指令之后停止记录。现在执行该指令缓冲以完成传输操作：
 
 ```rust,noplaypen
 let command_buffers = &[command_buffer];
@@ -225,7 +225,7 @@ device.queue_submit(data.graphics_queue, &[info], vk::Fence::null())?;
 device.queue_wait_idle(data.graphics_queue)?;
 ```
 
-与绘制指令不同，这次我们无需等待事件。我们只需立即在缓冲上执行传输操作。同样，有两种等待传输完成的可能方法。我们可以使用围栏，使用 `wait_for_fences` 来等待，或者只需等待传输队列变为空闲状态，使用 `queue_wait_idle`。使用围栏可以让你同时安排多个传输并等待它们全部完成，而不必逐个执行。这可以让驱动程序有更多优化的机会。
+与绘制指令不同，这次我们无需等待事件。我们只需立即在缓冲上执行传输操作。同样，有两种方法可以等待传输完成。我们可以使用围栏，使用 `wait_for_fences` 来等待，或者只需等待传输队列变为空闲状态，使用 `queue_wait_idle`。使用围栏可以让你同时安排多个传输并等待它们全部完成，而不必逐个执行。这可以给驱动程序更多优化的机会。
 
 ```rust,noplaypen
 device.free_command_buffers(data.command_pool, &[command_buffer]);
@@ -250,6 +250,6 @@ device.free_memory(staging_buffer_memory, None);
 
 ## 结论
 
-值得注意的是，在实际的应用程序中，你不应该为每个单独的缓冲实际调用 `allocate_memory`。同时，内存分配的最大数量受到 `max_memory_allocation_count` 物理设备限制的限制，即使在高端硬件（如 NVIDIA GTX 1080）上，这个限制可能低至 `4096`。为了在同一时间为大量对象分配内存，正确的方法是创建一个自定义的分配器，通过使用我们在许多函数中看到的 `offset` 参数，将单个分配分割为多个不同的对象。
+值得注意的是，在实际的应用程序中，你不应该为每个缓冲都调用 `allocate_memory`。内存分配的最大数量受到物理设备的 `max_memory_allocation_count` 限制，即使在高端硬件（如 NVIDIA GTX 1080）上，这个限制也可能低至 `4096`。要在同一时刻为大量对象分配内存，正确的方法是创建一个自定义的分配器，通过使用我们在许多函数中看到的 `offset` 参数，将单个分配分割为多个不同的对象。
 
 然而，在本教程中可以为每个资源单独分配，因为目前我们不会接近这些限制。
