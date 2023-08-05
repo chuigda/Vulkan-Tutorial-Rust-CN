@@ -143,7 +143,7 @@ let pos = vk::VertexInputAttributeDescription::builder()
 * `glm::Vec3` &ndash; `vk::Format::R32G32B32_SFLOAT`&nbsp;
 * `glm::Vec4` &ndash; `vk::Format::R32G32B32A32_SFLOAT`&nbsp;
 
-如你所见，颜色格式的颜色通道数量应与着色器数据类型中组件数量相匹配。使用通道数量比着色器中组件数量多的颜色格式也是可以的，但多余的通道将被静默丢弃。如果通道数量少于组件数量，则 BGA 组件将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度也应与着色器数据类型匹配。请参阅以下示例：
+如你所见，颜色格式的颜色通道数量应与着色器数据类型的组件数量相匹配。颜色格式的通道数量比着色器数据类型的组件数量多也是可以的，但多余的通道将被静默丢弃。如果通道数量少于组件数量，则 BGA 组件将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度也应与着色器数据类型匹配。请参阅以下示例：
 
 * `glm::IVec2` &ndash; `vk::Format::R32G32_SINT`，包含 `i32` 的 2 分量向量
 * `glm::UVec4` &ndash; `vk::Format::R32G32B32A32_UINT`，包含 `u32` 的 4 分量向量
@@ -170,9 +170,7 @@ let color = vk::VertexInputAttributeDescription::builder()
 
 ## 管线顶点输入
 
-现在，我们需要设置图形管线，以便通过引用 `create_pipeline` 中的结构接受这种格式的顶点数据。
-
-找到 `vertex_input_state` 结构并修改它，以引用这两个描述：
+现在我们需要在 `create_pipeline` 中引用这两个描述结构体，以让图形管线接受这种格式的顶点数据。找到 `vertex_input_state` 结构并修改它，让它引用这两个描述结构体：
 
 ```rust,noplaypen
 let binding_descriptions = &[Vertex::binding_description()];
@@ -182,4 +180,4 @@ let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
     .vertex_attribute_descriptions(&attribute_descriptions);
 ```
 
-现在，管线已准备好接受 `vertices` 容器格式的顶点数据，并将其传递给我们的顶点着色器。如果你现在启用了验证层并运行程序，你会看到它抱怨没有绑定到绑定点的顶点缓冲区。接下来的步骤是创建一个顶点缓冲区，并将顶点数据移到其中，以便 GPU 能够访问它。
+现在，管线已准备好接受 `vertices` 容器格式的顶点数据，并将其传递给我们的顶点着色器。如果你现在启用了校验层并运行程序，你会看到它抱怨没有顶点缓冲区被绑定到绑定点。接下来的步骤是创建一个顶点缓冲区，并将顶点数据移到其中，以便 GPU 能够访问它。
