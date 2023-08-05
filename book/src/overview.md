@@ -12,7 +12,7 @@
 
 在显卡架构成熟之后，它们开始提供更多的可编程特性。所有这些新功能都必须以某种方式与现有的 API 集成。这就导致这些 API 不能提供理想的抽象，而显卡驱动需要猜测程序员的意图，以将其映射到现代图形架构。这就是为什么有这么多驱动更新来提高游戏性能，而且有时候提升幅度很大。由于这些驱动的复杂性，应用程序开发人员还需要处理制造商之间的不一致性 例如 [着色器](https://en.wikipedia.org/wiki/Shader) 接受的语法。除了这些新功能之外，过去十年还涌入了具有强大图形硬件的移动设备。这些移动 GPU 出于空间和能耗上的考虑，采用了不同的架构。其中一个例子是 [tiled rendering](https://en.wikipedia.org/wiki/Tiled_rendering)，它可以给程序员提供对此功能的更多控制，从而提高性能。另一个起源于这些 API 时代的限制是有限的多线程支持，这可能会导致 CPU 成为性能瓶颈。
 
-Vulkan 从头开始、针对现代图形架构而设计，从而解决了上述问题。Vulkan 要求程序员明确地指定他们的意图，从而减少驱动开销，并允许多个线程并行创建和提交命令。Vulkan 使用一种标准的字节码格式和一种编译器来减少着色器编译中的不一致性。最后，它将现代图形卡的通用处理能力纳入到单个 API 中，从而将图形和计算功能统一起来。
+Vulkan 从头开始、针对现代图形架构而设计，从而解决了上述问题。Vulkan 要求程序员明确地指定他们的意图，从而减少驱动开销，并允许多个线程并行创建和提交指令。Vulkan 使用一种标准的字节码格式和一种编译器来减少着色器编译中的不一致性。最后，它将现代图形卡的通用处理能力纳入到单个 API 中，从而将图形和计算功能统一起来。
 
 ## 画一个三角形需要什么
 
@@ -24,7 +24,7 @@ Vulkan 从头开始、针对现代图形架构而设计，从而解决了上述�
 
 ### 2. 逻辑设备和队列族（queue families）
 
-选择正确的硬件设备后，你需要创建一个 `VkDevice` (逻辑设备)，在这里你需要更具体地描述你将要使用的 `VkPhysicalDeviceFeatures`，例如多视口渲染和 64 位浮点数。你还需要指定你想要使用的队列族。大多数 Vulkan 操作，例如绘制命令和内存操作，都是通过将它们提交到 `VkQueue` 来异步执行的。队列是从队列族中分配的，每个队列族都支持一组特定的操作。例如，可能会有单独的队列族用于图形、计算和内存传输操作。队列族的可用性也可以用作物理设备选择的区分因素。虽然支持 Vulkan 的设备可能不提供任何图形功能，但是今天所有支持 Vulkan 的显卡通常都支持我们感兴趣的所有队列操作。
+选择正确的硬件设备后，你需要创建一个 `VkDevice` (逻辑设备)，在这里你需要更具体地描述你将要使用的 `VkPhysicalDeviceFeatures`，例如多视口渲染和 64 位浮点数。你还需要指定你想要使用的队列族。大多数 Vulkan 操作，例如绘制指令和内存操作，都是通过提交到 `VkQueue` 来异步执行的。队列是从队列族中分配的，每个队列族都支持一组特定的操作。例如，可能会有单独的队列族用于图形、计算和内存传输操作。队列族的可用性也可以用作物理设备选择的区分因素。虽然支持 Vulkan 的设备可能不提供任何图形功能，但是今天所有支持 Vulkan 的显卡通常都支持我们感兴趣的所有队列操作。
 
 ### 3. 创建窗口和交换链（swapchain）
 
@@ -71,7 +71,7 @@ Vulkan 与之前的图形 API 最大的不同是几乎所有图形管线的配�
 
 ### 总结
 
-这个快速的介绍应该能让你对绘制第一个三角形所需的工作有一个基本的了解。一个真实的程序包含更多的步骤，例如分配顶点缓冲区、创建统一缓冲区和上传纹理图像，这些都会在后续章节中介绍，但我们会从简单的开始，因为 Vulkan 本身的学习曲线就已经非常陡峭了。请注意，我们会通过将顶点坐标嵌入到顶点着色器中来作弊，而不是使用顶点缓冲区。这是因为管理顶点缓冲区需要对命令缓冲区有一定的了解。
+这个快速的介绍应该能让你对绘制第一个三角形所需的工作有一个基本的了解。一个真实的程序包含更多的步骤，例如分配顶点缓冲区、创建统一缓冲区和上传纹理图像，这些都会在后续章节中介绍，但我们会从简单的开始，因为 Vulkan 本身的学习曲线就已经非常陡峭了。请注意，我们会通过将顶点坐标嵌入到顶点着色器中来作弊，而不使用顶点缓冲。这是因为管理顶点缓冲需要对指令缓冲有一定的了解。
 
 所以简单来说，要绘制第一个三角形，我们需要：
 
@@ -126,30 +126,30 @@ Vulkan API 是用 C 语言定义的。Vulkan API 的规范 —— Vulkan API 注
 
 例如，`VK_BUFFER_USAGE_TRANSFER_SRC_BIT` 位标志是 `VkBufferUsageFlags` 掩码的 `TRANSFER_SRC` 位标志。在 `vulkanalia` 中，这个位标志变成了 `vk::BufferUsageFlags::TRANSFER_SRC`。
 
-### 命令
+### 指令
 
-诸如 `vkCreateInstance` 的原始 Vulkan 命令的类型在 `vulkanalia` 中被定义为带有 `PFN_`（pointer to function，函数指针）前缀的函数指针类型别名。所以 `vkCreateInstance` 的 `vulkanalia` 类型别名是 `vk::PFN_vkCreateInstance`。
+诸如 `vkCreateInstance` 的原始 Vulkan 指令的类型在 `vulkanalia` 中被定义为带有 `PFN_`（pointer to function，函数指针）前缀的函数指针类型别名。所以 `vkCreateInstance` 的 `vulkanalia` 类型别名是 `vk::PFN_vkCreateInstance`。
 
-这些函数签名本身还不足以调用 Vulkan 命令，我们必须先加载这些类型所描述的命令。Vulkan 规范针对这个问题有一个[详细的描述](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#initialization-functionpointers)，但是在这里我会给出一个简化的版本。
+这些函数签名本身还不足以调用 Vulkan 指令，我们必须先加载这些类型所描述的指令。Vulkan 规范针对这个问题有一个[详细的描述](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#initialization-functionpointers)，但是在这里我会给出一个简化的版本。
 
-第一个要加载的命令是 `vkGetInstanceProcAddr`，这个命令是以平台特定的方式加载的，但是 `vulkanalia` 提供了一个可选的 [`libloading`](https://crates.io/crates/libloading) 集成，我们会在本教程中使用它来从 Vulkan 共享库中加载这个命令。`vkGetInstanceProcAddr` 可以用来加载我们想要调用的其他 Vulkan 命令。
+第一个要加载的指令是 `vkGetInstanceProcAddr`，这个指令是以平台特定的方式加载的，但是 `vulkanalia` 提供了一个可选的 [`libloading`](https://crates.io/crates/libloading) 集成，我们会在本教程中使用它来从 Vulkan 共享库中加载这个指令。`vkGetInstanceProcAddr` 可以用来加载我们想要调用的其他 Vulkan 指令。
 
-然而，取决于系统上的 Vulkan 实现，可能会有多个版本的 Vulkan 命令可用。例如，如果你的系统上有一个独立的 NVIDIA GPU 和一个集成的 Intel GPU，那么可能会有针对每个设备的专用 Vulkan 命令的不同实现，例如 `allocate_memory`。在这种情况下，`vkGetInstanceProcAddr` 会返回一个命令，这个命令会根据使用的设备来分派调用到正确的设备特定命令。
+然而，取决于系统上的 Vulkan 实现，可能会有多个版本的 Vulkan 指令可用。例如，如果你的系统上有一个独立的 NVIDIA GPU 和一个集成的 Intel GPU，那么可能会有针对每个设备的专用 Vulkan 指令的不同实现，例如 `allocate_memory`。在这种情况下，`vkGetInstanceProcAddr` 会返回一个指令，这个指令会根据使用的设备来分派调用到正确的设备特定指令。
 
-要避免这种分派的运行时开销，可以使用 `vkGetDeviceProcAddr` 命令来直接加载这些设备特定的 Vulkan 命令。这个命令的加载方式和 `vkGetInstanceProcAddr` 一样。
+要避免这种分派的运行时开销，可以使用 `vkGetDeviceProcAddr` 指令来直接加载这些设备特定的 Vulkan 指令。这个指令的加载方式和 `vkGetInstanceProcAddr` 一样。
 
-我们会在这个教程中用到许多 Vulkan 命令。幸运的是，我们不需要手动加载它们，因为 `vulkanalia` 已经提供了以下四类结构体，可以用来轻松地加载所有 Vulkan 命令：
+我们会在这个教程中用到许多 Vulkan 指令。幸运的是，我们不需要手动加载它们，因为 `vulkanalia` 已经提供了以下四类结构体，可以用来轻松地加载所有 Vulkan 指令：
 
-* `vk::StaticCommands` &ndash; 以平台特定的方式加载的 Vulkan 命令，可以用来加载其他命令（例如 `vkGetInstanceProcAddr` 和 `vkGetDeviceProcAddr`）
-* `vk::EntryCommands` &ndash; 使用 `vkGetInstanceProcAddr` 和一个空的 Vulkan 实例加载的 Vulkan 命令。这些命令不与特定的 Vulkan 实例绑定，可以用来查询实例支持并创建实例
-* `vk::InstanceCommands` &ndash; 使用 `vkGetInstanceProcAddr` 和一个有效的 Vulkan 实例加载的 Vulkan 命令。这些命令与特定的 Vulkan 实例绑定，可以用来查询设备支持并创建设备
-* `vk::DeviceCommands` &ndash; 使用 `vkGetDeviceProcAddr` 和一个有效的 Vulkan 设备加载的 Vulkan 命令。这些命令与特定的 Vulkan 设备绑定，并且提供了你期望中图形 API 提供的大多数功能
+* `vk::StaticCommands` &ndash; 以平台特定的方式加载的 Vulkan 指令，可以用来加载其他指令（例如 `vkGetInstanceProcAddr` 和 `vkGetDeviceProcAddr`）
+* `vk::EntryCommands` &ndash; 使用 `vkGetInstanceProcAddr` 和一个空的 Vulkan 实例加载的 Vulkan 指令。这些指令不与特定的 Vulkan 实例绑定，可以用来查询实例支持并创建实例
+* `vk::InstanceCommands` &ndash; 使用 `vkGetInstanceProcAddr` 和一个有效的 Vulkan 实例加载的 Vulkan 指令。这些指令与特定的 Vulkan 实例绑定，可以用来查询设备支持并创建设备
+* `vk::DeviceCommands` &ndash; 使用 `vkGetDeviceProcAddr` 和一个有效的 Vulkan 设备加载的 Vulkan 指令。这些指令与特定的 Vulkan 设备绑定，并且提供了你期望中图形 API 提供的大多数功能
 
-这些结构体能让你简单地在 Rust 中加载和调用原始 Vulkan 命令，不过 `vulkanalia` 提供了对原始命令的包装，这使得在 Rust 中使用它们更加容易，并且不易出错。
+这些结构体能让你简单地在 Rust 中加载和调用原始 Vulkan 指令，不过 `vulkanalia` 提供了对原始指令的包装，这使得在 Rust 中使用它们更加容易，并且不易出错。
 
-### 命令包装器（wrapper）
+### 指令封装（command wrapper）
 
-一个典型的 Vulkan 命令的签名在 C 中看起来就像这样：
+一个典型的 Vulkan 指令的签名在 C 中看起来就像这样：
 
 ```c
 VkResult vkEnumerateInstanceExtensionProperties(
@@ -159,15 +159,15 @@ VkResult vkEnumerateInstanceExtensionProperties(
 );
 ```
 
-熟悉 Vulkan API 的人可以从这个签名中快速看出这个命令的用法，尽管它没有包含一些关键信息。
+熟悉 Vulkan API 的人可以从这个签名中快速看出这个指令的用法，尽管它没有包含一些关键信息。
 
-而对于那些刚接触 Vulkan API 的人来说，查看此命令的[文档](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceExtensionProperties.html)可能会更有启发性。文档中对此命令行为的描述表明，使用此命令列出 Vulkan 实例可用的扩展（extension）需要多个步骤：
+而对于那些刚接触 Vulkan API 的人来说，查看此指令的[文档](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceExtensionProperties.html)可能会更有启发性。文档中对此指令行为的描述表明，使用此指令列出 Vulkan 实例可用的扩展（extension）需要多个步骤：
 
-1. 调用命令以获取扩展的数量
-2. 分配一个可以容纳输出的缓冲区
-3. 再次调用命令，获取扩展并填充缓冲区
+1. 调用指令以获取扩展的数量
+2. 分配一个可以容纳输出的缓冲
+3. 再次调用指令，获取扩展并填充缓冲
 
-所以在 C++ 中，这些步骤可能看起来像这样（简单起见，这里忽略了命令的结果）：
+所以在 C++ 中，这些步骤可能看起来像这样（简单起见，这里忽略了指令的结果）：
 
 ```c++
 // 1.
@@ -181,7 +181,7 @@ std::vector<VkExtensionProperties> pProperties{pPropertyCount};
 vkEnumerateInstanceExtensionProperties(NULL, &pPropertyCount, pProperties.data());
 ```
 
-而 `vkEnumerateInstanceExtensionProperties` 的包装器的 Rust 签名如下：
+而 `vkEnumerateInstanceExtensionProperties` 的封装的 Rust 签名如下：
 
 ```rust,noplaypen
 unsafe fn enumerate_instance_extension_properties(
@@ -190,24 +190,24 @@ unsafe fn enumerate_instance_extension_properties(
 ) -> VkResult<Vec<ExtensionProperties>>;
 ```
 
-这个命令包装器使得从 Rust 使用 `vkEnumerateInstanceExtensionProperties` 更加容易、更少出错，并且更符合惯用法：
+这个指令封装使得从 Rust 使用 `vkEnumerateInstanceExtensionProperties` 更加容易、更少出错，并且更符合惯用法：
 
 * `layer_name` 参数的可选性被编码在函数签名中。这个参数是可选的，这一点在 C 函数签名中没有体现，需要查阅 Vulkan 规范才能得到这个信息
-* 命令的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）体现。这使得我们可以利用 Rust 强大的错误处理能力，并且在我们忽略检查可失败命令的结果时，编译器会发出警告
-* 命令包装器在内部处理了上面描述的三个步骤，并返回一个包含扩展属性的 `Vec`
+* 指令的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）体现。这使得我们可以利用 Rust 强大的错误处理能力，并且在我们忽略检查可失败指令的结果时，编译器会发出警告
+* 指令封装在内部处理了上面描述的三个步骤，并返回一个包含扩展属性的 `Vec`
 
-注意，命令包装器仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类型的错误（例如给此命令传递一个空的层名称，）但还是有很多可能会出错的事情，导致诸如段错误之类“有趣”的事情发生。你可以随时检查 Vulkan 文档中命令的 `Valid Usage` 部分以了解如何正确地调用命令。
+注意，指令封装仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类型的错误（例如给此指令传递一个空的层名称，）但还是有很多可能会出错的事情，导致诸如段错误之类“有趣”的事情发生。你可以随时检查 Vulkan 文档中指令的 `Valid Usage` 部分以了解如何正确地调用指令。
 
-你可能注意到了上面命令包装器中的 `&self` 参数。这些命令包装器是在 trait 中定义的，而 `vulkanalia` 暴露的类型实现了这些 trait。这些 trait 可以分为两类：版本 trait （version traits）和扩展 trait（extension traits）。版本 trait 为 Vulkan 的标准部分中的命令提供命令包装器，而扩展 trait 为 Vulkan 扩展中的命令提供命令包装器。
+你可能注意到了上面指令封装中的 `&self` 参数。这些指令封装是在 trait 中定义的，而 `vulkanalia` 暴露的类型实现了这些 trait。这些 trait 可以分为两类：版本 trait （version traits）和扩展 trait（extension traits）。版本 trait 为 Vulkan 的标准部分中的指令提供指令封装，而扩展 trait 为 Vulkan 扩展中的指令提供指令封装。
 
-例如，`enumerate_instance_extension_properties` 是一个非扩展 Vulkan 命令，是 Vulkan 1.0 的一部分，不依赖于 Vulkan 实例或设备，所以它被放在 `vk::EntryV1_0` trait 中。而 `cmd_draw_indirect_count` 命令是在 Vulkan 1.2 中添加的，并且依赖于 Vulkan 设备，所以它被放在 `vk::DeviceV1_2` trait 中。
+例如，`enumerate_instance_extension_properties` 是一个非扩展 Vulkan 指令，是 Vulkan 1.0 的一部分，不依赖于 Vulkan 实例或设备，所以它被放在 `vk::EntryV1_0` trait 中。而 `cmd_draw_indirect_count` 指令是在 Vulkan 1.2 中添加的，并且依赖于 Vulkan 设备，所以它被放在 `vk::DeviceV1_2` trait 中。
 
-而 `vk::KhrSurfaceExtension` 是一个扩展 trait，我们将在后面的章节中使用它来调用 `destroy_surface_khr` 这样的 Vulkan 命令，这些命令是在 `VK_KHR_surface` 扩展中定义的。
+而 `vk::KhrSurfaceExtension` 是一个扩展 trait，我们将在后面的章节中使用它来调用 `destroy_surface_khr` 这样的 Vulkan 指令，这些指令是在 `VK_KHR_surface` 扩展中定义的。
 
 <!-- TODO: needs much refinement -->
-这些版本和扩展 trait 是为包含加载的命令和所需的 Vulkan 实例或设备（如果有的话）的类型定义的。这些类型是精心手工制作的，而不是 `vulkanalia` 的 `vk` 模块中自动生成的 Vulkan 绑定的一部分。它们是 `Entry`、`Instance` 和 `Device` 结构体，将在后面的章节中使用。
+这些版本和扩展 trait 是为包含加载的指令和所需的 Vulkan 实例或设备（如果有的话）的类型定义的。这些类型是精心手工制作的，而不是 `vulkanalia` 的 `vk` 模块中自动生成的 Vulkan 绑定的一部分。它们是 `Entry`、`Instance` 和 `Device` 结构体，将在后面的章节中使用。
 
-从现在开始，本教程将继续像本章节一样直接按名称引用这些命令包装器（例如 `create_instance`）。你可以访问 `vulkanalia` 文档来获取命令包装器的更多信息，例如命令包装器是在哪个 trait 中定义的。
+从现在开始，本教程将继续像本章节一样直接按名称引用这些指令封装（例如 `create_instance`）。你可以访问 `vulkanalia` 文档来获取指令封装的更多信息，例如指令封装是在哪个 trait 中定义的。
 
 <!--
 1. 机械工业出版社翻译的《GoF 设计模式》使用了“生成器模式”
@@ -216,7 +216,7 @@ unsafe fn enumerate_instance_extension_properties(
 -->
 ### 生成器（Builders）
 
-Vulkan API 通常使用结构体作为 Vulkan 命令的参数。这些作为命令的参数使用的 Vulkan 结构体有一个字段，用于指示结构体的类型。在 C API 中，这个字段（`sType`）需要被显式地设置。例如，这里我们正在填充 `VkInstanceCreateInfo` 的一个实例，然后在 C++ 中使用它来调用 `vkCreateInstance`：
+Vulkan API 通常使用结构体作为 Vulkan 指令的参数。这些作为指令的参数使用的 Vulkan 结构体有一个字段，用于指示结构体的类型。在 C API 中，这个字段（`sType`）需要被显式地设置。例如，这里我们正在填充 `VkInstanceCreateInfo` 的一个实例，然后在 C++ 中使用它来调用 `vkCreateInstance`：
 
 ```c++
 std::vector<const char*> extensions{/* 3 extension names */};
@@ -264,11 +264,11 @@ let info = vk::InstanceCreateInfo::builder()
 let instance = entry.create_instance(&info, None).unwrap();
 ```
 
-幸运的是，`vulkanalia` 为此提供了解决方案 —— 不调用 `build()`，而是直接将生成器传递给命令包装器！在任何接受 Vulkan 结构体的地方，你都可以直接提供与 Vulkan 结构体对应的生成器。如果从上面的代码中删除 `build()` 调用，Rust 编译器就能够利用生成器上的生存期来拒绝这个坏代码，并告诉你 `error[E0716]: temporary value dropped while borrowed`。
+幸运的是，`vulkanalia` 为此提供了解决方案 —— 不调用 `build()`，而是直接将生成器传递给指令封装！在任何接受 Vulkan 结构体的地方，你都可以直接提供与 Vulkan 结构体对应的生成器。如果从上面的代码中删除 `build()` 调用，Rust 编译器就能够利用生成器上的生存期来拒绝这个坏代码，并告诉你 `error[E0716]: temporary value dropped while borrowed`。
 
 ### `prelude` 模块
 
-`vulkanalia` 提供了[`prelude` 模块](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/prelude/index.html)，用于暴露使用 crate 所需的基本类型。每个 Vulkan 版本都有一个 `prelude` 模块，每个模块都会暴露相关的命令 trait，以及其他经常用到的类型：
+`vulkanalia` 提供了[`prelude` 模块](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/prelude/index.html)，用于暴露使用 crate 所需的基本类型。每个 Vulkan 版本都有一个 `prelude` 模块，每个模块都会暴露相关的指令 trait，以及其他经常用到的类型：
 
 ```rust,noplaypen
 // Vulkan 1.0
