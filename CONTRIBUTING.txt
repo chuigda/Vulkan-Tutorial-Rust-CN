@@ -23,4 +23,5 @@
 --
 
 临时策略
-    1. 禁止将 ChatGPT 用作翻译 (GitHub Copilot 允许使用)
+    1. 禁止将 ChatGPT 用作翻译 (GitHub Copilot 允许使用)，因为我们发现 ChatGPT
+       经常搞错原文的语义，在某些时候甚至不如传统的翻译软件可靠
