@@ -6,7 +6,7 @@
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/07_image_views.rs)
 
-要在渲染管线中使用任何 `vk::Image` —— 包括交换链中的那些，我们都需要为其创建一个图像视图对象 `vk::ImageView`。图像视图就像它的名字所描述的那样，它描述了如何访问图像，以及访问图像的哪一部分。例如，图像视图可以用来表示“一张图像应该被视为一张没有 mipmap 级别（mipmapping levels）的二维纹理”。
+要在渲染管线中使用任何 `vk::Image` —— 包括交换链中的那些，我们都需要为其创建一个图像视图对象 `vk::ImageView`。图像视图就像它的名字所描述的那样，它描述了如何访问图像，以及访问图像的哪一部分。例如，图像视图可以用来表示“一张图像应该被视为一张没有多级渐远层级（mipmapping levels）的二维纹理”。
 
 在本章中，我们会实现一个 `create_swapchain_image_views` 函数，来为交换链中的每张图像创建一个基本的图像视图，这样我们就可以在之后的章节中将它们用作渲染目标。
 
@@ -70,7 +70,7 @@ let components = vk::ComponentMapping::builder()
 ```
 
 <!-- TODO subresource 这个翻译还有待考虑 -->
-接着，我们为图像视图定义子资源（subresource）范围，它描述了图像的用途以及应该访问图像的哪一部分。这里，我们的图像将被用作没有 mipmap 级别，也没有多个层次的颜色目标：
+接着，我们为图像视图定义子资源（subresource）范围，它描述了图像的用途以及应该访问图像的哪一部分。这里，我们的图像将被用作没有多级渐远层级，也没有多个层次的颜色目标：
 
 ```rust,noplaypen
 let subresource_range = vk::ImageSubresourceRange::builder()

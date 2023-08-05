@@ -143,7 +143,7 @@ let pos = vk::VertexInputAttributeDescription::builder()
 * `glm::Vec3` &ndash; `vk::Format::R32G32B32_SFLOAT`&nbsp;
 * `glm::Vec4` &ndash; `vk::Format::R32G32B32A32_SFLOAT`&nbsp;
 
-如你所见，颜色格式的颜色通道数量应与着色器数据类型的组件数量相匹配。颜色格式的通道数量比着色器数据类型的组件数量多也是可以的，但多余的通道将被静默丢弃。如果通道数量少于组件数量，则 BGA 组件将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度也应与着色器数据类型匹配。请参阅以下示例：
+如你所见，颜色格式的颜色通道数量应与着色器数据类型的分量数量相匹配。颜色格式的通道数量比着色器数据类型的分量数量多也是可以的，但多余的通道将被静默丢弃。如果通道数量少于分量数量，则 BGA 分量将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度也应与着色器数据类型匹配。请参阅以下示例：
 
 * `glm::IVec2` &ndash; `vk::Format::R32G32_SINT`，包含 `i32` 的 2 分量向量
 * `glm::UVec4` &ndash; `vk::Format::R32G32B32A32_UINT`，包含 `u32` 的 4 分量向量
