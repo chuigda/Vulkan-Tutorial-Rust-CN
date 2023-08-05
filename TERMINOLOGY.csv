@@ -110,9 +110,7 @@ image view,名词,Vulkan概念,图像视图,,,
 swap extent,名词,Vulkan概念,交换范围,,,
 push constant,名词,Vulkan概念,推式常量,一些 CSDN blog 使用了这个翻译，我觉得其实还不赖,,
 command,名词,Vulkan概念,指令,经由 Vulkan API 提交到 GPU 上执行的指令，例如绘制指令、计算指令、内存拷贝指令等,,
-command,名词,Vulkan概念,指令,"Vulkan API 中的函数，例如 vkCreateGraphicsPipeline。
-注意 Vulkan specification 并不将这些东西称作 command，C++ 版教程也不使用这个术语。
-或许以后需要改变这个翻译，直接将这些东西称为 function",,
+command,名词,Vulkan概念,指令,"Vulkan API 中的函数，例如 vkCreateGraphicsPipeline。注意 Vulkan specification 并不将这些东西称作 command，C++ 版教程也不使用这个术语。或许以后需要改变这个翻译，直接将这些东西称为 function",,
 ,,,,,,
 C style,形容词,C语言概念,类 C,,GLSL is a shading language with a C-style syntax,
 null-terminated C string,名词,C语言概念,以空字符结尾的C字符串,,,
