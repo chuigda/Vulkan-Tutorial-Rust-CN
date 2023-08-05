@@ -284,7 +284,7 @@
           <xhtml:div
              style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 63px; white-space: nowrap; word-wrap: normal; text-align: center;">
             <xhtml:div
-               style="display:inline-block;text-align:inherit;text-decoration:inherit;">细分曲面</xhtml:div>
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">曲面细分</xhtml:div>
           </xhtml:div>
         </foreignObject>
         <text
@@ -292,7 +292,7 @@
            y="12"
            font-size="12px"
            id="text52"
-           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">细分曲面</text>
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">曲面细分</text>
       </switch>
     </g>
     <path
