@@ -40,7 +40,7 @@
 # 顶点缓冲
 
 - [描述顶点输入](./vertex/vertex_input_description.md)
-- [Vertex buffer creation](./vertex/vertex_buffer_creation.md)
+- [创建顶点缓冲](./vertex/vertex_buffer_creation.md)
 - [Staging buffer](./vertex/staging_buffer.md)
 - [Index buffer](./vertex/index_buffer.md)
 
