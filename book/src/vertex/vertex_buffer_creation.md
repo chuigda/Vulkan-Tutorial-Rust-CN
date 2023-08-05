@@ -129,9 +129,9 @@ unsafe fn get_memory_type_index(
 let memory = instance.get_physical_device_memory_properties(data.physical_device);
 ```
 
-返回的 `vk::PhysicalDeviceMemoryProperties` 结构体有两个数组 `memory_types` 和 `memory_heaps`。内存堆是不同的内存资源，比如专用的 VRAM 和在 VRAM 耗尽时 RAM 中的交换空间。这些堆中有不同类型的内存。现在我们只关注内存类型，而不关注内存来自哪个堆，但你应该能想到不同的堆会影响性能。
+返回的 `vk::PhysicalDeviceMemoryProperties` 结构体有两个数组 `memory_types` 和 `memory_heaps`。内存堆代表不同的内存资源，比如专用的 VRAM 和在 VRAM 耗尽时 RAM 中的交换空间。这些堆中有不同类型的内存。现在我们只关注内存类型，而不关注内存来自哪个堆，但你应该能想到不同的堆会影响性能。
 
-首先，让我们找到一个适合缓冲本身的内存类型：
+首先，让我们找到一个对缓冲本身合适的内存类型：
 
 ```rust,noplaypen
 (0..memory.memory_type_count)
@@ -141,9 +141,9 @@ let memory = instance.get_physical_device_memory_properties(data.physical_device
 
 `requirements` 参数中的 `memory_type_bits` 字段将被用于指定适合的内存类型。这意味着我们可以通过简单地迭代并检查相应的位是否设置为 `1` 来找到适合的内存类型的索引。
 
-然而，内存类型不仅要对顶点缓冲合适，我们还需要能够将顶点数据写入该内存。`memory_types` 数组由指定每种内存类型的堆和属性的`vk::MemoryType` 结构体组成。属性定义了内存的特殊功能，例如是否可以从 CPU 映射它以便我们从 CPU 写入数据。这个属性通过 `vk::MemoryPropertyFlags::HOST_VISIBLE` 来指示。我们还需要使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 属性。我们将在映射内存时看到为什么需要这样做。
+然而，内存类型不仅要对顶点缓冲合适，我们还需要能够将顶点数据写入该内存。`memory_types` 数组由 `vk::MemoryType` 结构体组成，该结构体指定每种类型内存的堆（heap）和属性（properties）。属性定义了内存的特殊特性，例如能否从 CPU 映射它以便我们从 CPU 写入数据 —— 这个属性通过 `vk::MemoryPropertyFlags::HOST_VISIBLE` 来指示。我们还需要使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 属性。我们将在映射内存时看到为什么需要这样做。
 
-现在，我们可以修改循环以检查此属性的支持：
+现在，修改循环以检查此属性的支持：
 
 ```rust,noplaypen
 (0..memory.memory_type_count)
@@ -194,9 +194,9 @@ data.vertex_buffer_memory = device.allocate_memory(&memory_info, None)?;
 device.bind_buffer_memory(data.vertex_buffer, data.vertex_buffer_memory, 0)?;
 ```
 
-前两个参数不言自明，第三个参数是在内存区域内的偏移量。由于此内存专门为该顶点缓冲分配，因此偏移量只是 `0` 。如果我们要提供非零的偏移量，则这个值必须可被 `requirements.alignment` 整除。
+前两个参数不言自明，第三个参数是顶点数据在内存区域内的偏移量。由于此内存专门为顶点缓冲分配，因此偏移量是 `0`。如果我们要提供非零的偏移量，则这个值必须可被 `requirements.alignment` 整除。
 
-当然，就像在 C 语言中动态内存分配一样，内存应该在某个时候被释放。绑定到缓冲对象的内存在缓冲不再被使用时可以被释放，所以让我们在缓冲被销毁后释放它：
+当然，就像在 C 语言中动态分配的内存一样，内存应该在某个时候被释放。绑定到缓冲对象的内存在缓冲不再被使用时可以被释放，所以让我们在缓冲被销毁后释放它：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -222,31 +222,31 @@ let memory = device.map_memory(
 
 该函数允许我们访问由偏移量和大小指定的内存区域。在这里，偏移量和大小分别为 `0` 和 `buffer_info.size`。还可以使用特殊值 `vk::WHOLE_SIZE` 来映射所有内存。最后一个参数可用于指定标志，但当前 API 中还没有任何可用的标志。它必须设置为空标志集。返回的值是映射值的指针。
 
-在继续之前，我们需要一个用来将顶点列表的内存复制到映射内存中的函数。在程序中添加这个导入：
+在继续之前，我们需要一个将顶点列表的内存复制到映射内存中的函数。在程序中添加这个导入：
 
 ```rust,noplaypen
 use std::ptr::copy_nonoverlapping as memcpy;
 ```
 
-现在我们可以将顶点数据复制到缓冲内存中，然后使用 `unmap_memory` 将其取消映射。
+现在我们可以将顶点数据复制到缓冲内存中，然后使用 `unmap_memory` 取消映射。
 
 ```rust,noplaypen
 memcpy(VERTICES.as_ptr(), memory.cast(), VERTICES.len());
 device.unmap_memory(data.vertex_buffer_memory);
 ```
 
-不幸的是，驱动程序可能不会立即将数据复制到缓冲内存中，例如因为缓存的原因。还有可能写入缓冲的数据尚未在映射内存中可见。有两种方法可以解决这个问题：
+不幸的是，出于诸如缓存（caching）的原因，驱动程序可能不会立即将数据复制到缓冲内存中。写入缓冲的数据亦可能在映射内存中尚不可见。有两种方法可以解决这个问题：
 
-* 使用内存堆是主机一致的，使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 表示
-* 在写入映射内存后调用 `flush_mapped_memory_ranges`，在从映射内存读取之前调用 `invalidate_mapped_memory_ranges`
+* 使用主机一致（host coherent）的内存堆，这种堆使用 `vk::MemoryPropertyFlags::HOST_COHERENT` 表示
+* 在写入映射内存后调用 `flush_mapped_memory_ranges`，并在读取映射内存之前调用 `invalidate_mapped_memory_ranges`
 
-我们采用了第一种方法，这样可以确保映射内存始终与分配的内存内容相匹配。请记住，这可能会导致稍微较差的性能，但我们将在下一章看到为什么这没关系。
+我们采用了第一种方法，这样可以确保映射内存始终与分配的内存内容相匹配。相较于冲刷（flush）内存而言，这样做性能稍差，但我们将在下一章看到为什么这没关系。
 
-刷新内存范围或使用一致性内存堆意味着驱动程序将知道我们对缓冲的写入，但并不意味着它们实际上已经在GPU上可见。数据传输到GPU是在后台进行的操作，规范仅告诉我们，它在下一次 `queue_submit` 调用时是保证完成的。
+冲刷内存范围或使用一致性内存堆意味着驱动程序将知道我们对缓冲的写入，但这并不意味着我们写入的数据实际上已经在 GPU 上可见。将数据传输到 GPU 是在后台进行的操作，规范仅保证这个操作在我们下一次调用 `queue_submit` 时是完成的。
 
 ## 绑定顶点缓冲
 
-现在，唯一剩下的任务是在渲染操作期间绑定顶点缓冲。我们将扩展 `create_command_buffers` 函数来完成这个任务。
+现在，仅剩的任务是在渲染操作期间绑定顶点缓冲。我们将扩展 `create_command_buffers` 函数来完成这个任务。
 
 ```rust,noplaypen
 // ...
@@ -255,7 +255,7 @@ device.cmd_draw(*command_buffer, VERTICES.len() as u32, 1, 0, 0);
 // ...
 ```
 
-`cmd_bind_vertex_buffers` 命令用于将顶点缓冲绑定到绑定点，就像我们在上一章中设置的那样。第二个参数指定我们正在使用的顶点输入绑定的索引。最后两个参数指定要绑定的顶点缓冲和从中开始读取顶点数据的字节偏移量。您还应该更改对 `cmd_draw` 的调用，将缓冲中的顶点数传递给该函数，而不是硬编码的数字 `3`。
+`cmd_bind_vertex_buffers` 指令用于将顶点缓冲绑定到绑定点，就像我们在上一章中设置的那样。第二个参数指定我们正在使用的顶点输入绑定的索引。最后两个参数指定要绑定的顶点缓冲和从中开始读取顶点数据的字节偏移量。你还应该更改对 `cmd_draw` 的调用，将缓冲中的顶点数传递给该函数，代替原先硬编码的数字 `3`。
 
 现在运行程序，您应该再次看到熟悉的三角形：
 
@@ -277,4 +277,4 @@ lazy_static! {
 
 ![白色三角](../images/triangle_white.png)
 
-在下一章中，我们将介绍一种不同的将顶点数据复制到顶点缓冲的方法，这将导致更好的性能，但需要更多的工作。
+在下一章中，我们将介绍另一种将顶点数据复制到顶点缓冲的方法。这种方法能带来更好的性能，但需要更多的工作。
