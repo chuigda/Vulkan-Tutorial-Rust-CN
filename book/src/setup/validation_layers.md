@@ -14,7 +14,7 @@ Vulkan API 的设计秉持了尽可能降低驱动开销的理念，带来的影
 * 追踪对象的创建和销毁，找出资源泄漏
 * 通过追踪发起调用的线程，检查线程安全性
 * 在标准输出中打印含有所有调用及其参数的日志
-* 追踪 Vulkan 调用，用于分析性能（profiling）与重放（replay）
+* 追踪 Vulkan 调用，用于性能分析（profiling）与重放（replay）
 
 诊断校验层中一个函数的实现看起来就像这样（C 语言）：
 
@@ -51,7 +51,7 @@ use std::os::raw::c_void;
 use vulkanalia::vk::ExtDebugUtilsExtension;
 ```
 
-`HashSet` 会被用在存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的指令封装。其它引入会被用于记录校验层传来的信息。
+`HashSet` 会被用在存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的指令包装器。其它引入会被用于记录校验层传来的信息。
 
 ## 使用校验层
 
