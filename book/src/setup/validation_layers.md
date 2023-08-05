@@ -51,7 +51,7 @@ use std::os::raw::c_void;
 use vulkanalia::vk::ExtDebugUtilsExtension;
 ```
 
-`HashSet` 会被用在存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的指令包装器。其它引入会被用于记录校验层传来的信息。
+`HashSet` 会被用在存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的指令封装。其它引入会被用于记录校验层传来的信息。
 
 ## 使用校验层
 
@@ -262,9 +262,9 @@ unsafe fn destroy(&mut self) {
 
 你可能好奇过这个字段的目的是什么：Vulkan 不是已经知道传递给它的结构体的类型了吗？事实上，这个字段与 `next` 字段的目的紧密相关：它提供了扩展 Vulkan 结构体的能力。
 
-Vulkan 结构体中的 `next` 字段可以用来指定一个[结构体指针链](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#fundamentals-validusage-pNext)。`next` 可以是空指针，也可以是一个指向 Vulkan 结构体的指针，Vulkan 可以利用这一点来扩展结构体。这个链中的每个结构体都可以为传递给 Vulkan 命令的根结构体提供额外的信息。Vulkan 的这个特性允许在不破坏向后兼容性的情况下扩展 Vulkan 命令的功能。
+Vulkan 结构体中的 `next` 字段可以用来指定一个[结构体指针链](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#fundamentals-validusage-pNext)。`next` 可以是空指针，也可以是一个指向 Vulkan 结构体的指针，Vulkan 可以利用这一点来扩展结构体。这个链中的每个结构体都可以为传递给 Vulkan 指令的根结构体提供额外的信息。Vulkan 的这个特性允许在不破坏向后兼容性的情况下扩展 Vulkan 指令的功能。
 
-当你将这样的结构体链传递给 Vulkan 命令时，Vulkan 命令将会遍历结构体链以收集链中所有结构体的信息。因此，Vulkan 不知道链中每个结构体的类型，这就需要 `s_type` 字段。
+当你将这样的结构体链传递给 Vulkan 指令时，Vulkan 指令将会遍历结构体链以收集链中所有结构体的信息。因此，Vulkan 不知道链中每个结构体的类型，这就需要 `s_type` 字段。
 
 `vulkanalia` 提供的生成器能够轻松地以类型安全的方式构建这样的结构体链。例如，看一下 `vk::InstanceCreateInfoBuilder` 生成器，特别是 `push_next` 方法。这个方法允许将任何实现了 `vk::ExtendsInstanceCreateInfo` 特性的 Vulkan 结构体添加到 `vk::InstanceCreateInfo` 的结构体链中。
 
