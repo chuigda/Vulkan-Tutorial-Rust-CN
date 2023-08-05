@@ -16,7 +16,7 @@ use vulkanalia::window as vk_window;
 use vulkanalia::prelude::v1_0::*;
 ```
 
-这里我们引入 [`anyhow!`](https://docs.rs/anyhow/latest/anyhow/macro.anyhow.html) 宏，这个宏可以让我们轻松地构造 `anyhow` 错误的实例。然后，我们引入 `log::*`，这样我们就可以使用 `log` crate 中的日志宏。接下来，我们引入 `LibloadingLoader`，它是 `vulkanalia` 提供的 `libloading` 集成，我们会用它来从 Vulkan 共享库中加载最初的 Vulkan 命令。你操作系统上 Vulkan 共享库（例如 Windows 上的 `vulkan-1.dll`）将会被导入为 `LIBRARY`。
+这里我们引入 [`anyhow!`](https://docs.rs/anyhow/latest/anyhow/macro.anyhow.html) 宏，这个宏可以让我们轻松地构造 `anyhow` 错误的实例。然后，我们引入 `log::*`，这样我们就可以使用 `log` crate 中的日志宏。接下来，我们引入 `LibloadingLoader`，它是 `vulkanalia` 提供的 `libloading` 集成，我们会用它来从 Vulkan 共享库中加载最初的 Vulkan 指令。你操作系统上 Vulkan 共享库（例如 Windows 上的 `vulkan-1.dll`）将会被导入为 `LIBRARY`。
 
 接着我们将 `vulkanalia` 对窗口的集成导入为 `vk_window`，我们将在本章中使用它来枚举渲染到窗口所需的全局 Vulkan 扩展。在将来的章节中，我们还将使用 `vk_window` 来将 Vulkan 实例与 `winit` 窗口链接起来。
 
@@ -59,7 +59,7 @@ Ok(entry.create_instance(&info, None)?)
 * 包含创建信息的结构体的引用
 * 可选的自定义分配器回调的引用，本教程中始终为 `None`
 
-现在我们有了一个可以通过入口点创建 Vulkan 实例的函数，接下来我们需要创建一个 Vulkan 入口点。这个入口点将加载用于查询实例支持和创建实例的 Vulkan 命令。但在此之前，让我们向我们的 `App` 结构体添加一些字段来存储我们将要创建的 Vulkan 入口点和实例：
+现在我们有了一个可以通过入口点创建 Vulkan 实例的函数，接下来我们需要创建一个 Vulkan 入口点。这个入口点将加载用于查询实例支持和创建实例的 Vulkan 指令。但在此之前，让我们向我们的 `App` 结构体添加一些字段来存储我们将要创建的 Vulkan 入口点和实例：
 
 ```rust,noplaypen
 struct App {
@@ -79,7 +79,7 @@ unsafe fn create(window: &Window) -> Result<Self> {
 }
 ```
 
-这里我们首先创建了一个 Vulkan 函数加载器，用来从 Vulkan 共享库中加载最初的 Vulkan 命令，接着我们使用这个函数加载器创建 Vulkan 入口点，这个入口点将会加载我们需要的所有 Vulkan 命令。最后，我们用 Vulkan 入口点调用 `create_instance` 函数来创建 Vulkan 实例。
+这里我们首先创建了一个 Vulkan 函数加载器，用来从 Vulkan 共享库中加载最初的 Vulkan 指令，接着我们使用这个函数加载器创建 Vulkan 入口点，这个入口点将会加载我们需要的所有 Vulkan 指令。最后，我们用 Vulkan 入口点调用 `create_instance` 函数来创建 Vulkan 实例。
 
 ## 清理工作
 
@@ -91,7 +91,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-和创建对象所用的 Vulkan 命令一样，用于销毁对象的 Vulkan 命令也接受一个可选的、指向自定义分配器回调的引用。所以和之前一样，我们传入 `None` 来使用默认的分配器行为。
+和创建对象所用的 Vulkan 指令一样，用于销毁对象的 Vulkan 指令也接受一个可选的、指向自定义分配器回调的引用。所以和之前一样，我们传入 `None` 来使用默认的分配器行为。
 
 ## 不合规的 Vulkan 实现
 
@@ -156,12 +156,12 @@ let info = vk::InstanceCreateInfo::builder()
 
 ## `Instance` 和 `vk::Instance`
 
-当我们调用 `create_instance` 函数时，我们得到的不是 Vulkan 命令 `vkCreateInstance` 返回的原始 Vulkan 实例，而是一个 `vulkanalia` 中的自定义类型，它将原始 Vulkan 实例和为该特定实例加载的命令结合在一起。
+当我们调用 `create_instance` 函数时，我们得到的不是 Vulkan 指令 `vkCreateInstance` 返回的原始 Vulkan 实例，而是一个 `vulkanalia` 中的自定义类型，它将原始 Vulkan 实例和为该特定实例加载的指令结合在一起。
 
-我们使用的 `Instance` 类型（从 `vulkanalia` 的 `prelude` 模块中导入）不应和 `vk::Instance` 混淆。`vk::Instance` 类型是原始的 Vulkan 实例。在后面的章节中，我们也会用到 `Device` 类型。和 `Instance` 类似的是，`Device` 也由原始 Vulkan 设备（`vk::Device`）和为该设备加载的命令组成。幸运的是，本教程中我们不需要直接使用 `vk::Instance` 或者 `vk::Device`，所以你不用担心弄混它们。
+我们使用的 `Instance` 类型（从 `vulkanalia` 的 `prelude` 模块中导入）不应和 `vk::Instance` 混淆。`vk::Instance` 类型是原始的 Vulkan 实例。在后面的章节中，我们也会用到 `Device` 类型。和 `Instance` 类似的是，`Device` 也由原始 Vulkan 设备（`vk::Device`）和为该设备加载的指令组成。幸运的是，本教程中我们不需要直接使用 `vk::Instance` 或者 `vk::Device`，所以你不用担心弄混它们。
 
-因为 `Instance` 中包含了 Vulkan 实例和与之关联的命令，所以 `Instance` 的命令包装器也能够在需要原始 Vulkan 实例时提供它。
+因为 `Instance` 中包含了 Vulkan 实例和与之关联的指令，所以 `Instance` 的指令封装也能够在需要原始 Vulkan 实例时提供它。
 
-如果你查看 `vkDestroyInstance` 命令的文档，你会发现它接受两个参数：要销毁的实例和可选的自定义分配器回调。然而，`destroy_instance` 只接受可选的自定义分配器回调，因为它能够提供原始 Vulkan 实例作为第一个参数，就像上面描述的那样。
+如果你查看 `vkDestroyInstance` 指令的文档，你会发现它接受两个参数：要销毁的实例和可选的自定义分配器回调。然而，`destroy_instance` 只接受可选的自定义分配器回调，因为它能够提供原始 Vulkan 实例作为第一个参数，就像上面描述的那样。
 
 创建完实例之后，在继续进行更复杂的步骤之前，是时候拿出校验层，看看我们的调试功能了。
