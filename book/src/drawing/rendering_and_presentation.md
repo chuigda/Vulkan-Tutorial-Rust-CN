@@ -152,8 +152,6 @@ self.device.queue_submit(
 
 有两个内建的子流程依赖能在渲染流程开始前和结束后进行布局转换，但前者进行转换的时机并不正确 —— 它假设转换发生在管线开始的时候，但在那个时候我们还没有获取到图像！有两种方法可以解决这个问题。我们可以将 `image_available_semaphore` 的 `wait_stages` 改为 `vk::PipelineStageFlags::TOP_OF_PIPE`，以确保图像可用之前渲染流程不会开始。或者，我们可以让渲染流程等待 `vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT` 阶段。我决定在这里使用第二种方法，因为这是个了解子流程依赖的工作原理的好机会。
 
-Subpass dependencies are specified in `vk::SubpassDependency` structs. Go to our `^create_render_pass` function and add one:
-
 子流程依赖是由 `vk::SubpassDependency` 结构体来指定的。在 `create_render_pass` 函数中添加一个：
 
 ```rust,noplaypen
@@ -170,14 +168,14 @@ let dependency = vk::SubpassDependency::builder()
     .src_access_mask(vk::AccessFlags::empty())
 ```
 
-接下来的两个字段制订了要等待的操作，以及这些操作会在哪个阶段发生。我们需要等待交换链完成对图像的读取，然后才能访问它。这可以通过等待颜色附件输出阶段本身来实现。
+接下来的两个字段 `src_stage_mask` 和 `src_access_mask` 指定了要等待的操作，以及这些操作会在哪个阶段发生。我们需要等待交换链完成对图像的读取，然后才能访问它。这可以通过等待颜色附件输出阶段本身来实现。
 
 ```rust,noplaypen
     .dst_stage_mask(vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT)
     .dst_access_mask(vk::AccessFlags::COLOR_ATTACHMENT_WRITE);
 ```
 
-The operations that should wait on this are in the color attachment stage and involve the writing of the color attachment. These settings will prevent the transition from happening until it's actually necessary (and allowed): when we want to start writing colors to it.
+最后两个字段 `dst_stage_mask` 和 `dst_access_mask` 指定了哪些操作会等待这个子流程依赖，以及这些操作会在哪个阶段发生。上面的设置会阻止转换发生，直到我们真正需要（且允许）它发生的时候：当我们想要开始向图像写入颜色的时候。
 
 ```rust,noplaypen
 let attachments = &[color_attachment];
@@ -189,11 +187,11 @@ let info = vk::RenderPassCreateInfo::builder()
     .dependencies(dependencies);
 ```
 
-The `vk::RenderPassCreateInfo` struct has a field to specify an array of dependencies.
+最后在 `vk::RenderPassCreateInfo` 的 `dependencies` 字段中指定这个依赖。
 
-## Presentation
+## 呈现
 
-The last step of drawing a frame is submitting the result back to the swapchain to have it eventually show up on the screen. Presentation is configured through a `vk::PresentInfoKHR` structure at the end of the `App::render` function.
+绘制一帧的最后异步就是将结果提交回交换链，让它最终显示在屏幕上。我们在 `App::render` 函数末尾添加一个 `vk::PresentInfoKHR` 结构体来配置呈现：
 
 ```rust,noplaypen
 let swapchains = &[self.data.swapchain];
@@ -204,31 +202,31 @@ let present_info = vk::PresentInfoKHR::builder()
     .image_indices(image_indices);
 ```
 
-The first parameter specifies which semaphores to wait on before presentation can happen, just like `vk::SubmitInfo`.
+第一个参数指定了在呈现之前要等待的信号量，就像 `vk::SubmitInfo` 一样。
 
-The next two parameters specify the swapchains to present images to and the index of the image for each swapchain. This will almost always be a single one.
+接下来的两个参数指定了要呈现图像的交换链，以及交换链的图像索引。这里几乎总是只有一张交换链图像。
 
-There is one last optional parameter called `results`. It allows you to specify an array of `vk::Result` values to check for every individual swapchain if presentation was successful. It's not necessary if you're only using a single swapchain, because you can simply use the return value of the present function.
+还有一个可选的 `result` 参数，可以指定一个 `vk::Result` 数组，用于检查每个交换链的呈现是否成功。如果你只使用单个交换链，那么这个参数是不必要的，因为你可以直接使用呈现函数的返回值。
 
 ```rust,noplaypen
 self.device.queue_present_khr(self.data.present_queue, &present_info)?;
 ```
 
-The `queue_present_khr` function submits the request to present an image to the swapchain. We'll modify the error handling for both `acquire_next_image_khr` and `queue_present_khr` in the next chapter, because their failure does not necessarily mean that the program should terminate, unlike the functions we've seen so far.
+`queue_present_khr` 函数提交了一个请求，要求将图像呈现到交换链中。我们将在下一章修改 `acquire_next_image_khr` 和 `queue_present_khr` 的错误处理，因为它们的失败并不一定意味着应该终止程序，这与我们迄今为止所见到的函数不同。
 
-If you did everything correctly up to this point, then you should now see something resembling the following when you run your program:
+如果你之前的工作都没有问题，那么现在你应该可以看到类似下面这样的东西：
 
 ![](../images/triangle.png)
 
->This colored triangle may look a bit different from the one you're used to seeing in graphics tutorials. That's because this tutorial lets the shader interpolate in linear color space and converts to sRGB color space afterwards. See [this blog post](https://medium.com/@heypete/hello-triangle-meet-swift-and-wide-color-6f9e246616d9) for a discussion of the difference.
+> 这个彩色三角形看上去可能和你在其他图形学教程中看到过的略有不同。这是因为本教程让着色器在线性颜色空间中进行插值，然后再转换到 sRGB 颜色空间。参见[这篇博客](https://medium.com/@heypete/hello-triangle-meet-swift-and-wide-color-6f9e246616d9)来了解这两种颜色空间的区别。
 
-Yay! Unfortunately, you'll see that when validation layers are enabled, the program crashes as soon as you close it. The messages printed to the terminal from `debug_callback` tell us why:
+好耶！然而不幸的是，当启用校验层时，程序在你关闭它的时候会崩溃。从 `debug_callback` 打印到终端的消息告诉了我们原因：
 
 ![](../images/semaphore_in_use.png)
 
-Remember that all of the operations in `App::render` are asynchronous. That means that when we call `App::destroy` before exiting the loop in `main`, drawing and presentation operations may still be going on. Cleaning up resources while that is happening is a bad idea.
+还记得吗？我们说过 `App::render` 中的所有操作都是异步的。也就是说，当我们在 `main` 函数中的循环退出之前调用 `App::destroy` 的时候，绘制和呈现操作可能仍在进行。在这种情况下清理资源可不是个好主意。
 
-To fix that problem, we should wait for the logical device to finish operations using `device_wait_idle` before calling `App::destroy`:
+要修复这一问题，我们应该在 `App::destroy` 中调用 `device_wait_idle` 来等待逻辑设备完成操作：
 
 ```rust,noplaypen
 Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
@@ -239,13 +237,14 @@ Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
 }
 ```
 
-You can also wait for operations in a specific command queue to be finished with `queue_wait_idle`. These functions can be used as a very rudimentary way to perform synchronization. You'll see that the program no longer crashes when closing the window (though you will see some errors related to synchronization if you have the validation layers enabled).
+你也可以用 `queue_wait_idle` 来等待某个特定指令队列中的操作完成。这些函数可以用作一种非常简单的同步方式。你会发现当你关闭窗口时程序不再崩溃（不过如果你启用了校验层的话，你会看到一些与同步相关的错误）。
 
+<!-- any suggestions? -->
 ## Frames in flight
 
-If you run your application with validation layers enabled now you may either get errors or notice that the memory usage slowly grows. The reason for this is that the application is rapidly submitting work in the `App::render` function, but doesn't actually check if any of it finishes. If the CPU is submitting work faster than the GPU can keep up with then the queue will slowly fill up with work. Worse, even, is that we are reusing the `image_available_semaphore` and `render_finished_semaphore` semaphores, along with the command buffers, for multiple frames at the same time!
+如果你启用校验层并运行应用程序，你会看到一些错误信息，或者观察到内存使用量在缓慢增长。这是因为应用程序在 `App::render` 函数中快速提交了大量工作，但实际上并没有检查它们是否完成。如果 CPU 提交的工作比 GPU 能够跟上的速度快，那么队列就会慢慢地被工作填满。更糟糕的是，我们同时还在重复使用 `image_available_semaphore` 和 `render_finished_semaphore` 信号量，以及命令缓冲。
 
-The easy way to solve this is to wait for work to finish right after submitting it, for example by using `queue_wait_idle` (note: don't actually make this change):
+最简单的解决方式就是在提交之后等待工作完成，例如使用 `queue_wait_idle`（注意：不要真的这么做）：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -258,15 +257,21 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-However, we are likely not optimally using the GPU in this way, because the whole graphics pipeline is only used for one frame at a time right now. The stages that the current frame has already progressed through are idle and could already be used for a next frame. We will now extend our application to allow for multiple frames to be *in-flight* while still bounding the amount of work that piles up.
+<!--
+这个 In-flight 怎么翻啊
 
-Start by adding a constant at the top of the program that defines how many frames should be processed concurrently:
+However, we are likely not optimally using the GPU in this way, because the whole graphics pipeline is only used for one frame at a time right now. The stages that the current frame has already progressed through are idle and could already be used for a next frame. We will now extend our application to allow for multiple frames to be *in-flight* while still bounding the amount of work that piles up.
+-->
+
+但这并不是使用 GPU 的最佳方式，因为如果这么做的话，整个图形管线只能同时渲染一帧了。然而当前帧已经完成的阶段是空闲的，可以用来渲染下一帧。我们现在将扩展我们的应用程序，允许多帧同时进行，同时限制积压的工作量。
+
+首先在程序顶部添加一个常量，用于定义可以并行处理多少帧：
 
 ```rust,noplaypen
 const MAX_FRAMES_IN_FLIGHT: usize = 2;
 ```
 
-Each frame should have its own set of semaphores in `AppData`:
+每一帧都应该有自己的信号量集合，存储在 `AppData` 中：
 
 ```rust,noplaypen
 struct AppData {
@@ -276,7 +281,7 @@ struct AppData {
 }
 ```
 
-The `create_sync_objects` function should be changed to create all of these:
+然后修改 `create_sync_objects` 函数，创建这些信号量：
 
 ```rust,noplaypen
 unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()> {
@@ -293,7 +298,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-Similarly, they should also all be cleaned up:
+类似地，它们也应该被清理：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -307,7 +312,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-To use the right pair of semaphores every time, we need to keep track of the current frame. We will use a frame index for that purpose which we'll add to `App` (initialize it to `0` in `App::create`):
+要确保每次都使用正确的信号量，我们需要跟踪当前帧。我们将使用一个帧索引来实现，我们将把它添加到 `App` 中（在 `App::create` 中将其初始化为 `0`）：
 
 ```rust,noplaypen
 struct App {
@@ -316,7 +321,7 @@ struct App {
 }
 ```
 
-The `App::render` function can now be modified to use the right objects:
+然后修改 `App::render` 函数，使用正确的信号量对象：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -344,7 +349,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-Of course, we shouldn't forget to advance to the next frame every time:
+当然，记得每次都要前进到下一帧：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -356,11 +361,11 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-By using the modulo (%) operator, we ensure that the frame index loops around after every `MAX_FRAMES_IN_FLIGHT` enqueued frames.
+使用取余（%）运算符，我们可以确保在每次入队 `MAX_FRAMES_IN_FLIGHT` 帧之后，帧索引都会绕回到 0。
 
-Although we've now set up the required objects to facilitate processing of multiple frames simultaneously, we still don't actually prevent more than `MAX_FRAMES_IN_FLIGHT` from being submitted. Right now there is only GPU-GPU synchronization and no CPU-GPU synchronization going on to keep track of how the work is going. We may be using the frame #0 objects while frame #0 is still in-flight!
+尽管我们现在已经设置了所需的对象来同时处理多帧，但我们仍然没有真正阻止超过 `MAX_FRAMES_IN_FLIGHT` 的帧被提交。现在只有 GPU-GPU 同步，没有 CPU-GPU 同步来跟踪工作的进度。我们可能在帧 #0 还在飞行的时候就使用了帧 #0 的对象！
 
-To perform CPU-GPU synchronization, Vulkan offers a second type of synchronization primitive called *fences*. Fences are similar to semaphores in the sense that they can be signaled and waited for, but this time we actually wait for them in our own code. We'll first create a fence for each frame in `AppData`:
+要进行 CPU-GPU 同步，Vulkan 提供了第二种同步原语 —— *栅栏*。栅栏与信号量类似，栅栏可以发出信号，也可以等待栅栏发出的信号。但这次我们实际上要在自己的代码中等待。我们首先为 `AppData` 中的每一帧创建一个栅栏：
 
 ```rust,noplaypen
 struct AppData {
@@ -369,7 +374,7 @@ struct AppData {
 }
 ```
 
-We'll create the fences together with the semaphores in the `create_sync_objects` function:
+我们会在 `create_sync_objects` 函数中一起创建信号量和栅栏：
 
 ```rust,noplaypen
 unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()> {
@@ -389,7 +394,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-The creation of fences (`vk::Fence`) is very similar to the creation of semaphores. Also make sure to clean up the fences in `App::destroy`:
+创建围墙（`vk::Fence`）的方式与创建信号量非常相似。同样，确保在 `App::destroy` 中清理围墙：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -400,7 +405,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-We will now change `App::render` to use the fences for synchronization. The `queue_submit` call includes an optional parameter to pass a fence that should be signaled when the command buffer finishes executing. We can use this to signal that a frame has finished.
+现在我们修改 `App::render` 函数并将栅栏用于同步。`queue_submit` 调用包含一个可选的参数，为其传递一个栅栏，当命令缓冲执行完毕时该围墙会发出信号。我们可以使用这个来发出帧已经完成的信号。
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -416,7 +421,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-Now the only thing remaining is to change the beginning of `App::render` to wait for the frame to be finished:
+现在剩下的就是修改 `App::render` 的开头，等待帧完成：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -432,11 +437,11 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-The `wait_for_fences` function takes an array of fences and waits for either any or all of them to be signaled before returning. The `true` we pass here indicates that we want to wait for all fences, but in the case of a single one it obviously doesn't matter. Just like `acquire_next_image_khr` this function also takes a timeout. Unlike the semaphores, we manually need to restore the fence to the unsignaled state by resetting it with the `reset_fences` call.
+`wait_for_fences` 函数接受一个栅栏数组，并等待其中任意一个或全部栅栏发出信号后再返回。我们传递的 `true` 参数表示我们想要等待所有栅栏，但是在只有一个栅栏的情况下，这显然并不重要。与 `acquire_next_image_khr` 异样，这个函数也接受一个超时参数。与信号量不同，我们需要调用 `reset_fences` 函数手动将围墙重置到未发出信号的状态。
 
-If you run the program now, you'll notice something something strange. The application no longer seems to be rendering anything and might even be frozen.
+如果你现在运行程序，你会发现一些奇怪的事情。应用程序似乎不再渲染任何东西，甚至可能会卡死。
 
-That means that we're waiting for a fence that has not been submitted. The problem here is that, by default, fences are created in the unsignaled state. That means that `wait_for_fences` will wait forever if we haven't used the fence before. To solve that, we can change the fence creation to initialize it in the signaled state as if we had rendered an initial frame that finished:
+这就意味着我们正在等待一个还没有发出信号的围墙。问题在于，默认情况下，围墙在创建之后处于未发出信号的状态。这意味着如果我们之前没有使用过围墙，`wait_for_fences` 就会永远等待。要解决这个问题，我们可以修改围墙的创建方式，将其初始化为已经发出信号的状态，就好像我们已经渲染了一帧：
 
 ```rust,noplaypen
 unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()> {
@@ -449,9 +454,13 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
+<!--
 The memory leak is gone now, but the program is not quite working correctly yet. If `MAX_FRAMES_IN_FLIGHT` is higher than the number of swapchain images or `acquire_next_image_khr` returns images out-of-order then it's possible that we may start rendering to a swapchain image that is already *in flight*. To avoid this, we need to track for each swapchain image if a frame in flight is currently using it. This mapping will refer to frames in flight by their fences so we'll immediately have a synchronization object to wait on before a new frame can use that image.
+-->
 
-First add a new list called `images_in_flight` to `AppData` to track this:
+现在就没有内存泄漏的问题了，但程序还不能正常工作。如果 `MAX_FRAMES_IN_FLIGHT` 大于交换链图像的数量，或者 `acquire_next_image_khr` 返回的图像是无序的，那么我们可能会开始渲染一个已经*在飞行中*（in flight）的交换链图像。为了避免这种情况，我们需要跟踪每个交换链图像是否有一个正在使用它的帧。这个映射将通过它们的围墙来引用飞行帧，因此我们将立即拥有一个同步对象来等待，直到新的帧可以使用该图像。
+
+首先在 `AppData` 中添加一个名为 `images_in_flight` 的新列表来跟踪正在使用的图像：
 
 ```rust,noplaypen
 struct AppData {
@@ -461,7 +470,7 @@ struct AppData {
 }
 ```
 
-Prepare it in `create_sync_objects`:
+并在 `create_sync_objects` 中初始化它：
 
 ```rust,noplaypen
 unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()> {
@@ -476,7 +485,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-Initially not a single frame is using an image so we explicitly initialize it to *no fence*. Now we'll modify `App::render` to wait on any previous frame that is using the image that we've just been assigned for the new frame:
+在最开始的时候，没有帧在使用图像，因此我们显式地将其初始化为*没有围墙*（no fence）。现在我们将修改 `App::render`，等待任何正在使用我们刚刚为新帧分配的图像的上一帧：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
