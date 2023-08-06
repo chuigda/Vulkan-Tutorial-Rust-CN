@@ -24,13 +24,13 @@
 - [介绍](./pipeline/introduction.md)
 - [着色器模块](./pipeline/shader_modules.md)
 - [固定功能](./pipeline/fixed_functions.md)
-- [Render passes](./pipeline/render_passes.md)
+- [渲染流程](./pipeline/render_passes.md)
 - [总结](./pipeline/conclusion.md)
 
 # 绘制
 
 - [帧缓冲](./drawing/framebuffers.md)
-- [Command buffers](./drawing/command_buffers.md)
+- [指令缓冲](./drawing/command_buffers.md)
 - [Rendering and presentation](./drawing/rendering_and_presentation.md)
 
 # 交换链
@@ -39,8 +39,8 @@
 
 # 顶点缓冲
 
-- [Vertex input description](./vertex/vertex_input_description.md)
-- [Vertex buffer creation](./vertex/vertex_buffer_creation.md)
+- [描述顶点输入](./vertex/vertex_input_description.md)
+- [创建顶点缓冲](./vertex/vertex_buffer_creation.md)
 - [暂存缓冲](./vertex/staging_buffer.md)
 - [Index buffer](./vertex/index_buffer.md)
 
