@@ -61,9 +61,9 @@ unsafe fn create_buffer(
 }
 ```
 
-确保添加缓冲大小、用法以及内存属性的参数，以便我们可以使用此函数创建多种不同类型的缓冲。
+确保将缓冲大小、用法以及内存属性添加到函数参数，以便于我们使用此函数创建多种不同类型的缓冲。
 
-现在，你可以从 `create_vertex_buffer` 中删除缓冲创建和内存分配的代码，改为调用 `create_buffer`：
+现在，你可以从 `create_vertex_buffer` 中删除创建缓冲和分配内存的代码，改为调用 `create_buffer`：
 
 ```rust,noplaypen
 unsafe fn create_vertex_buffer(
@@ -150,12 +150,12 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-我们现在使用一个新的 `staging_buffer` 和 `staging_buffer_memory` 来进行顶点数据的映射和复制。在本章中，我们将使用两个新的缓冲用法标志：
+我们现在使用新的 `staging_buffer` 和 `staging_buffer_memory` 来映射和复制顶点数据。在本章中，我们将使用两个新的缓冲用法标志：
 
 * `vk::BufferUsageFlags::TRANSFER_SRC` &ndash; 缓冲可以作为内存传输操作的源。
 * `vk::BufferUsageFlags::TRANSFER_DST` &ndash; 缓冲可以作为内存传输操作的目标。
 
-`vertex_buffer` 现在是从设备本地内存类型分配的，这通常意味着我们不能使用 `map_memory`。然而，我们可以从 `staging_buffer` 复制数据到 `vertex_buffer`。我们必须为 `staging_buffer` 指定传输源标志，为 `vertex_buffer` 指定传输目标标志和顶点缓冲用法标志，来表示我们的意图。
+`vertex_buffer` 现在是从设备本地内存类型分配的，这通常意味着我们不能使用 `map_memory`。然而，我们可以将数据从 `staging_buffer` 复制到 `vertex_buffer`。我们必须为 `staging_buffer` 指定传输源标志，为 `vertex_buffer` 指定传输目标标志和顶点缓冲用法标志，来表明我们的意图。
 
 接下来，我们将编写一个名为 `copy_buffer` 的函数，用于将内容从一个缓冲复制到另一个缓冲。
 
@@ -208,7 +208,7 @@ let regions = vk::BufferCopy::builder().size(size);
 device.cmd_copy_buffer(command_buffer, source, destination, &[regions]);
 ```
 
-缓冲的内容通过 `cmd_copy_buffer` 指令进行传输。该指令需要源缓冲和目标缓冲作为参数，以及一个用于复制的区域数组。区域由 `vk::BufferCopy` 结构体定义，结构体中包括源缓冲偏移量、目标缓冲偏移量和大小。需要注意的是，与 `map_memory` 指令不同，这里不能指定 `vk::WHOLE_SIZE`。
+缓冲的内容通过 `cmd_copy_buffer` 指令进行传输。该指令以源缓冲、目标缓冲和待复制区域的数组为参数。区域由 `vk::BufferCopy` 结构体定义，结构体中包括源缓冲偏移量、目标缓冲偏移量和大小。需要注意的是，与 `map_memory` 指令不同，这里不能指定 `vk::WHOLE_SIZE`。
 
 ```rust,noplaypen
 device.end_command_buffer(command_buffer)?;
@@ -225,15 +225,15 @@ device.queue_submit(data.graphics_queue, &[info], vk::Fence::null())?;
 device.queue_wait_idle(data.graphics_queue)?;
 ```
 
-与绘制指令不同，这次我们无需等待事件。我们只需立即在缓冲上执行传输操作。同样，有两种方法可以等待传输完成。我们可以使用围栏，使用 `wait_for_fences` 来等待，或者只需等待传输队列变为空闲状态，使用 `queue_wait_idle`。使用围栏可以让你同时安排多个传输并等待它们全部完成，而不必逐个执行。这可以给驱动程序更多优化的机会。
+与绘制指令不同，这次我们无需等待事件，而是立即在缓冲上执行传输操作。同样，有两种方法可以等待传输完成。我们可以使用围栏（fence），并使用 `wait_for_fences` 来等待，或者只需使用 `queue_wait_idle` 等待传输队列变为空闲状态。使用围栏可以让你同时安排多个传输并等待它们全部完成，而不必逐个执行。这可以给驱动程序更多优化的机会。
 
 ```rust,noplaypen
 device.free_command_buffers(data.command_pool, &[command_buffer]);
 ```
 
-千万别忘记清理用于传输操作的指令缓冲。
+别忘记清理用于传输操作的指令缓冲。
 
-现在，我们可以在 `create_vertex_buffer` 函数中调用 `copy_buffer`，将顶点数据移动到设备本地缓冲：
+现在，我们可以在 `create_vertex_buffer` 函数中调用 `copy_buffer`，将顶点数据复制到设备本地缓冲：
 
 ```rust,noplaypen
 copy_buffer(device, data, staging_buffer, vertex_buffer, size)?;
@@ -246,7 +246,7 @@ device.destroy_buffer(staging_buffer, None);
 device.free_memory(staging_buffer_memory, None);
 ```
 
-运行程序以验证你是否能再次看到熟悉的三角形。尽管目前可能看不出改进，但现在顶点数据是从高性能内存加载的。当我们开始渲染更复杂的几何图形时，这一点将变得更加重要。
+运行程序以验证你是否能再次看到熟悉的三角形。现在，顶点数据是从高性能内存加载的，尽管目前可能看不到改进。当我们开始渲染更复杂的几何图形时，这一点将变得更加重要。
 
 ## 结论
 
