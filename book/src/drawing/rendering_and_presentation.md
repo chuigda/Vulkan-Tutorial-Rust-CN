@@ -1,26 +1,30 @@
-# Rendering and presentation
+# 渲染与呈现
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/15_hello_triangle.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/drawing/rendering_and_presentation.html>
+> 
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-This is the chapter where everything is going to come together. We're going to implement the `App::render` function that will be called from the main loop to put the triangle on the screen.
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/15_hello_triangle.rs)
 
-## Synchronization
+在本章中我们会把所有东西组合起来。我们将实现 `App::render` 函数，该函数会由主循环调用，将三角形渲染到屏幕上。
 
-The `App::render` function will perform the following operations:
+## 同步
 
-* Acquire an image from the swapchain
-* Execute the command buffer with that image as attachment in the framebuffer
-* Return the image to the swapchain for presentation
+`App::render` 函数会进行以下操作：
 
-Each of these events is set in motion using a single function call, but they are executed asynchronously. The function calls will return before the operations are actually finished and the order of execution is also undefined. That is unfortunate, because each of the operations depends on the previous one finishing.
+* 从交换链获取一张图像
+* 使用该图像作为帧缓冲的附件，执行指令缓冲
+* 将该图像返还到交换链，以供呈现
 
-There are two ways of synchronizing swapchain events: fences and semaphores. They're both objects that can be used for coordinating operations by having one operation signal and another operation wait for a fence or semaphore to go from the unsignaled to signaled state.
+每个操作都是通过单个函数调用来启动的，但它们会异步地（asynchronously）执行。函数调用会在操作实际完成之前返回，且操作之间的执行顺序也是不确定的。然而很不幸的是，我们的每一步操作实际上都依赖于前一步操作的完成。
 
-The difference is that the state of fences can be accessed from your program using calls like `wait_for_fences` and semaphores cannot be. Fences are mainly designed to synchronize your application itself with rendering operation, whereas semaphores are used to synchronize operations within or across command queues. We want to synchronize the queue operations of draw commands and presentation, which makes semaphores the best fit.
+有两种方法可以用于同步交换链事件：信号量（semaphores）和栅栏（fences）。它们都是可以用于协调操作的对象，这是通过让一个操作发出信号、另一个操作等待信号量或栅栏的状态从未发出信号（unsignaled）变为已发出信号（signaled）来实现的。
 
-## Semaphores
+区别在于，栅栏的状态可以通过 `wait_for_fences` 等函数从程序中访问，而信号量则不行。栅栏主要用于同步应用程序本身与渲染操作，而信号量则用于同步指令队列内或跨队列的操作。我们希望同步绘制指令和呈现操作，因此信号量是最佳选择。
 
-We'll need one semaphore to signal that an image has been acquired and is ready for rendering, and another one to signal that rendering has finished and presentation can happen. Create two `AppData` fields to store these semaphore objects:
+## 信号量
+
+我们需要两个信号量，一个用于传递图像已被获取并可以用于渲染的信号，另一个用于传递渲染已完成并可以进行呈现的信号。在 `AppData` 中创建两个字段来存储这些信号量对象：
 
 ```rust,noplaypen
 struct AppData {
@@ -30,7 +34,7 @@ struct AppData {
 }
 ```
 
-To create the semaphores, we'll add the last `create` function for this part of the tutorial, `create_sync_objects`:
+添加一个 `create_sync_objects` 函数来创建信号量：
 
 ```rust,noplaypen
 impl App {
@@ -47,7 +51,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-Creating semaphores requires filling in the `vk::SemaphoreCreateInfo`, but in the current version of the API it doesn't actually have any required fields.
+创建信号量需要填充 `vk::SemaphoreCreateInfo` 结构体，不过在当前版本的 API 中它并没有任何必填字段。
 
 ```rust,noplaypen
 unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()> {
@@ -57,14 +61,14 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-Future versions of the Vulkan API or extensions may add functionality for the `flags` and `p_next` parameters like it does for the other structures. Creating the semaphores follows the familiar pattern:
+未来的 Vulkan API 或者扩展可能会为 `flags` 和 `p_next` 参数添加功能，就像它为其他结构体所做的那样。信号量的创建也是熟悉的模式：
 
 ```rust,noplaypen
 data.image_available_semaphore = device.create_semaphore(&semaphore_info, None)?;
 data.render_finished_semaphore = device.create_semaphore(&semaphore_info, None)?;
 ```
 
-The semaphores should be cleaned up at the end of the program, when all commands have finished and no more synchronization is necessary:
+信号量应该在程序结束时清理，这时候所有指令都已经完成，用不着再进行同步了：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -74,9 +78,9 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Acquiring an image from the swapchain
+## 从交换链获取图像
 
-As mentioned before, the first thing we need to do in the `App::render` function is acquire an image from the swapchain. Recall that the swapchain is an extension feature, so we must use a function with the `*_khr` naming convention:
+正如我们之前所提到的，在 `App::render` 函数中要做的第一件事就死活从交换链取得一张图像。回想一下，交换链是一个扩展特性，因此我们必须使用一个带有 `*_khr` 后缀的函数：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -107,15 +111,15 @@ let submit_info = vk::SubmitInfo::builder()
 }
 ```
 
-The first parameter of `acquire_next_image_khr` is the swapchain from which we wish to acquire an image. The second parameter specifies a timeout in nanoseconds for an image to become available. Using the maximum value of a 64 bit unsigned integer disables the timeout.
+`acquire_next_image_khr` 的第一个参数是我们将要从中获取图像的交换链。第二个参数指定了一个以纳秒为单位的超时时间，使用 64 位无符号整数的最大值可以禁用超时。
 
-The next two parameters specify synchronization objects that are to be signaled when the presentation engine is finished using the image. That's the point in time where we can start drawing to it. It is possible to specify a semaphore, fence or both. We're going to use our `image_available_semaphore` for that purpose here.
+下一个参数指定了在呈现引擎使用完图像后要发出信号的同步对象，可以是信号量或者栅栏，也可以两者都指定。我们将在这里使用 `image_available_semaphore`，它发出信号的时刻就是我们可以开始绘制的时候。
 
-This function returns the index of the swapchain image that has become available. The index refers to the `vk::Image` in our `swapchain_images` array. We're going to use that index to pick the right command buffer.
+这个函数返回将会被获取的交换链图像的索引。这个索引指向 `swapchain_images` 数组中的 `vk::Image`。我们将使用这个索引来选择正确的命令缓冲。
 
-## Submitting the command buffer
+## 提交指令缓冲
 
-Queue submission and synchronization is configured through parameters in the `vk::SubmitInfo` structure.
+队列的提交和同步是通过 `vk::SubmitInfo` 结构体来配置的：
 
 ```rust,noplaypen
 let wait_semaphores = &[self.data.image_available_semaphore];
@@ -129,26 +133,28 @@ let submit_info = vk::SubmitInfo::builder()
     .signal_semaphores(signal_semaphores);
 ```
 
-The first two parameters, `^wait_semaphores` and `wait_dst_stage_mask`, specifies which semaphores to wait on before execution begins and in which stage(s) of the pipeline to wait. We want to wait with writing colors to the image until it's available, so we're specifying the stage of the graphics pipeline that writes to the color attachment. That means that theoretically the implementation can already start executing our vertex shader and such while the image is not yet available. Each entry in the `wait_stages` array corresponds to the semaphore with the same index in `^wait_semaphores`.
+前两个参数 `wait_semaphores` 和 `wait_dst_stage_mask` 指定在指令缓冲执行前要等待的信号量，以及在管线的哪个阶段等待。我们希望在图像可用之前不要写入颜色，因此我们指定了写入颜色附件的管线阶段。这意味着理论上来说实现可以进行若干优化，例如可以在图像还不可用的时候就开始执行我们的顶点着色器。`wait_stages` 数组中的每个条目都对应于 `wait_semaphores` 中相同索引的信号量。
 
-The next parameter, `command_buffers`, specifies which command buffers to actually submit for execution. As mentioned earlier, we should submit the command buffer that binds the swapchain image we just acquired as color attachment.
+下一个参数，`command_buffers`，指定了要提交执行的指令缓冲。正如之前提到的，我们应该提交绑定了我们刚获取的交换链图像的指令缓冲。
 
-Lastly `signal_semaphores` specifies which semaphores to signal once the command buffer(s) have finished execution. In our case we're using the `render_finished_semaphore` for that purpose.
+最后一个参数 `signal_semaphores` 指定了在指令缓冲执行完毕后要发出信号的信号量。在我们的例子中，我们使用 `render_finished_semaphore`。
 
 ```rust,noplaypen
 self.device.queue_submit(
     self.data.graphics_queue, &[submit_info], vk::Fence::null())?;
 ```
 
-We can now submit the command buffer to the graphics queue using `queue_submit`. The function takes an array of `vk::SubmitInfo` structures as argument for efficiency when the workload is much larger. The last parameter references an optional fence that will be signaled when the command buffers finish execution. We're using semaphores for synchronization, so we'll just pass a `vk::Fence::null()`.
+现在我们可以用 `queue_submit` 来将指令缓冲提交到图形队列了。这个函数接受一个 `vk::SubmitInfo` 结构体的数组作为参数，这样做是为了在工作量很大的时候提高效率。最后一个参数引用了一个可选的栅栏，当指令缓冲执行完毕时会发出信号。我们已经在用信号量来进行同步了，因此我们只传递一个 `vk::Fence::null()`。
 
-## Subpass dependencies
+## 子流程依赖
 
-Remember that the subpasses in a render pass automatically take care of image layout transitions. These transitions are controlled by *subpass dependencies*, which specify memory and execution dependencies between subpasses. We have only a single subpass right now, but the operations right before and right after this subpass also count as implicit "subpasses".
+还记得渲染流程中自动进行图像布局转换的子流程吗？这些转换是由*子流程依赖*（subpass dependencies）控制的，它们指定了子流程之间的内存和执行依赖关系。我们现在只有一个子流程，但是在这个子流程之前和之后的操作也被视为隐式的“子流程”。
 
-There are two built-in dependencies that take care of the transition at the start of the render pass and at the end of the render pass, but the former does not occur at the right time. It assumes that the transition occurs at the start of the pipeline, but we haven't acquired the image yet at that point! There are two ways to deal with this problem. We could change the `wait_stages` for the `image_available_semaphore` to `vk::PipelineStageFlags::TOP_OF_PIPE` to ensure that the render passes don't begin until the image is available, or we can make the render pass wait for the `vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT` stage. I've decided to go with the second option here, because it's a good excuse to have a look at subpass dependencies and how they work.
+有两个内建的子流程依赖能在渲染流程开始前和结束后进行布局转换，但前者进行转换的时机并不正确 —— 它假设转换发生在管线开始的时候，但在那个时候我们还没有获取到图像！有两种方法可以解决这个问题。我们可以将 `image_available_semaphore` 的 `wait_stages` 改为 `vk::PipelineStageFlags::TOP_OF_PIPE`，以确保图像可用之前渲染流程不会开始。或者，我们可以让渲染流程等待 `vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT` 阶段。我决定在这里使用第二种方法，因为这是个了解子流程依赖的工作原理的好机会。
 
 Subpass dependencies are specified in `vk::SubpassDependency` structs. Go to our `^create_render_pass` function and add one:
+
+子流程依赖是由 `vk::SubpassDependency` 结构体来指定的。在 `create_render_pass` 函数中添加一个：
 
 ```rust,noplaypen
 let dependency = vk::SubpassDependency::builder()
@@ -157,14 +163,14 @@ let dependency = vk::SubpassDependency::builder()
     // continued...
 ```
 
-The first two fields specify the indices of the dependency and the dependent subpass. The special value `vk::SUBPASS_EXTERNAL` refers to the implicit subpass before or after the render pass depending on whether it is specified in `src_subpass` or `dst_subpass`. The index `0` refers to our subpass, which is the first and only one. The `dst_subpass` must always be higher than `src_subpass` to prevent cycles in the dependency graph (unless one of the subpasses is `vk::SUBPASS_EXTERNAL`).
+前两个字段 `src_subpass` 和 `dst_subpass` 指定了依赖和被依赖的子流程的索引。特殊值 `vk::SUBPASS_EXTERNAL` 指的是隐式子流程，它位于渲染流程开始前或结束后，具体的语义取决于它是在 `src_subpass` 还是 `dst_subpass` 中指定的。索引 `0` 指的是我们的子流程，也是唯一的子流程。`dst_subpass` 必须始终大于 `src_subpass`，以防止依赖图中出现循环（除非其中一个子流程是 `vk::SUBPASS_EXTERNAL`）。
 
 ```rust,noplaypen
     .src_stage_mask(vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT)
     .src_access_mask(vk::AccessFlags::empty())
 ```
 
-The next two fields specify the operations to wait on and the stages in which these operations occur. We need to wait for the swapchain to finish reading from the image before we can access it. This can be accomplished by waiting on the color attachment output stage itself.
+接下来的两个字段制订了要等待的操作，以及这些操作会在哪个阶段发生。我们需要等待交换链完成对图像的读取，然后才能访问它。这可以通过等待颜色附件输出阶段本身来实现。
 
 ```rust,noplaypen
     .dst_stage_mask(vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT)
