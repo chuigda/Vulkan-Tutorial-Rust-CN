@@ -41,7 +41,7 @@
 
 - [描述顶点输入](./vertex/vertex_input_description.md)
 - [创建顶点缓冲](./vertex/vertex_buffer_creation.md)
-- [Staging buffer](./vertex/staging_buffer.md)
+- [暂存缓冲](./vertex/staging_buffer.md)
 - [Index buffer](./vertex/index_buffer.md)
 
 # Uniform 缓冲

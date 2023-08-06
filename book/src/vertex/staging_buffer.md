@@ -1,26 +1,30 @@
-# Staging buffer
+# 暂存缓冲
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/19_staging_buffer.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/staging_buffer.html>
+>
+> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
 
-The vertex buffer we have right now works correctly, but the memory type that allows us to access it from the CPU may not be the most optimal memory type for the graphics card itself to read from. The most optimal memory has the `vk::MemoryPropertyFlags::DEVICE_LOCAL` flag and is usually not accessible by the CPU on dedicated graphics cards. In this chapter we're going to create two vertex buffers. One *staging buffer* in CPU accessible memory to upload the data from the vertex array to, and the final vertex buffer in device local memory. We'll then use a buffer copy command to move the data from the staging buffer to the actual vertex buffer.
+**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/19_staging_buffer.rs)
 
-## Transfer queue
+目前我们的顶点缓冲可以正常工作，但是能直接从 CPU 访问的内存对于从显卡读取而言可能并不是最优的。最优内存具有 `vk::MemoryPropertyFlags::DEVICE_LOCAL` 标志，通常位于独立显卡上，无法由 CPU 访问。在本章中，我们将创建两个顶点缓冲。首先是位于 CPU 可访问内存中的*暂存缓冲*，用于将顶点数组中的数据上传至其中；然后是位于设备本地内存中的最终顶点缓冲。接着，我们将使用缓冲复制指令将数据从暂存缓冲复制到实际的顶点缓冲中。
 
-The buffer copy command requires a queue family that supports transfer operations, which is indicated using `vk::QueueFlags::TRANSFER`. The good news is that any queue family with `vk::QueueFlags::GRAPHICS` or `vk::QueueFlags::COMPUTE` capabilities already implicitly support `vk::QueueFlags::TRANSFER` operations. The implementation is not required to explicitly list it in `queue_flags` in those cases.
+## 传输队列
 
-If you like a challenge, then you can still try to use a different queue family specifically for transfer operations. It will require you to make the following modifications to your program:
+缓冲复制指令需要一个支持传输操作的队列族，这种队列族具有 `vk::QueueFlags::TRANSFER` 标志。好消息是，任何具有 `vk::QueueFlags::GRAPHICS` 或 `vk::QueueFlags::COMPUTE` 能力的队列族已经隐式地支持 `vk::QueueFlags::TRANSFER` 操作。在这种情况下，实现不需要在 `queue_flags` 中显式列出这个标志。
 
-* Modify `QueueFamilyIndices` and `QueueFamilyIndices::get` to explicitly look for a queue family with the `vk::QueueFlags::TRANSFER` bit, but not the `vk::QueueFlags::GRAPHICS`.
-* Modify `create_logical_device` to request a handle to the transfer queue
-* Create a second command pool for command buffers that are submitted on the transfer queue family
-* Change the `sharing_mode` of resources to be `vk::SharingMode::CONCURRENT` and specify both the graphics and transfer queue families
-* Submit any transfer commands like `cmd_copy_buffer` (which we'll be using in this chapter) to the transfer queue instead of the graphics queue
+如果你愿意接受挑战，你仍然可以尝试为传输操作使用不同的队列族。这将需要你对程序进行以下修改：
 
-It's a bit of work, but it'll teach you a lot about how resources are shared between queue families.
+- 修改 `QueueFamilyIndices` 和 `QueueFamilyIndices::get`，以明确寻找具有 `vk::QueueFlags::TRANSFER` 标志但不具有 `vk::QueueFlags::GRAPHICS` 的队列族。
+- 修改 `create_logical_device`，以请求传输队列的句柄。
+- 为在传输队列族上提交的指令缓冲创建第二个指令池。
+- 将资源的 `sharing_mode` 改为 `vk::SharingMode::CONCURRENT`，并指定图形队列族和传输队列族。
+- 将任何传输指令（在本章中将使用的 `cmd_copy_buffer` 等）提交到传输队列，而不是图形队列。
 
-## Abstracting buffer creation
+虽然需要付出一些努力，但这将让你深入了解在不同队列族之间共享资源的重要知识。
 
-Because we're going to create multiple buffers in this chapter, it's a good idea to move buffer creation to a helper function. Create a new function `^create_buffer` and move the code in `create_vertex_buffer` (except mapping) to it.
+## 抽象化缓冲创建
+
+由于我们将在本章中创建多个缓冲，将缓冲创建操作移动到一个辅助函数中是个不错的主意。创建一个名为 `create_buffer` 的新函数，并将 `create_vertex_buffer` 中的代码（除了映射部分）迁移到该函数中：
 
 ```rust,noplaypen
 unsafe fn create_buffer(
@@ -57,9 +61,9 @@ unsafe fn create_buffer(
 }
 ```
 
-Make sure to add parameters for the buffer size, usage and memory properties so that we can use this function to create many different types of buffers.
+确保将缓冲大小、用法以及内存属性添加到函数参数，以便于我们使用此函数创建多种不同类型的缓冲。
 
-You can now remove the buffer creation and memory allocation code from `create_vertex_buffer` and just call `^create_buffer` instead:
+现在，你可以从 `create_vertex_buffer` 中删除创建缓冲和分配内存的代码，改为调用 `create_buffer`：
 
 ```rust,noplaypen
 unsafe fn create_vertex_buffer(
@@ -96,11 +100,11 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-Run your program to make sure that the vertex buffer still works properly.
+运行程序，确保顶点缓冲仍然正常工作。
 
-## Using a staging buffer
+## 使用暂存缓冲
 
-We're now going to change `create_vertex_buffer` to only use a host visible buffer as temporary buffer and use a device local one as actual vertex buffer.
+现在，我们要修改 `create_vertex_buffer`，使其只将主机可见的缓冲作为临时缓冲，并将一个设备本地缓冲用作实际的顶点缓冲。
 
 ```rust,noplaypen
 unsafe fn create_vertex_buffer(
@@ -146,14 +150,14 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-We're now using a new `staging_buffer` with `staging_buffer_memory` for mapping and copying the vertex data. In this chapter we're going to use two new buffer usage flags:
+我们现在使用新的 `staging_buffer` 和 `staging_buffer_memory` 来映射和复制顶点数据。在本章中，我们将使用两个新的缓冲用法标志：
 
-* `vk::BufferUsageFlags::TRANSFER_SRC` &ndash; Buffer can be used as source in a memory transfer operation.
-* `vk::BufferUsageFlags::TRANSFER_DST` &ndash; Buffer can be used as destination in a memory transfer operation.
+* `vk::BufferUsageFlags::TRANSFER_SRC` &ndash; 缓冲可以作为内存传输操作的源。
+* `vk::BufferUsageFlags::TRANSFER_DST` &ndash; 缓冲可以作为内存传输操作的目标。
 
-The `vertex_buffer` is now allocated from a memory type that is device local, which generally means that we're not able to use `map_memory`. However, we can copy data from the `staging_buffer` to the `vertex_buffer`. We have to indicate that we intend to do that by specifying the transfer source flag for the `staging_buffer` and the transfer destination flag for the `vertex_buffer`, along with the vertex buffer usage flag.
+`vertex_buffer` 现在是从设备本地内存类型分配的，这通常意味着我们不能使用 `map_memory`。然而，我们可以将数据从 `staging_buffer` 复制到 `vertex_buffer`。我们必须为 `staging_buffer` 指定传输源标志，为 `vertex_buffer` 指定传输目标标志和顶点缓冲用法标志，来表明我们的意图。
 
-We're now going to write a function to copy the contents from one buffer to another, called `copy_buffer`.
+接下来，我们将编写一个名为 `copy_buffer` 的函数，用于将内容从一个缓冲复制到另一个缓冲。
 
 ```rust,noplaypen
 unsafe fn copy_buffer(
@@ -167,7 +171,7 @@ unsafe fn copy_buffer(
 }
 ```
 
-Memory transfer operations are executed using command buffers, just like drawing commands. Therefore we must first allocate a temporary command buffer. You may wish to create a separate command pool for these kinds of short-lived buffers, because the implementation may be able to apply memory allocation optimizations. You should use the `vk::CommandPoolCreateFlags::TRANSIENT` flag during command pool generation in that case.
+内存传输操作与绘制指令一样，都需要通过指令缓冲来执行。因此，我们首先需要分配一个临时的指令缓冲。你可能希望为这些短暂的缓冲创建一个独立的指令池，因为实现可以对内存分配进行优化。在这种情况下，你应该在生成指令池时使用 `vk::CommandPoolCreateFlags::TRANSIENT` 标志。
 
 ```rust,noplaypen
 unsafe fn copy_buffer(
@@ -188,7 +192,7 @@ unsafe fn copy_buffer(
 }
 ```
 
-And immediately start recording the command buffer:
+然后开始记录指令缓冲：
 
 ```rust,noplaypen
 let info = vk::CommandBufferBeginInfo::builder()
@@ -197,20 +201,20 @@ let info = vk::CommandBufferBeginInfo::builder()
 device.begin_command_buffer(command_buffer, &info)?;
 ```
 
-We're only going to use the command buffer once and wait with returning from the function until the copy operation has finished executing. It's good practice to tell the driver about our intent using `vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT`.
+我们将只使用这个指令缓冲一次，并在复制操作完成之前等待函数返回。使用 `vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT` 标志可以向驱动程序表明我们的意图，这是一个很好的实践。
 
 ```rust,noplaypen
 let regions = vk::BufferCopy::builder().size(size);
 device.cmd_copy_buffer(command_buffer, source, destination, &[regions]);
 ```
 
-Contents of buffers are transferred using the `cmd_copy_buffer` command. It takes the source and destination buffers as arguments, and an array of regions to copy. The regions are defined in `vk::BufferCopy` structs and consist of a source buffer offset, destination buffer offset and size. It is not possible to specify `vk::WHOLE_SIZE` here, unlike the `map_memory` command.
+缓冲的内容通过 `cmd_copy_buffer` 指令进行传输。该指令以源缓冲、目标缓冲和待复制区域的数组为参数。区域由 `vk::BufferCopy` 结构体定义，结构体中包括源缓冲偏移量、目标缓冲偏移量和大小。需要注意的是，与 `map_memory` 指令不同，这里不能指定 `vk::WHOLE_SIZE`。
 
 ```rust,noplaypen
 device.end_command_buffer(command_buffer)?;
 ```
 
-This command buffer only contains the copy command, so we can stop recording right after that. Now execute the command buffer to complete the transfer:
+这个指令缓冲仅包含复制指令，因此我们在复制指令之后停止记录。现在执行该指令缓冲以完成传输操作：
 
 ```rust,noplaypen
 let command_buffers = &[command_buffer];
@@ -221,31 +225,31 @@ device.queue_submit(data.graphics_queue, &[info], vk::Fence::null())?;
 device.queue_wait_idle(data.graphics_queue)?;
 ```
 
-Unlike the draw commands, there are no events we need to wait on this time. We just want to execute the transfer on the buffers immediately. There are again two possible ways to wait on this transfer to complete. We could use a fence and wait with `wait_for_fences`, or simply wait for the transfer queue to become idle with `queue_wait_idle`. A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time. That may give the driver more opportunities to optimize.
+与绘制指令不同，这次我们无需等待事件，而是立即在缓冲上执行传输操作。同样，有两种方法可以等待传输完成。我们可以使用围栏（fence），并使用 `wait_for_fences` 来等待，或者只需使用 `queue_wait_idle` 等待传输队列变为空闲状态。使用围栏可以让你同时安排多个传输并等待它们全部完成，而不必逐个执行。这可以给驱动程序更多优化的机会。
 
 ```rust,noplaypen
 device.free_command_buffers(data.command_pool, &[command_buffer]);
 ```
 
-Don't forget to clean up the command buffer used for the transfer operation.
+别忘记清理用于传输操作的指令缓冲。
 
-We can now call `copy_buffer` from the `create_vertex_buffer` function to move the vertex data to the device local buffer:
+现在，我们可以在 `create_vertex_buffer` 函数中调用 `copy_buffer`，将顶点数据复制到设备本地缓冲：
 
 ```rust,noplaypen
 copy_buffer(device, data, staging_buffer, vertex_buffer, size)?;
 ```
 
-After copying the data from the staging buffer to the device buffer, we should clean it up:
+在从暂存缓冲复制数据到设备缓冲之后，不要忘记进行清理：
 
 ```rust,noplaypen
 device.destroy_buffer(staging_buffer, None);
 device.free_memory(staging_buffer_memory, None);
 ```
 
-Run your program to verify that you're seeing the familiar triangle again. The improvement may not be visible right now, but its vertex data is now being loaded from high performance memory. This will matter when we're going to start rendering more complex geometry.
+运行程序以验证你是否能再次看到熟悉的三角形。现在，顶点数据是从高性能内存加载的，尽管目前可能看不到改进。当我们开始渲染更复杂的几何图形时，这一点将变得更加重要。
 
-## Conclusion
+## 结论
 
-It should be noted that in a real world application, you're not supposed to actually call `allocate_memory` for every individual buffer. The maximum number of simultaneous memory allocations is limited by the `max_memory_allocation_count` physical device limit, which may be as low as `4096` even on high end hardware like an NVIDIA GTX 1080. The right way to allocate memory for a large number of objects at the same time is to create a custom allocator that splits up a single allocation among many different objects by using the `offset` parameters that we've seen in many functions.
+值得注意的是，在实际的应用程序中，你不应该为每个缓冲都调用 `allocate_memory`。内存分配的最大数量受到物理设备的 `max_memory_allocation_count` 限制，即使在高端硬件（如 NVIDIA GTX 1080）上，这个限制也可能低至 `4096`。要在同一时刻为大量对象分配内存，正确的方法是创建一个自定义的分配器，通过使用我们在许多函数中看到的 `offset` 参数，将单个分配分割为多个不同的对象。
 
-However, for this tutorial it's okay to use a separate allocation for every resource, because we won't come close to hitting any of these limits for now.
+然而，在本教程中可以为每个资源单独分配，因为目前我们不会接近这些限制。
