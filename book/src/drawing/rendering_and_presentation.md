@@ -516,7 +516,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-Because we now have more calls to `wait_for_fences`, the `reset_fences` call should be **moved**. It's best to simply call it right before actually using the fence:
+因为我们现在有多个 `wait_for_fences` 调用，`reset_fences` 的调用也应该相应地改变。最好在实际使用栅栏之前再调用它：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -534,12 +534,12 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-We've now implemented all the needed synchronization to ensure that there are no more than two frames of work enqueued and that these frames are not accidentally using the same image. Note that it is fine for other parts of the code, like the final cleanup, to rely on more rough synchronization like `device_wait_idle`. You should decide on which approach to use based on performance requirements.
+现在我们实现了所需的所有同步机制，确保没有两帧以上的工作被排入队列，并且排入队列的两帧不会使用同一张图像。代码中的其他部分，例如最终的清理工作，仍然可以依赖于 `device_wait_idle` 这类更粗略的同步机制。你应该基于性能需求选择使用哪种方式。
 
-To learn more about synchronization through examples, have a look at [this extensive overview](https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples#swapchain-image-acquire-and-present) by Khronos.
+要通过示例学习更多关于同步机制的知识，请参阅 Khronos 编写的[这篇全面概述](https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples#swapchain-image-acquire-and-present)。
 
-## Conclusion
+## 结论
 
-A little over 600 (non-empty) lines of code later, we've finally gotten to the stage of seeing something pop up on the screen! Bootstrapping a Vulkan program is definitely a lot of work, but the take-away message is that Vulkan gives you an immense amount of control through its explicitness. I recommend you to take some time now to reread the code and build a mental model of the purpose of all of the Vulkan objects in the program and how they relate to each other. We'll be building on top of that knowledge to extend the functionality of the program from this point on.
+在编写了大概 600 行代码之后，我们终于看到有东西在屏幕上显示出来了！从零开始编写一个 Vulkan 程序显然是一项艰巨的任务，但要点是，Vulkan 通过其明确性为你提供了巨大的控制权。我建议你花些时间重读代码，并建立程序中所有 Vulkan 对象以及对象之间关系的思维模型。从现在开始，我们将以这些知识为基石，扩展我们程序的功能。
 
-In the next chapter we'll deal with one more small thing that is required for a well-behaved Vulkan program.
+在下一章中，我们将处理良好的 Vulkan 程序需要的一点小事。
