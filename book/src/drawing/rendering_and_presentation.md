@@ -80,7 +80,7 @@ unsafe fn destroy(&mut self) {
 
 ## 从交换链获取图像
 
-正如我们之前所提到的，在 `App::render` 函数中要做的第一件事就死活从交换链取得一张图像。回想一下，交换链是一个扩展特性，因此我们必须使用一个带有 `*_khr` 后缀的函数：
+正如我们之前所提到的，在 `App::render` 函数中要做的第一件事就是从交换链取得一张图像。回想一下，交换链是一个扩展特性，所以我们要用的函数带有 `_khr` 后缀。
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
