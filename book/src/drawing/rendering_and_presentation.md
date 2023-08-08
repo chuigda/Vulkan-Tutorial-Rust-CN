@@ -239,10 +239,10 @@ Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
 
 你也可以用 `queue_wait_idle` 来等待某个特定指令队列中的操作完成。这些函数可以用作一种非常简单的同步方式。你会发现当你关闭窗口时程序不再崩溃（不过如果你启用了校验层的话，你会看到一些与同步相关的错误）。
 
-<!-- any suggestions? -->
-## Frames in flight
+<!-- C++ 版的教程是这么翻译的 -->
+## 多帧并行渲染
 
-如果你启用校验层并运行应用程序，你会看到一些错误信息，或者观察到内存使用量在缓慢增长。这是因为应用程序在 `App::render` 函数中快速提交了大量工作，但实际上并没有检查它们是否完成。如果 CPU 提交的工作比 GPU 能够跟上的速度快，那么队列就会慢慢地被工作填满。更糟糕的是，我们同时还在重复使用 `image_available_semaphore` 和 `render_finished_semaphore` 信号量，以及命令缓冲。
+如果你启用校验层并运行应用程序，你会看到一些错误信息，或者观察到内存使用量在缓慢增长。这是因为应用程序在 `App::render` 函数中快速提交了大量工作，但实际上并没有等待它们完成。如果 CPU 提交工作的速度比 GPU 处理工作的速度快，那么队列就会慢慢地被工作填满。更糟糕的是，我们同时还在重复使用 `image_available_semaphore` 和 `render_finished_semaphore` 信号量，以及命令缓冲。
 
 最简单的解决方式就是在提交之后等待工作完成，例如使用 `queue_wait_idle`（注意：不要真的这么做）：
 
@@ -257,12 +257,6 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-<!--
-这个 In-flight 怎么翻啊
-
-However, we are likely not optimally using the GPU in this way, because the whole graphics pipeline is only used for one frame at a time right now. The stages that the current frame has already progressed through are idle and could already be used for a next frame. We will now extend our application to allow for multiple frames to be *in-flight* while still bounding the amount of work that piles up.
--->
-
 但这并不是使用 GPU 的最佳方式，因为如果这么做的话，整个图形管线只能同时渲染一帧了。然而当前帧已经完成的阶段是空闲的，可以用来渲染下一帧。我们现在将扩展我们的应用程序，允许多帧同时进行，同时限制积压的工作量。
 
 首先在程序顶部添加一个常量，用于定义可以并行处理多少帧：
@@ -271,7 +265,7 @@ However, we are likely not optimally using the GPU in this way, because the whol
 const MAX_FRAMES_IN_FLIGHT: usize = 2;
 ```
 
-每一帧都应该有自己的信号量集合，存储在 `AppData` 中：
+每一帧都应该有自己的信号量，存储在 `AppData` 中：
 
 ```rust,noplaypen
 struct AppData {
@@ -298,7 +292,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-类似地，它们也应该被清理：
+类似地，这些信号量也应该被清理：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -312,7 +306,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-要确保每次都使用正确的信号量，我们需要跟踪当前帧。我们将使用一个帧索引来实现，我们将把它添加到 `App` 中（在 `App::create` 中将其初始化为 `0`）：
+要确保每次都使用正确的信号量，我们需要跟踪当前帧。我们将使用一个帧索引来实现，我们把它添加到 `App` 中（在 `App::create` 中将其初始化为 `0`）：
 
 ```rust,noplaypen
 struct App {
@@ -363,7 +357,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 
 使用取余（%）运算符，我们可以确保在每次入队 `MAX_FRAMES_IN_FLIGHT` 帧之后，帧索引都会绕回到 0。
 
-尽管我们现在已经设置了所需的对象来同时处理多帧，但我们仍然没有真正阻止超过 `MAX_FRAMES_IN_FLIGHT` 的帧被提交。现在只有 GPU-GPU 同步，没有 CPU-GPU 同步来跟踪工作的进度。我们可能在帧 #0 还在飞行的时候就使用了帧 #0 的对象！
+尽管我们现在已经设置了所需的对象来同时处理多帧，但我们仍然没有真正阻止多于 `MAX_FRAMES_IN_FLIGHT` 的帧被提交。现在只有 GPU-GPU 同步，没有 CPU-GPU 同步来跟踪工作的进度。我们可能在帧 #0 还在飞行的时候就使用了与帧 #0 关联的对象！
 
 要进行 CPU-GPU 同步，Vulkan 提供了第二种同步原语 —— *栅栏*。栅栏与信号量类似，栅栏可以发出信号，也可以等待栅栏发出的信号。但这次我们实际上要在自己的代码中等待。我们首先为 `AppData` 中的每一帧创建一个栅栏：
 
@@ -394,7 +388,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-创建围墙（`vk::Fence`）的方式与创建信号量非常相似。同样，确保在 `App::destroy` 中清理围墙：
+创建栅栏（`vk::Fence`）的方式与创建信号量非常相似。同样，确保在 `App::destroy` 中清理栅栏：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -405,7 +399,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-现在我们修改 `App::render` 函数并将栅栏用于同步。`queue_submit` 调用包含一个可选的参数，为其传递一个栅栏，当命令缓冲执行完毕时该围墙会发出信号。我们可以使用这个来发出帧已经完成的信号。
+现在我们修改 `App::render` 函数并将栅栏用于同步。`queue_submit` 调用包含一个可选的参数，为其传递一个栅栏，当命令缓冲执行完毕时该栅栏会发出信号。我们可以使用这个来发出帧已经完成的信号。
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
@@ -437,11 +431,11 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-`wait_for_fences` 函数接受一个栅栏数组，并等待其中任意一个或全部栅栏发出信号后再返回。我们传递的 `true` 参数表示我们想要等待所有栅栏，但是在只有一个栅栏的情况下，这显然并不重要。与 `acquire_next_image_khr` 异样，这个函数也接受一个超时参数。与信号量不同，我们需要调用 `reset_fences` 函数手动将围墙重置到未发出信号的状态。
+`wait_for_fences` 函数接受一个栅栏数组，并等待其中任意一个或全部栅栏发出信号后再返回。我们传递的 `true` 参数表示我们想要等待所有栅栏，但是在只有一个栅栏的情况下，这显然并不重要。与 `acquire_next_image_khr` 一样，这个函数也接受一个超时参数。与信号量不同，我们需要调用 `reset_fences` 函数手动将栅栏重置到未发出信号的状态。
 
 如果你现在运行程序，你会发现一些奇怪的事情。应用程序似乎不再渲染任何东西，甚至可能会卡死。
 
-这就意味着我们正在等待一个还没有发出信号的围墙。问题在于，默认情况下，围墙在创建之后处于未发出信号的状态。这意味着如果我们之前没有使用过围墙，`wait_for_fences` 就会永远等待。要解决这个问题，我们可以修改围墙的创建方式，将其初始化为已经发出信号的状态，就好像我们已经渲染了一帧：
+这就意味着我们正在等待一个还没有发出信号的栅栏。问题在于，默认情况下，栅栏在创建之后处于未发出信号的状态。这意味着如果我们之前没有使用过栅栏，`wait_for_fences` 就会永远等待。要解决这个问题，我们可以修改栅栏的创建方式，将其初始化为已经发出信号的状态，就好像我们已经渲染了一帧：
 
 ```rust,noplaypen
 unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()> {
@@ -458,7 +452,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 The memory leak is gone now, but the program is not quite working correctly yet. If `MAX_FRAMES_IN_FLIGHT` is higher than the number of swapchain images or `acquire_next_image_khr` returns images out-of-order then it's possible that we may start rendering to a swapchain image that is already *in flight*. To avoid this, we need to track for each swapchain image if a frame in flight is currently using it. This mapping will refer to frames in flight by their fences so we'll immediately have a synchronization object to wait on before a new frame can use that image.
 -->
 
-现在就没有内存泄漏的问题了，但程序还不能正常工作。如果 `MAX_FRAMES_IN_FLIGHT` 大于交换链图像的数量，或者 `acquire_next_image_khr` 返回的图像是无序的，那么我们可能会开始渲染一个已经*在飞行中*（in flight）的交换链图像。为了避免这种情况，我们需要跟踪每个交换链图像是否有一个正在使用它的帧。这个映射将通过它们的围墙来引用飞行帧，因此我们将立即拥有一个同步对象来等待，直到新的帧可以使用该图像。
+现在就没有内存泄漏的问题了，但程序还不能正常工作。如果 `MAX_FRAMES_IN_FLIGHT` 大于交换链图像的数量，或者 `acquire_next_image_khr` 返回的图像是无序的，那么我们可能会开始渲染一个已经*在飞行中*（in flight）的交换链图像。为了避免这种情况，我们需要跟踪每个交换链图像是否有一个正在使用它的帧。这个映射将通过它们的栅栏来引用飞行帧，因此我们将立即拥有一个同步对象来等待，直到新的帧可以使用该图像。
 
 首先在 `AppData` 中添加一个名为 `images_in_flight` 的新列表来跟踪正在使用的图像：
 
@@ -485,7 +479,7 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
 }
 ```
 
-在最开始的时候，没有帧在使用图像，因此我们显式地将其初始化为*没有围墙*（no fence）。现在我们将修改 `App::render`，等待任何正在使用我们刚刚为新帧分配的图像的上一帧：
+在最开始的时候，没有帧在使用图像，因此我们显式地将其初始化为*没有栅栏*（no fence）。现在我们将修改 `App::render`，等待任何正在使用我们刚刚为新帧分配的图像的上一帧：
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {
