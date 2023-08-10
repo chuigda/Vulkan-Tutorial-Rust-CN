@@ -31,7 +31,7 @@
 
 - [帧缓冲](./drawing/framebuffers.md)
 - [指令缓冲](./drawing/command_buffers.md)
-- [Rendering and presentation](./drawing/rendering_and_presentation.md)
+- [渲染与呈现](./drawing/rendering_and_presentation.md)
 
 # 交换链
 

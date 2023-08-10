@@ -51,6 +51,7 @@ primitive,名词,程序设计概念,原语,,"The language includes many features
 macro,名词,程序设计概念,宏,,,
 flush,动词,程序设计概念,冲刷,例如 glFlush 或者 fflush 这种操作，用来同步两个“设备”上的数据,Do keep in mind that this may lead to slightly worse performance than explicit flushing,
 fence,名词,程序设计概念,栅栏,用来同步一系列的操作，确保这些操作同时完成,,
+semaphore,名词,程序设计概念,信号量,,,
 ,,,,,,
 queue,名词,数据结构,队列,,,
 ,,,,,,
