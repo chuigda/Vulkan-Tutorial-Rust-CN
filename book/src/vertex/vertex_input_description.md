@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/17_vertex_input.rs) | [shader.vert](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.vert) | [shader.frag](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.frag)
+**本章代码：** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/17_vertex_input.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/17/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/17/shader.frag)
 
 在接下来的几章中，我们将用内存中的顶点缓冲替换顶点着色器中硬编码的顶点数据。我们将从最简单的方法开始，即创建一个对 CPU 可见的缓冲，并直接将顶点数据复制到其中。之后，我们将学习如何使用暂存缓冲区将顶点数据复制到高性能内存中。
 

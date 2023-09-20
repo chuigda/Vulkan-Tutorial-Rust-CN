@@ -1,6 +1,6 @@
 # Descriptor pool and sets
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/22_descriptor_sets.rs)
+**Code:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/22_descriptor_sets.rs)
 
 The descriptor layout from the previous chapter describes the type of descriptors that can be bound. In this chapter we're going to create a descriptor set for each `vk::Buffer` resource to bind it to the uniform buffer descriptor.
 

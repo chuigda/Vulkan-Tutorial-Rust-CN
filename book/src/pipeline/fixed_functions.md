@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/10_fixed_functions.rs)
+**本章代码：** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/10_fixed_functions.rs)
 
 旧的图形学 API 在渲染管线中为大部分阶段提供了默认状态。而在 Vulkan 中，你必须显式指定一切 —— 从视口大小到颜色混合函数。在本章中，我们会创建并填充配置这些固定功能操作所需的所有结构体。
 

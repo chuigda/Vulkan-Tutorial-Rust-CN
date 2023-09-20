@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/14_command_buffers.rs)
+**本章代码：** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/14_command_buffers.rs)
 
 Vulkan 中的指令 —— 例如绘制操作和内存传输操作 —— 并不是通过直接调用函数来执行的。你需要把你想执行的操作记录在指令缓冲对象中。这样做的优势在于绘制指令可以提前配置好，并且可以在多个线程中配置指令。在配置完指令缓冲之后，你只要在主循环中告诉 Vulkan 执行这些指令就可以了。
 

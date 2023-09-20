@@ -1,6 +1,6 @@
 # Recreation
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/16_swapchain_recreation.rs)
+**Code:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/16_swapchain_recreation.rs)
 
 The application we have now successfully draws a triangle, but there are some circumstances that it isn't handling properly yet. It is possible for the window surface to change such that the swapchain is no longer compatible with it. One of the reasons that could cause this to happen is the size of the window changing. We have to catch these events and recreate the swapchain.
 

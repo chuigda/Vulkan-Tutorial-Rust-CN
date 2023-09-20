@@ -1,10 +1,10 @@
 # 索引缓冲
 
-> 原文链接：<https://[k](https://kylemayes.github.io/vulkanalia/vertex/index_buffer.html)>
+> 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/index_buffer.html>
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/20_index_buffer.rs)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/20_index_buffer.rs)
 
 在真正的应用程序中，你渲染的 3D 网格通常中的许多三角形之间都会共享顶点。即使是像绘制矩形这样简单的事情，也会遇到这种情况：
 

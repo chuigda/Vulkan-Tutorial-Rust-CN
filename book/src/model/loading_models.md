@@ -1,6 +1,6 @@
 # Loading models
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/27_model_loading.rs)
+**Code:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/27_model_loading.rs)
 
 Your program is now ready to render textured 3D meshes, but the current geometry in the `vertices` and `indices` arrays is not very interesting yet. In this chapter we're going to extend the program to load the vertices and indices from an actual model file to make the graphics card actually do some work.
 

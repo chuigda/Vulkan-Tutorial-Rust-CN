@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/09_shader_modules.rs) | [shader.vert](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/09/shader.vert) | [shader.frag](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/09/shader.frag)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/09_shader_modules.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.frag)
 
 不同于以往的 API，Vulkan 中的着色器代码不是以 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) 或者 [HLSL](https://en.wikipedia.org/wiki/High-Level_Shading_Language) 这种形式指定的，而是以一种被称为 [SPIR-V](https://www.khronos.org/spir) 的字节码格式指定的。Vulkan 和 OpenCL（都是 Knronos 的 API）都使用这种字节码格式。这种格式既可以用于图形着色器，也可以用于计算着色器，不过本书中我们会关注其中与图形管线有关的部分。
 

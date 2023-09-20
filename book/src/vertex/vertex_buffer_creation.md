@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/18_vertex_buffer.rs)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/18_vertex_buffer.rs)
 
 在 Vulkan 中，缓冲是用于存储可被显卡读取的任意数据的内存区域。我们会在本章中用它们来存储顶点数据，但它们也可以用于许多其他目的，这些将在以后的章节中探讨。与我们到目前为止见过的 Vulkan 对象不同，缓冲不会自动为自己分配内存。前面章节中的工作已经表明，Vulkan API 将几乎所有事物置于程序员的控制下，内存管理就是其中之一。
 
