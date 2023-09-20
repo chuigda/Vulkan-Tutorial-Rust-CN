@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/01_instance_creation.rs)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/01_instance_creation.rs)
 
 你首先要做的事情就是通过创建一个 *实例* 来初始化 Vulkan 库。实例是你的应用程序和 Vulkan 库之间的连接，创建它涉及到向驱动程序指定一些关于你的应用程序的细节。首先，添加下面的导入：
 

@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码：**[main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/08_graphics_pipeline.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/08_graphics_pipeline.rs)
 
 在接下来的几章中，我们会搭建图形管线。它会被用来画我们的第一个三角形。图形管线是一系列将我们提交的顶点与网格纹理转换为渲染目标中的像素点的操作。下面是一个简化版的流程图：
 

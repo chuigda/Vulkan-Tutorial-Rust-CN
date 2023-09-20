@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/13_framebuffers.rs)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/13_framebuffers.rs)
 
 我们在之前的几个章节中多次提到过帧缓冲。而现在我们已经建立了渲染流程，就差一个跟交换链图片格式相同的帧缓冲了。
 

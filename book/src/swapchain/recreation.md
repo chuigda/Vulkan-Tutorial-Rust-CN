@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/16_swapchain_recreation.rs)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/16_swapchain_recreation.rs)
 
 现在应用程序能画出三角形了，但它还没有正确处理一些情况。窗口表面可能会发生变化，使得交换链不再与之兼容。导致这种情况发生的原因之一是窗口的大小发生了变化。我们必须捕获这些事件并重新创建交换链。
 

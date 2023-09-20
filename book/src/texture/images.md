@@ -1,6 +1,6 @@
 # Images
 
-**Code:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/23_texture_image.rs)
+**Code:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/23_texture_image.rs)
 
 The geometry has been colored using per-vertex colors so far, which is a rather limited approach. In this part of the tutorial we're going to implement texture mapping to make the geometry look more interesting. This will also allow us to load and draw basic 3D models in a future chapter.
 
@@ -184,7 +184,7 @@ The image will only be used by one queue family: the one that supports graphics 
     .samples(vk::SampleCountFlags::_1)
 ```
 
-The `samples` flag is related to multisampling. This is only relevant for images that will be used as attachments, so stick to one sample. 
+The `samples` flag is related to multisampling. This is only relevant for images that will be used as attachments, so stick to one sample.
 
 ```rust,noplaypen
     .flags(vk::ImageCreateFlags::empty()); // Optional.
