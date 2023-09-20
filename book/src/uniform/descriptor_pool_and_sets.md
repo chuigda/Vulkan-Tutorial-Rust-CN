@@ -104,7 +104,7 @@ unsafe fn create_descriptor_sets(device: &Device, data: &mut AppData) -> Result<
 }
 ```
 
-A descriptor set allocation is described with a `vk::DescriptorSetAllocateInfo` struct. You need to specify the descriptor pool to allocate from, the number of descriptor sets to allocate, and the descriptor layout to base them on:
+A descriptor set allocation is described with a `vk::DescriptorSetAllocateInfo` struct. You need to specify the descriptor pool to allocate from and an array of descriptor layouts that describes each of the descriptor sets you are allocating:
 
 ```rust,noplaypen
 let layouts = vec![data.descriptor_set_layout; data.swapchain_images.len()];
@@ -200,7 +200,7 @@ device.cmd_bind_descriptor_sets(
 device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
 ```
 
-Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we need to specify if we want to bind descriptor sets to the graphics or compute pipeline. The next parameter is the layout that the descriptors are based on. The next three parameters specify the index of the first descriptor set, the number of sets to bind, and the array of sets to bind. We'll get back to this in a moment. The last two parameters specify an array of offsets that are used for dynamic descriptors. We'll look at these in a future chapter.
+Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we need to specify if we want to bind descriptor sets to the graphics or compute pipeline. The next parameter is the layout that the descriptors are based on. The next two parameters specify the index of the first descriptor set and the array of sets to bind. We'll get back to this in a moment. The last parameter specifies an array of offsets that are used for dynamic descriptors. We'll look at these in a future chapter.
 
 If you run your program now, then you'll notice that unfortunately nothing is visible. The problem is that because of the Y-flip we did in the projection matrix, the vertices are now being drawn in counter-clockwise order instead of clockwise order. This causes backface culling to kick in and prevents any geometry from being drawn. Go to the `^create_pipeline` function and modify the `front_face` in `vk::PipelineRasterizationStateCreateInfo` to correct this:
 
@@ -223,9 +223,9 @@ One thing we've glossed over so far is how exactly the data in the Rust structur
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 struct UniformBufferObject {
-    model: glm::Mat4,
-    view: glm::Mat4,
-    proj: glm::Mat4,
+    model: Mat4,
+    view: Mat4,
+    proj: Mat4,
 }
 ```
 
@@ -243,10 +243,10 @@ However, that's not all there is to it. For example, try modifying the struct an
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 struct UniformBufferObject {
-    foo: glm::Vec2,
-    model: glm::Mat4,
-    view: glm::Mat4,
-    proj: glm::Mat4,
+    foo: Vec2,
+    model: Mat4,
+    view: Mat4,
+    proj: Mat4,
 }
 ```
 
@@ -279,11 +279,11 @@ The new structure starts with a `vec2` which is only 8 bytes in size and therefo
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 struct UniformBufferObject {
-    foo: glm::Vec2,
+    foo: Vec2,
     _padding: [u8; 8],
-    model: glm::Mat4,
-    view: glm::Mat4,
-    proj: glm::Mat4,
+    model: Mat4,
+    view: Mat4,
+    proj: Mat4,
 }
 ```
 
