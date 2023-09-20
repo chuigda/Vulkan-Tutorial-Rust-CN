@@ -1,8 +1,8 @@
 # FAQ
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/faq.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 本页面列举了在开发 Vulkan 应用时可能遇到的常见问题及其解决方案。
 

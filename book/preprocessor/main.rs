@@ -16,7 +16,7 @@ use pulldown_cmark_to_cmark::cmark;
 /// The Vulkan API Registry index.
 const INDEX: &str = include_str!("../../../index.txt");
 /// The version of `vulkanalia` used by the tutorial.
-const VERSION: &str = "0.12.0";
+const VERSION: &str = "0.22.0";
 
 /// The number of documentation link replacements made.
 static REPLACEMENTS: AtomicUsize = AtomicUsize::new(0);
@@ -75,6 +75,7 @@ fn load_index() -> HashMap<&'static str, &'static str> {
     info!("Loaded index has {} entries.", index.len());
 
     // Add entries for non-generated items.
+    index.insert("Bytecode", "https://docs.rs/vulkanalia/%VERSION%/vulkanalia/bytecode/struct.Bytecode.html");
     index.insert("Device", "https://docs.rs/vulkanalia/%VERSION%/vulkanalia/struct.Device.html");
     index.insert("Entry", "https://docs.rs/vulkanalia/%VERSION%/vulkanalia/struct.Entry.html");
     index.insert("Instance", "https://docs.rs/vulkanalia/%VERSION%/vulkanalia/struct.Instance.html");

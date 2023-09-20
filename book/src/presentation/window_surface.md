@@ -1,8 +1,8 @@
 # 窗口表面
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/presentation/window_surface.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 **本章代码：**[main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/05_window_surface.rs)
 
@@ -83,7 +83,6 @@ unsafe fn destroy(&mut self) {
 
 ## 查询呈现（presentation）支持
 
-<!-- 这里是故意没按照原文翻译的，因为原文真把我气笑了。之后可能会给原文提 PR 以修正这个问题。 -->
 尽管 Vulkan 的实现可能支持窗口系统集成，但这并不意味着系统中的每个设备都支持。因此，我们需要扩展 `pick_physical_device` 函数的功能，以确保我们选择的设备能够向我们创建的表面呈现图像。因为呈现是与队列相关的功能，所以我们实际上是要找到一个支持向我们创建的表面进行呈现的队列族。
 
 事实上，支持绘制指令的队列族和支持呈现的队列族可能并不重叠。因此，我们必须考虑呈现队列不同于图形队列的可能性，并修改 `QueueFamilyIndices` 结构体来解决此问题：

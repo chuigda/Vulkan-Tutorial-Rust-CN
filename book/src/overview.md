@@ -1,8 +1,8 @@
 # 概览
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/overview.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 本章会以介绍 Vulkan 和它所解决的问题开始。之后，我们会看到绘制第一个三角形所需的所有组件。这会给你一个总体的蓝图，以便你将每个后续章节放在正确的位置。我们会通过 `vulkanalia` 实现的 Vulkan API 结构来总结。
 
@@ -247,7 +247,7 @@ let instance = entry.create_instance(&info, None).unwrap();
 * 无需为 `s_type` 字段提供值。这是因为生成器会自动为这个字段提供正确的值（`vk::StructureType::INSTANCE_CREATE_INFO`）
 * 无需为 `enabled_extension_count` 字段提供值。这是因为生成器的 `enabled_extension_names` 方法会自动使用提供的切片的长度设置这个字段
 
-<!-- 
+<!--
 生命周期属于是误译，显然 Rust 的 lifetime 里面没有“周”。
 生命周期应该用来指 React，Vue 的 lifecycle 那种东西。
 所以我们选择了“生存期”。

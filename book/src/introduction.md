@@ -1,10 +1,10 @@
 # 介绍
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/introduction.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-本教程是用 Rust 对 <https://vulkan-tutorial.com> 的改写版本，应当归功于原教程的作者 ([Alexander Overvoorde](https://github.com/Overv)) 及[其他贡献者们](https://github.com/Overv/VulkanTutorial/graphs/contributors)。  
+本教程是用 Rust 对 <https://vulkan-tutorial.com> 的改写版本，应当归功于原教程的作者 ([Alexander Overvoorde](https://github.com/Overv)) 及[其他贡献者们](https://github.com/Overv/VulkanTutorial/graphs/contributors)。
 
 同时，本教程也包含由笔者原创的章节（从 `Push Constants` 章节开始）。这些章节介绍了在几乎所有的 Vulkan 应用中都非常重要的 Vulkan 概念和特性。然而，正如这些章节中所说明的那样，这些特性是实验性的。
 

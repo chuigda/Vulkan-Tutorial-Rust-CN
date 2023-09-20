@@ -1,8 +1,8 @@
 # 渲染与呈现
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/drawing/rendering_and_presentation.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/15_hello_triangle.rs)
 
@@ -93,19 +93,6 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
             vk::Fence::null(),
         )?
         .0 as usize;
-
-        let wait_semaphores = &[self.data.image_available_semaphore];
-let wait_stages = &[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
-let command_buffers = &[self.data.command_buffers[image_index as usize]];
-let signal_semaphores = &[self.data.render_finished_semaphore];
-let submit_info = vk::SubmitInfo::builder()
-    .wait_semaphores(wait_semaphores)
-    .wait_dst_stage_mask(wait_stages)
-    .command_buffers(command_buffers)
-    .signal_semaphores(signal_semaphores);
-
-    self.device.queue_submit(
-    self.data.graphics_queue, &[submit_info], vk::Fence::null())?;
 
     Ok(())
 }

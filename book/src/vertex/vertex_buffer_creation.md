@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/vertex_buffer_creation.html>
 >
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/18_vertex_buffer.rs)
 
@@ -264,13 +264,11 @@ device.cmd_draw(*command_buffer, VERTICES.len() as u32, 1, 0, 0);
 通过修改 `VERTICES` 列表，将顶点的颜色更改为白色，可以尝试修改三角形的顶点颜色：
 
 ```rust,noplaypen
-lazy_static! {
-    static ref VERTICES: Vec<Vertex> = vec![
-        Vertex::new(glm::vec2(0.0, -0.5), glm::vec3(1.0, 1.0, 1.0)),
-        Vertex::new(glm::vec2(0.5, 0.5), glm::vec3(0.0, 1.0, 0.0)),
-        Vertex::new(glm::vec2(-0.5, 0.5), glm::vec3(0.0, 0.0, 1.0)),
-    ];
-}
+static VERTICES: [Vertex; 3] = [
+    Vertex::new(vec2(0.0, -0.5), vec3(1.0, 1.0, 1.0)),
+    Vertex::new(vec2(0.5, 0.5), vec3(0.0, 1.0, 0.0)),
+    Vertex::new(vec2(-0.5, 0.5), vec3(0.0, 0.0, 1.0)),
+];
 ```
 
 再次运行程序，您应该会看到以下效果：

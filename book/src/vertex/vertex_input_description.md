@@ -1,8 +1,8 @@
 # 描述顶点输入
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/vertex_input_description.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 **本章代码：** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/17_vertex_input.rs) | [shader.vert](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.vert) | [shader.frag](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/17/shader.frag)
 
@@ -39,16 +39,18 @@ layout(location = 2) in vec3 inColor;
 
 ## 顶点数据
 
-我们将从着色器代码中将顶点数据移到程序代码的数组中。首先，向我们的程序添加几个导入项。
+我们将从着色器代码中将顶点数据移到程序代码的数组中。首先，向我们的程序添加几个导入项和一些类型别名。
 
 ```rust,noplaypen
 use std::mem::size_of;
 
-use nalgebra_glm as glm;
-use lazy_static::lazy_static;
+use cgmath::{vec2, vec3};
+
+type Vec2 = cgmath::Vector2<f32>;
+type Vec3 = cgmath::Vector3<f32>;
 ```
 
-`size_of` 函数将用于计算我们将要定义的顶点数据的大小，而 `nalgebra-glm` 则定义了我们需要的向量类型。`lazy_static!` 宏将用于定义顶点数据，因为 `nalgebra-glm` 中的向量构造函数尚不是 `const fn`。
+`size_of` 函数将用于计算我们将要定义的顶点数据的大小，而 `cgmath` 则定义了我们需要的向量类型。
 
 接下来，创建一个名为 `Vertex` 的 `#[repr(C)]` 结构体，其中包含我们将在顶点着色器中使用的两个属性，并添加一个简单的构造函数：
 
@@ -56,27 +58,25 @@ use lazy_static::lazy_static;
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 struct Vertex {
-    pos: glm::Vec2,
-    color: glm::Vec3,
+    pos: Vec2,
+    color: Vec3,
 }
 
 impl Vertex {
-    fn new(pos: glm::Vec2, color: glm::Vec3) -> Self {
+    const fn new(pos: Vec2, color: Vec3) -> Self {
         Self { pos, color }
     }
 }
 ```
 
-`nalgebra-glm` 提供了与着色器语言中使用的向量类型完全匹配的 Rust 类型。
+`cgmath` 提供了与着色器语言中使用的向量类型完全匹配的 Rust 类型。
 
 ```rust,noplaypen
-lazy_static! {
-    static ref VERTICES: Vec<Vertex> = vec![
-        Vertex::new(glm::vec2(0.0, -0.5), glm::vec3(1.0, 0.0, 0.0)),
-        Vertex::new(glm::vec2(0.5, 0.5), glm::vec3(0.0, 1.0, 0.0)),
-        Vertex::new(glm::vec2(-0.5, 0.5), glm::vec3(0.0, 0.0, 1.0)),
-    ];
-}
+static VERTICES: [Vertex; 3] = [
+    Vertex::new(vec2(0.0, -0.5), vec3(1.0, 0.0, 0.0)),
+    Vertex::new(vec2(0.5, 0.5), vec3(0.0, 1.0, 0.0)),
+    Vertex::new(vec2(-0.5, 0.5), vec3(0.0, 0.0, 1.0)),
+];
 ```
 
 现在我们可以使用 `Vertex` 结构体来定义顶点数据了。我们使用了与之前完全相同的位置和颜色值，但现在顶点位置和颜色数据被合并进一个顶点数组中。这种定义顶点数据的方式也被称为*交错顶点属性*（interleaving vertex attributes）。
@@ -139,14 +139,14 @@ let pos = vk::VertexInputAttributeDescription::builder()
 `format` 参数描述属性的数据类型。有点混淆的是，`format` 字段使用与颜色格式相同的枚举类型。以下是常见的着色器类型和对应的颜色格式枚举：
 
 * `f32` &ndash; `vk::Format::R32_SFLOAT`&nbsp;
-* `glm::Vec2` &ndash; `vk::Format::R32G32_SFLOAT`&nbsp;
-* `glm::Vec3` &ndash; `vk::Format::R32G32B32_SFLOAT`&nbsp;
-* `glm::Vec4` &ndash; `vk::Format::R32G32B32A32_SFLOAT`&nbsp;
+* `cgmath::Vector2<f32>` (我们的 `Vec2`) &ndash; `vk::Format::R32G32_SFLOAT`&nbsp;
+* `cgmath::Vector3<f32>` (我们的 `Vec3`) &ndash; `vk::Format::R32G32B32_SFLOAT`&nbsp;
+* `cgmath::Vector4<f32>` &ndash; `vk::Format::R32G32B32A32_SFLOAT`&nbsp;
 
 如你所见，颜色格式的颜色通道数量应与着色器数据类型的分量数量相匹配。颜色格式的通道数量比着色器数据类型的分量数量多也是可以的，但多余的通道将被静默丢弃。如果通道数量少于分量数量，则 BGA 分量将使用默认值 `(0, 0, 1)` 。颜色类型（ `SFLOAT` ，`UINT` ，`SINT` ）和位宽度也应与着色器数据类型匹配。请参阅以下示例：
 
-* `glm::IVec2` &ndash; `vk::Format::R32G32_SINT`，包含 `i32` 的 2 分量向量
-* `glm::UVec4` &ndash; `vk::Format::R32G32B32A32_UINT`，包含 `u32` 的 4 分量向量
+* `cgmath::Vector2<i32>` &ndash; `vk::Format::R32G32_SINT`，包含 `i32` 的 2 分量向量
+* `cgmath::Vector4<u32>` &ndash; `vk::Format::R32G32B32A32_UINT`，包含 `u32` 的 4 分量向量
 * `f64` &ndash; `vk::Format::R64_SFLOAT`，双精度（64位）浮点数
 
 `format` 参数隐式地定义了属性数据的字节大小，而 `offset` 参数指定从顶点数据开始的字节数：绑定每次加载一个 `Vertex`，位置属性（`pos`）从该结构体的开始处偏移 `0` 字节。
@@ -156,7 +156,7 @@ let color = vk::VertexInputAttributeDescription::builder()
     .binding(0)
     .location(1)
     .format(vk::Format::R32G32B32_SFLOAT)
-    .offset(size_of::<glm::Vec2>() as u32)
+    .offset(size_of::<Vec2>() as u32)
     .build();
 ```
 

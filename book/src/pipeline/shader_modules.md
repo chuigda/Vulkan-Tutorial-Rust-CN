@@ -1,8 +1,8 @@
 # 着色器模块
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/pipeline/shader_modules.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/09_shader_modules.rs) | [shader.vert](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/09/shader.vert) | [shader.frag](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/shaders/09/shader.frag)
 
@@ -23,7 +23,6 @@ GLSL 是一种使用类 C 语法的着色器语言。使用 GLSL 编写的程序
 ## 顶点着色器
 
 顶点着色器处理每个传入的顶点。它以顶点的属性 —— 例如世界坐标、颜色、法线和纹理坐标 —— 作为输入，输出最终的裁剪坐标（clip coordinates）和需要传递给片元着色器的属性，例如颜色和纹理坐标。这些值将由光栅化器（rasterizer）在片元上进行插值，从而产生平滑的渐变。
-
 
 *裁剪坐标*是一个顶点着色器输出的四维向量，它的四个分量会被除以第四个分量，从而产生一个*标准化设备坐标*（normalized device coordinate）。这些归一化设备坐标是 [齐次坐标](https://en.wikipedia.org/wiki/Homogeneous_coordinates)（homogeneous coordinates），它将帧缓冲映射到一个 `[-1, 1] × [-1, 1]` 的坐标系中，如下图所示：
 
@@ -217,31 +216,26 @@ unsafe fn create_shader_module(
 
 这个函数接受一个包含字节码的切片作为参数，并使用我们的逻辑设备，用字节码创建一个 `vk::ShaderModule` 对象。
 
-<!-- Chuigda: 我认为原文作者这里写的有问题，这完全就是在吃 malloc 的特性，一点稳定性都没有。
-我认为这地方应该至少 memcpy 一波
-我之后会给原作者开 PR 讨论这个问题，现在先这么翻译。 -->
-创建着色器模块很简单，只要指定字节码切片的长度和字节码切片本身就行。这些信息被包含在 `vk::ShaderModuleCreateInfo` 结构体中。唯一的问题是，字节码的长度是以字节为单位指定的，但是这个结构体中的字节码切片是 `&[u32]` 而不是 `&[u8]`。因此，我们需要先将 `&[u8]` 转换为 `&[u32]`。我们将使用 [`slice::align_to`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.align_to) 来完成这一转换，它可以将一个切片转换为一个包含不同大小和/或对齐要求的类型的切片。然而，`include_bytes!` 返回的 `&[u8]` 可能不满足我们的对齐要求，所以我们首先将它复制到一个 `Vec` 中。
+创建着色器模块很简单，只要指定字节码切片的长度和字节码切片本身就行。这些信息被包含在 `vk::ShaderModuleCreateInfo` 结构体中。唯一的问题是，字节码的长度是以字节为单位指定的，但是这个结构体中的字节码切片是 `&[u32]` 而不是 `&[u8]`。因此，我们需要先将 `&[u8]` 转换为 `&[u32]`。
 
-<!--
-Creating a shader module is simple, we only need to specify the length of our bytecode slice and the bytecode slice itself. This information is specified in a `vk::ShaderModuleCreateInfo` structure. The one catch is that the size of the bytecode is specified in bytes, but the bytecode slice expected by this struct is a `&[u32]` instead of a `&[u8]`. Therefore we will first need to convert our `&[u8]` into an `&[u32]`. We will accomplish this with [`slice::align_to`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.align_to) which can be used to convert a slice into a slice containing a type with a different size and/or alignment requirements. However, the `&[u8]` returned by `include_bytes!` may not meet our alignment requirements, so we'll first copy it into a `Vec`.
--->
+`vulkanalia` 提供了一个名为 `Bytecode` 的辅助结构体，我们将会用这个辅助结构体来将着色器代码复制到一个具有 `u32` 对齐的缓冲区中。首先导入这个辅助结构体：
 
 ```rust,noplaypen
-let bytecode = Vec::<u8>::from(bytecode);
-let (prefix, code, suffix) = bytecode.align_to::<u32>();
-if !prefix.is_empty() || !suffix.is_empty() {
-    return Err(anyhow!("Shader bytecode is not properly aligned."));
-}
+use vulkanalia::bytecode::Bytecode;
 ```
 
-`align_to` 方法返回的中间部分切片（`code`）具有 `&[u32]` 类型，并且一定具有正确的对齐。我们的 `bytecode` 切片中的任何 `u8`，如果不满足这一对齐要求，都会出现在返回的第一个或第三个切片中（`prefix` 和 `suffix`）。我们要求这两个切片都为空，以确保我们的整个 `bytecode` 切片都已经转换为 `&[u32]`，不过在实践中你不用担心这种失败情况。<!-- 屁咧 -->
+然后回到我们的 `create_shader_module` 函数，`Bytecode::new` 函数会在提供的字节切片长度不是 4 的整数倍，或者分配对齐的缓冲失败时返回错误。这里我们提供的字节码应该总是正确的，所以我们直接对结果调用 `unwrap`。
+
+```rust,noplaypen
+let bytecode = Bytecode::new(bytecode).unwrap();
+```
 
 接着我们创建 `vk::ShaderModuleCreateInfo` 并用它调用 `create_shader_module` 来创建着色器模块：
 
 ```rust,noplaypen
 let info = vk::ShaderModuleCreateInfo::builder()
-    .code_size(bytecode.len())
-    .code(code);
+    .code_size(bytecode.code_size())
+    .code(bytecode.code());
 
 Ok(device.create_shader_module(&info, None)?)
 ```

@@ -1,8 +1,8 @@
 # Vulkan 实例
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/setup/instance.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/01_instance_creation.rs)
 
@@ -132,8 +132,8 @@ let mut extensions = vk_window::get_required_instance_extensions(window)
     .collect::<Vec<_>>();
 
 // 从 Vulkan 1.3.216 之后，macOS 上的 Vulkan 实现需要启用额外的扩展
-let flags = if 
-    cfg!(target_os = "macos") && 
+let flags = if
+    cfg!(target_os = "macos") &&
     entry.version()? >= PORTABILITY_MACOS_VERSION
 {
     info!("Enabling extensions for macOS portability.");

@@ -1,8 +1,8 @@
 # 开发环境
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/development_environment.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 在这个章节中，我们将会安装 Vulkan SDK 并搭建开发 Vulkan 应用所需的环境。此教程假设你已经有一个搭建好的 Rust（1.51+）开发环境。
 
@@ -18,8 +18,8 @@
 
 ```toml
 anyhow = "1"
-lazy_static = "1"
 log = "0.4"
+cgmath = "0.18"
 nalgebra-glm = "0.18"
 png = "0.17"
 pretty_env_logger = "0.4"
@@ -30,9 +30,8 @@ winit = "0.28"
 ```
 
 * `anyhow` &ndash; 用于简单的错误处理
-* `lazy_static` &ndash; 用于存储静态数据，例如顶点数据
 * `log` &ndash; 日志库
-* `nalgebra-glm` &ndash; 一个 Rust 语言的 [GLM](https://glm.g-truc.net/0.9.9/index.html)（graphics math library，图形数学库）替代
+* `cgmath` &ndash; 一个 Rust 语言的 [GLM](https://glm.g-truc.net/0.9.9/index.html)（graphics math library，图形数学库）替代
 * `png` &ndash; 用于将 PNG 图片文件加载到纹理
 * `pretty_env_logger` &ndash; 用于打印日志到控制台
 * `thiserror` &ndash; 用于在自定义错误类型时减少样板代码

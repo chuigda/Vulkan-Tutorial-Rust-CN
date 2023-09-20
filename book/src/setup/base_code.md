@@ -1,8 +1,8 @@
 # 基础代码
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/setup/base_code.html>
-> 
-> Commit Hash: f083d3b38f8be37555a1126cd90f6b73c8679d99
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
 **本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/00_base_code.rs)
 
