@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码：**[main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/05_window_surface.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/05_window_surface.rs)
 
 Vulkan 是一个平台无关的 API，因此它不能直接与窗口系统进行交互。要在屏幕上呈现结果，我们需要使用一系列 WSI（Window System Interface，窗口系统接口）扩展来建立 Vulkan 与窗口系统之间的连接。在本章中，我们将讨论第一个扩展，即 `VK_KHR_surface`。它暴露了一个 `vk::SurfaceKHR` 类型，表示一种用于呈现图像的抽象表面。我们程序中的窗口表面将由我们用 `winit` 打开的窗口来支持。
 

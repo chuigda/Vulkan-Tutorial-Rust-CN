@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/00_base_code.rs)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/00_base_code.rs)
 
 在开发环境一章中，我们创建了一个 Cargo 项目添加了必要的依赖项目。在本章中，我们会用下面的代码替换 `src/main.rs` 中的内容：
 

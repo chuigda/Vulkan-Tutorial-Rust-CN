@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/15_hello_triangle.rs)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/15_hello_triangle.rs)
 
 在本章中我们会把所有东西组合起来。我们将实现 `App::render` 函数，该函数会由主循环调用，将三角形渲染到屏幕上。
 

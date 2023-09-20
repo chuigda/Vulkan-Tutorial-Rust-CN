@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码** [main.rs](https://github.com/KyleMayes/vulkanalia/tree/master/tutorial/src/11_render_passes.rs)
+**本章代码** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/11_render_passes.rs)
 
 在创建渲染管线之前，我们还需要设置渲染过程中将会使用的帧缓冲附件（framebuffer attachments）。我们需要指定有多少个颜色缓冲和深度缓冲，每个缓冲使用多少样本数，以及渲染操作将如何处理缓冲中的内容。所有这些信息都会被装进一个*渲染流程*对象中。我们将会创建一个新的函数 `create_render_pass`，并在 `App::create` 中 `create_pipeline` 之前调用它：
 
