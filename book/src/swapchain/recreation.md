@@ -30,9 +30,9 @@ unsafe fn recreate_swapchain(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-和在上一章的时候一样，我们首先调用 `device_wait_idle`，因为我们不能在资源正在被使用时修改它们。显然，我们要做的第一件事就是重建交换链本身。因为图像视图直接基于交换链图像，所以图像视图也需要被重建。因为渲染流程依赖于交换链图像的格式，所以渲染流程也需要被重建。在像窗口大小调整这样的操作中，交换链图像的格式改变的可能性很小，但是我们仍然需要处理这种情况。视口和裁剪矩形的大小在图形管线创建时指定，所以图形管线也需要被重建。使用动态状态来指定视口和裁剪矩形可以避免这种情况。然后，帧缓冲和指令缓冲也直接依赖于交换链图像。最后，我们调整了交换链图像的信号量列表的大小，因为重建后交换链图像的数量可能会发生变化。
+和上一章一样，我们首先调用 `device_wait_idle`，因为我们不能在资源正在被使用时修改它们。显然，我们要做的第一件事就是重建交换链本身。因为图像视图直接基于交换链图像，所以图像视图也需要被重建。因为渲染流程依赖于交换链图像的格式，所以渲染流程也需要被重建。在像窗口大小调整这样的操作中，交换链图像的格式改变的可能性很小，但是我们仍然需要处理这种情况。视口和裁剪矩形的大小在图形管线创建时指定，所以图形管线也需要被重建。使用动态状态来指定视口和裁剪矩形可以避免这种情况。然后，帧缓冲和指令缓冲也直接依赖于交换链图像。最后，我们调整了交换链图像的信号量列表的大小，因为重建后交换链图像的数量可能会发生变化。
 
-为了确保在重建这些对象之前清理旧对象，我们应该将一些清理代码移动到一个单独的方法，这样我们就可以在等待设备空闲之后从 `App::recreate_swapchain` 方法中调用它。我们将这个方法命名为 `App::destroy_swapchain`：
+为了确保在重建这些对象之前清理旧对象，我们应该将清理这些对象的代码从 `App::destroy` 方法中提取出来，移动到一个单独的 `App::destroy_swapchain` 方法中
 
 ```rust,noplaypen
 unsafe fn recreate_swapchain(&mut self, window: &Window) -> Result<()> {
@@ -115,7 +115,7 @@ let image_index = match result {
 
 如果在尝试从交换链获取图像时发现交换链已经过时，那么就不能再向它呈现内容了。因此我们应该立即重建交换链，并在下一次 `App::render` 调用时再次尝试。
 
-你可以决定在交换链不再是最优时要做的事情，但我选择在这种情况下继续进行渲染，因为我们已经获取了一个图像。因为 `vk::SuccessCode::SUBOPTIMAL_KHR` 被认为是一个成功的代码而不是一个错误代码，所以它将被 `match` 块中的 `Ok` 分支处理。
+你也可以选择在交换链不再最优时重建交换链，但我选择在这种情况下继续进行渲染，因为我们已经获取了一个图像。因为 `vk::SuccessCode::SUBOPTIMAL_KHR` 被认为是一个成功的代码而不是一个错误代码，所以它将被 `match` 块中的 `Ok` 分支处理。
 
 ```rust,noplaypen
 let result = self.device.queue_present_khr(self.data.present_queue, &present_info);
@@ -130,14 +130,11 @@ if changed {
 }
 ```
 
-<!-- TODO: chuigda: ??? -->
-`queue_present_khr` 函数返回相同的值，意义也相同。在这种情况下，如果交换链是次优的，我们也会重建交换链，因为我们想要最好的结果。
+`queue_present_khr` 函数返回和 `acquire_next_image_khr` 相同的值，意义也相同。在这种情况下，如果交换链是次优的，我们也会重建交换链，因为我们想要最好的结果。
 
-## 显式地处理窗口大小调整
+## 显式地处理窗口大小变化
 
-Although many drivers and platforms trigger `vk::ErrorCode::OUT_OF_DATE_KHR` automatically after a window resize, it is not guaranteed to happen. That's why we'll add some extra code to also handle resizes explicitly. First add a new field to the `App` struct to track whether a resize has happpened:
-
-尽管许多平台和驱动程序都会在窗口大小改变后自动触发 `vk::ErrorCode::OUT_OF_DATE_KHR`，但这并不保证会发生。这就是为什么我们要添加一些额外的代码来显式地处理调整大小。首先在 `App` 结构体中添加一个新字段来跟踪是否发生了调整大小：
+尽管许多平台和驱动程序都会在窗口大小改变后自动触发 `vk::ErrorCode::OUT_OF_DATE_KHR`，但并不保证如此。这就是为什么我们要添加一些额外的代码来显式地处理窗口大小变化。首先在 `App` 结构体中添加一个新字段来追踪窗口大小是否发生了改变：
 
 ```rust,noplaypen
 struct App {
@@ -162,7 +159,7 @@ if self.resized || changed {
 }
 ```
 
-注意要在 `queue_present_khr` 之后执行这个操作，以确保信号量处于一致的状态，否则一个已经被标记的信号量可能永远不会被正确地等待。现在我们可以在 `main` 中的窗口事件 `match` 块中添加一个分支来实际检测调整大小：
+注意要在 `queue_present_khr` 之后执行这个操作，以确保信号量处于一致的状态，否则一个已经发出信号的信号量可能永远不会被正确地等待。现在我们可以在 `main` 中的窗口事件 `match` 块中添加一个分支来实际检测调整大小：
 
 ```rust,noplaypen
 match event {
