@@ -35,7 +35,7 @@
 
 # 交换链
 
-- [Recreation](./swapchain/recreation.md)
+- [重建交换链](./swapchain/recreation.md)
 
 # 顶点缓冲
 
