@@ -107,7 +107,7 @@ unsafe fn create_index_buffer(
 }
 ```
 
-不过还是有两个值得一提的区别，`size` 现在等于索引数量乘以索引类型 —— 即 `u16` 或 `u32` —— 的大小。`index_buffer` 的用途应该是 `vk::BufferUsageFlags::INDEX_BUFFER` 而不是 `vk::BufferUsageFlags::VERTEX_BUFFER`，这是有道理的。除此之外，整个过程完全一样。我们创建一个暂存缓冲来复制 `INDICES` 的内容，然后将其复制到最终的设备本地索引缓冲。
+不过还是有两个值得一提的区别，`size` 现在等于索引数量乘以索引类型 —— 即 `u16` 或 `u32` —— 的大小。`index_buffer` 的用途应该是 `vk::BufferUsageFlags::INDEX_BUFFER` 而不是 `vk::BufferUsageFlags::VERTEX_BUFFER`，这是有道理的。除此之外，整个过程完全一样：我们创建一个暂存缓冲，将 `INDICES` 的内容复制到其中，然后将其复制到最终的设备本地索引缓冲。
 
 在程序结束时，和顶点缓冲一样，索引缓冲也应该被清理：
 
@@ -124,7 +124,7 @@ unsafe fn destroy(&mut self) {
 
 ## 使用索引缓冲
 
-在绘制中使用索引缓冲需要修改 `create_command_buffer` 中的两个地方。首先我们需要绑定索引缓冲，就像绑定顶点缓冲时一样。区别在于索引缓冲只能有一个。很不幸，不可能为每个顶点属性使用不同的索引，因此即使只有一个属性变化，我们仍然必须完全复制顶点数据。
+在绘制中使用索引缓冲需要修改 `create_command_buffer` 中的两个地方。首先我们需要绑定索引缓冲，就像绑定顶点缓冲时一样。区别在于索引缓冲只能有一个。很不幸，为每个顶点属性使用不同的索引是不可行的，因此即使只有一个属性变化，我们仍然必须完全复制顶点数据。
 
 ```rust,noplaypen
 device.cmd_bind_vertex_buffers(*command_buffer, 0, &[data.vertex_buffer], &[0]);
@@ -139,7 +139,6 @@ device.cmd_bind_index_buffer(*command_buffer, data.index_buffer, 0, vk::IndexTyp
 device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
 ```
 
-<!-- TODO: chuigda: check twice, ask KyleMayes when necessary -->
 `cmd_draw_indexed` 和 `cmd_draw` 的调用方式非常类似。命令缓冲后面的前两个参数指定了索引的数量和实例的数量。我们没有使用实例化，所以只指定 `1` 个实例。索引的数量表示将传递给顶点缓冲的顶点数量。下一个参数指定了索引缓冲的偏移量，传递 `0` 会让显卡从第一个索引开始读取。倒数第二个参数指定了要添加到索引缓冲中的索引的偏移量。最后一个参数指定了实例化（我们没有使用）的偏移量。
 
 现在运行程序，然后你应该会看到如下画面：
@@ -148,4 +147,4 @@ device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
 
 现在你知道如何使用索引缓冲来重用顶点并节约内存了。这会在我们之后的章节中加载 3D 模型时变得尤为重要。
 
-上一章已经提到过，你应该使用一次内存分配来分配多个资源，但事实上你应该更进一步。[驱动开发者建议](https://developer.nvidia.com/vulkan-memory-management)你将多个缓冲，例如顶点缓冲和索引缓冲，存储到一个 `vk::Buffer` 中，并在 `cmd_bind_vertex_buffers` 这样的命令中使用偏移量。这样做的好处是你的数据会因存放得更近而更缓存友好。如果这些资源在相同的渲染操作期间没有被使用，那么甚至可以重用同一块内存 —— 当然前提是数据被更新过。这被称为*别名*(aliasing)，并且一些 Vulkan 函数有显式的参数来指定你想要这样做。
+上一章已经提到过，你应该使用一次内存分配来分配多个资源，但事实上你应该更进一步。[驱动开发者建议](https://developer.nvidia.com/vulkan-memory-management)你将多个缓冲，例如顶点缓冲和索引缓冲，存储到一个 `vk::Buffer` 中，并在 `cmd_bind_vertex_buffers` 这样的命令中使用偏移量。这样做的好处是你的数据会因存放得更近而更缓存友好。如果这些资源在相同的渲染操作期间没有被使用，那么甚至可以重用同一块内存 —— 当然前提是数据被更新过。这被称为*别名*（aliasing），并且一些 Vulkan 函数有显式的参数来指定你想要这样做。
