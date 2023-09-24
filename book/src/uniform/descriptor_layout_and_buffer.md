@@ -1,18 +1,34 @@
-# Descriptor layout and buffer
+# 描述符布局与缓冲
 
-**Code:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/uniform/descriptor_layout_and_buffer.html>
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
 
 We're now able to pass arbitrary attributes to the vertex shader for each vertex, but what about global variables? We're going to move on to 3D graphics from this chapter on and that requires a model-view-projection matrix. We could include it as vertex data, but that's a waste of memory and it would require us to update the vertex buffer whenever the transformation changes. The transformation could easily change every single frame.
 
+现在我们可以将每个顶点的任何属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-试图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
+
 The right way to tackle this in Vulkan is to use *resource descriptors*. A descriptor is a way for shaders to freely access resources like buffers and images. We're going to set up a buffer that contains the transformation matrices and have the vertex shader access them through a descriptor. Usage of descriptors consists of three parts:
+
+在 Vulkan 中，正确的解决方式是使用*资源描述符（resource descriptor）*。描述符是一种让着色器自由访问缓冲和图像等资源的方法。我们将设置一个包含变换矩阵的缓冲，并让顶点着色器通过描述符访问它们。描述符的使用包括三个部分：
 
 * Specify a descriptor layout during pipeline creation
 * Allocate a descriptor set from a descriptor pool
 * Bind the descriptor set during rendering
 
+* 在创建管线时指定描述符布局
+* 从描述符池中分配一个描述符集合
+* 在渲染时绑定描述符集合
+
 The *descriptor layout* specifies the types of resources that are going to be accessed by the pipeline, just like a render pass specifies the types of attachments that will be accessed. A *descriptor set* specifies the actual buffer or image resources that will be bound to the descriptors, just like a framebuffer specifies the actual image views to bind to render pass attachments. The descriptor set is then bound for the drawing commands just like the vertex buffers and framebuffer.
 
+*描述符布局（descriptor layout）*指定了管线将要访问的资源类型，就像渲染流程指定了将要访问的附件类型一样。*描述符集合（descriptor set）*指定了将要绑定到描述符的实际缓冲或图像资源，就像帧缓冲指定了要绑定到渲染流程附件的实际图像视图一样。然后，描述符集合就像顶点缓冲和帧缓冲一样，绑定到绘制命令中。
+
 There are many types of descriptors, but in this chapter we'll work with uniform buffer objects (UBO). We'll look at other types of descriptors in future chapters, but the basic process is the same. Let's say we have the data we want the vertex shader to have in a struct like this:
+
+描述符有很多种，但在本章中我们将使用 uniform 缓冲对象（uniform buffer object，UBO）。我们将在以后的章节中介绍其他类型的描述符，但基本过程是相同的。假设我们有一个结构体，其中包含了我们希望顶点着色器能够访问的数据：
 
 ```rust,noplaypen
 #[repr(C)]
@@ -25,6 +41,8 @@ struct UniformBufferObject {
 ```
 
 Then we can copy the data to a `vk::Buffer` and access it through a uniform buffer object descriptor from the vertex shader like this:
+
+接着我们将数据复制到一个 `vk::Buffer` 中，然后在顶点着色器中像这样通过一个 uniform 缓冲对象描述符来访问它：
 
 ```glsl
 layout(binding = 0) uniform UniformBufferObject {
@@ -43,9 +61,13 @@ void main() {
 
 We're going to update the model, view and projection matrices every frame to make the rectangle from the previous chapter spin around in 3D.
 
-## Vertex shader
+我们将在每一帧中更新模型、视图和投影矩阵，使得上一章中的矩形在 3D 空间中旋转起来。
+
+## 顶点着色器
 
 Modify the vertex shader to include the uniform buffer object like it was specified above. I will assume that you are familiar with MVP transformations. If you're not, see [the resource](https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/) mentioned in the first chapter.
+
+修改顶点着色器，像上面说的那样将 uniform 缓冲对象包含进来。我假设你已经熟悉了 MVP 变换。如果你不熟悉，可以参考第一章中提到的[资源](https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/)。
 
 ```glsl
 #version 450
@@ -69,9 +91,13 @@ void main() {
 
 Note that the order of the `uniform`, `in` and `out` declarations doesn't matter. The `binding` directive is similar to the `location` directive for attributes. We're going to reference this binding in the descriptor layout. The line with `gl_Position` is changed to use the transformations to compute the final position in clip coordinates. Unlike the 2D triangles, the last component of the clip coordinates may not be `1`, which will result in a division when converted to the final normalized device coordinates on the screen. This is used in perspective projection as the *perspective division* and is essential for making closer objects look larger than objects that are further away.
 
-## Descriptor set layout
+注意 `uniform`、`in` 和 `out` 声明之间的顺序是无关紧要的。`binding` 指令和属性的 `location` 指令类似。我们将会在描述符布局中引用这个绑定。`gl_Position` 所在的那一行被修改为使用变换来计算最终的裁剪坐标。与 2D 三角形不同，裁剪坐标的最后一个分量可能不是 `1`，这将导致在转换为屏幕上的最终归一化设备坐标时进行除法运算。这在透视投影中被称为*透视除法*，对于使得更近的物体看起来比更远的物体更大是至关重要的。
+
+## 描述符集合布局
 
 The next step is to define the UBO on the Rust side and to tell Vulkan about this descriptor in the vertex shader. First we add a few more imports and a type alias:
+
+下一步就是在 Rust 这边定义 UBO，并告诉 Vulkan 在顶点着色器中关于这个描述符的信息。首先我们添加一些导入和类型别名：
 
 ```rust,noplaypen
 use cgmath::{point3, Deg};
@@ -80,6 +106,8 @@ type Mat4 = cgmath::Matrix4<f32>;
 ```
 
 Then create the `UniformBufferObject` struct:
+
+接着创建 `UniformBufferObject` 结构体：
 
 ```rust,noplaypen
 #[repr(C)]
@@ -93,7 +121,11 @@ struct UniformBufferObject {
 
 We can exactly match the definition in the shader using data types in the `cgmath` crate. The data in the matrices is binary compatible with the way the shader expects it, so we can later just copy a `UniformBufferObject` to a `vk::Buffer`.
 
+使用 `cgmath` crate 中的数据类型，我们可以完全匹配着色器中的定义。矩阵中的数据与着色器期望的数据是二进制兼容的，所以之后我们可以直接将 `UniformBufferObject` 复制到 `vk::Buffer` 中。
+
 We need to provide details about every descriptor binding used in the shaders for pipeline creation, just like we had to do for every vertex attribute and its `location` index. We'll set up a new function to define all of this information called `^create_descriptor_set_layout`. It should be called right before pipeline creation, because we're going to need it there.
+
+我们需要提供管线创建时着色器中使用的每个描述符绑定的详细信息，就像我们为每个顶点属性及其 `location` 索引所做的那样。我们将创建一个名为 `create_descriptor_set_layout` 的新的函数来定义所有这些信息。它应该在创建管线之前被调用，因为我们将在创建管线时用到这些信息。
 
 ```rust,noplaypen
 impl App {
@@ -116,6 +148,8 @@ unsafe fn create_descriptor_set_layout(
 
 Every binding needs to be described through a `vk::DescriptorSetLayoutBinding` struct.
 
+每个绑定都需要使用 `vk::DescriptorSetLayoutBinding` 来描述。
+
 ```rust,noplaypen
 unsafe fn create_descriptor_set_layout(
     device: &Device,
@@ -133,11 +167,19 @@ unsafe fn create_descriptor_set_layout(
 
 The first two fields specify the `binding` used in the shader and the type of descriptor, which is a uniform buffer object. It is possible for the shader variable to represent an array of uniform buffer objects, and `descriptor_count` specifies the number of values in the array. This could be used to specify a transformation for each of the bones in a skeleton for skeletal animation, for example. Our MVP transformation is in a single uniform buffer object, so we're using a `descriptor_count` of `1`.
 
+前两个字段指定了着色器中使用的 `binding` 和描述符的类型 —— 这里是 uniform 缓冲对象。着色器变量可以表示由 uniform 缓冲对象组成的数组，`descriptor_count` 指定了数组中的值的数量。例如，这可以用来为骨骼中的每个骨骼指定一个变换。我们的 MVP 变换在一个单独的 uniform 缓冲对象中，所以我们令 `descriptor_count` 为 `1`。
+
 We also need to specify in which shader stages the descriptor is going to be referenced. The `stage_flags` field can be a combination of `vk::ShaderStageFlags` values or the value `vk::ShaderStageFlags::ALL_GRAPHICS`. In our case, we're only referencing the descriptor from the vertex shader.
+
+我们还需要指定描述符将会在哪些着色器阶段被引用。`stage_flags` 字段可以是一系列 `vk::ShaderStageFlags` 值的组合，也可以是 `vk::ShaderStageFlags::ALL_GRAPHICS`。在我们的场景中，我们只在顶点着色器中使用这个描述符。
 
 There is also an `immutable_samplers` field which is only relevant for image sampling related descriptors, which we'll look at later. You can leave this to its default value.
 
+还有一个 `immutable_samplers` 字段，它只与图像采样相关的描述符有关，我们之后会看到。现在我们可以将它保留为默认值。
+
 All of the descriptor bindings are combined into a single `vk::DescriptorSetLayout` object. Define a new `AppData` field above `pipeline_layout`:
+
+所有描述符绑定会被合并到一个 `vk::DescriptorSetLayout` 对象中。在 `AppData` 中，`pipeline_layout` 的上面新增一个字段：
 
 ```rust,noplaypen
 struct AppData {
@@ -149,6 +191,8 @@ struct AppData {
 ```
 
 We can then create it using `create_descriptor_set_layout`. This function accepts a simple `vk::DescriptorSetLayoutCreateInfo` with the array of bindings:
+
+接着我们可以使用 `create_descriptor_set_layout` 来创建它。这个函数接受一个简单的 `vk::DescriptorSetLayoutCreateInfo`，其中包含了绑定的数组：
 
 ```rust,noplaypen
 let bindings = &[ubo_binding];
