@@ -124,16 +124,16 @@ unsafe fn destroy(&mut self) {
 
 ## 使用索引缓冲
 
-在绘制中使用索引缓冲需要修改 `create_command_buffer` 中的两个地方。首先我们需要绑定索引缓冲，就像绑定顶点缓冲时一样。区别在于索引缓冲只能由一个。不幸地是，我们无法为顶点的每个属性使用不同的索引，因此即使只有一个属性变化，我们仍然需要完全复制顶点数据。
+在绘制中使用索引缓冲需要修改 `create_command_buffer` 中的两个地方。首先我们需要绑定索引缓冲，就像绑定顶点缓冲时一样。区别在于索引缓冲只能有一个。很不幸，不可能为每个顶点属性使用不同的索引，因此即使只有一个属性变化，我们仍然必须完全复制顶点数据。
 
 ```rust,noplaypen
 device.cmd_bind_vertex_buffers(*command_buffer, 0, &[data.vertex_buffer], &[0]);
 device.cmd_bind_index_buffer(*command_buffer, data.index_buffer, 0, vk::IndexType::UINT16);
 ```
 
-一个索引缓冲通过 `cmd_bind_index_buffer` 来绑定，这个函数接受索引缓冲、字节偏移和索引数据类型作为参数。如前所述，可能的类型有 `vk::IndexType::UINT16` 和 `vk::IndexType::UINT32`。
+一个索引缓冲通过 `cmd_bind_index_buffer` 来绑定，这个函数接受索引缓冲、字节偏移量和索引数据类型作为参数。如前所述，可能的类型有 `vk::IndexType::UINT16` 和 `vk::IndexType::UINT32`。
 
-只绑定索引缓冲还不够，我们要改变绘图命令，告诉 Vulkan 使用索引缓冲。删除 `cmd_draw` 那一行，并用 `cmd_draw_indexed` 替换：
+只绑定索引缓冲还不够，我们要改变绘图命令，以告诉 Vulkan 使用索引缓冲。删除 `cmd_draw` 那一行，并用 `cmd_draw_indexed` 替换：
 
 ```rust,noplaypen
 device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
