@@ -6,27 +6,15 @@
 
 **本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
 
-We're now able to pass arbitrary attributes to the vertex shader for each vertex, but what about global variables? We're going to move on to 3D graphics from this chapter on and that requires a model-view-projection matrix. We could include it as vertex data, but that's a waste of memory and it would require us to update the vertex buffer whenever the transformation changes. The transformation could easily change every single frame.
-
 现在我们可以将每个顶点的任何属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-试图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
 
-The right way to tackle this in Vulkan is to use *resource descriptors*. A descriptor is a way for shaders to freely access resources like buffers and images. We're going to set up a buffer that contains the transformation matrices and have the vertex shader access them through a descriptor. Usage of descriptors consists of three parts:
-
 在 Vulkan 中，正确的解决方式是使用*资源描述符（resource descriptor）*。描述符是一种让着色器自由访问缓冲和图像等资源的方法。我们将设置一个包含变换矩阵的缓冲，并让顶点着色器通过描述符访问它们。描述符的使用包括三个部分：
-
-* Specify a descriptor layout during pipeline creation
-* Allocate a descriptor set from a descriptor pool
-* Bind the descriptor set during rendering
 
 * 在创建管线时指定描述符布局
 * 从描述符池中分配一个描述符集合
 * 在渲染时绑定描述符集合
 
-The *descriptor layout* specifies the types of resources that are going to be accessed by the pipeline, just like a render pass specifies the types of attachments that will be accessed. A *descriptor set* specifies the actual buffer or image resources that will be bound to the descriptors, just like a framebuffer specifies the actual image views to bind to render pass attachments. The descriptor set is then bound for the drawing commands just like the vertex buffers and framebuffer.
-
 *描述符布局（descriptor layout）*指定了管线将要访问的资源类型，就像渲染流程指定了将要访问的附件类型一样。*描述符集合（descriptor set）*指定了将要绑定到描述符的实际缓冲或图像资源，就像帧缓冲指定了要绑定到渲染流程附件的实际图像视图一样。然后，描述符集合就像顶点缓冲和帧缓冲一样，绑定到绘制命令中。
-
-There are many types of descriptors, but in this chapter we'll work with uniform buffer objects (UBO). We'll look at other types of descriptors in future chapters, but the basic process is the same. Let's say we have the data we want the vertex shader to have in a struct like this:
 
 描述符有很多种，但在本章中我们将使用 uniform 缓冲对象（uniform buffer object，UBO）。我们将在以后的章节中介绍其他类型的描述符，但基本过程是相同的。假设我们有一个结构体，其中包含了我们希望顶点着色器能够访问的数据：
 
@@ -39,8 +27,6 @@ struct UniformBufferObject {
     proj: Mat4,
 }
 ```
-
-Then we can copy the data to a `vk::Buffer` and access it through a uniform buffer object descriptor from the vertex shader like this:
 
 接着我们将数据复制到一个 `vk::Buffer` 中，然后在顶点着色器中像这样通过一个 uniform 缓冲对象描述符来访问它：
 
@@ -59,13 +45,9 @@ void main() {
 }
 ```
 
-We're going to update the model, view and projection matrices every frame to make the rectangle from the previous chapter spin around in 3D.
-
 我们将在每一帧中更新模型、视图和投影矩阵，使得上一章中的矩形在 3D 空间中旋转起来。
 
 ## 顶点着色器
-
-Modify the vertex shader to include the uniform buffer object like it was specified above. I will assume that you are familiar with MVP transformations. If you're not, see [the resource](https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/) mentioned in the first chapter.
 
 修改顶点着色器，像上面说的那样将 uniform 缓冲对象包含进来。我假设你已经熟悉了 MVP 变换。如果你不熟悉，可以参考第一章中提到的[资源](https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/)。
 
@@ -89,13 +71,9 @@ void main() {
 }
 ```
 
-Note that the order of the `uniform`, `in` and `out` declarations doesn't matter. The `binding` directive is similar to the `location` directive for attributes. We're going to reference this binding in the descriptor layout. The line with `gl_Position` is changed to use the transformations to compute the final position in clip coordinates. Unlike the 2D triangles, the last component of the clip coordinates may not be `1`, which will result in a division when converted to the final normalized device coordinates on the screen. This is used in perspective projection as the *perspective division* and is essential for making closer objects look larger than objects that are further away.
-
 注意 `uniform`、`in` 和 `out` 声明之间的顺序是无关紧要的。`binding` 指令和属性的 `location` 指令类似。我们将会在描述符布局中引用这个绑定。`gl_Position` 所在的那一行被修改为使用变换来计算最终的裁剪坐标。与 2D 三角形不同，裁剪坐标的最后一个分量可能不是 `1`，这将导致在转换为屏幕上的最终归一化设备坐标时进行除法运算。这在透视投影中被称为*透视除法*，对于使得更近的物体看起来比更远的物体更大是至关重要的。
 
-## 描述符集合布局
-
-The next step is to define the UBO on the Rust side and to tell Vulkan about this descriptor in the vertex shader. First we add a few more imports and a type alias:
+## 描述符集合布局（descriptor set layout）
 
 下一步就是在 Rust 这边定义 UBO，并告诉 Vulkan 在顶点着色器中关于这个描述符的信息。首先我们添加一些导入和类型别名：
 
@@ -104,8 +82,6 @@ use cgmath::{point3, Deg};
 
 type Mat4 = cgmath::Matrix4<f32>;
 ```
-
-Then create the `UniformBufferObject` struct:
 
 接着创建 `UniformBufferObject` 结构体：
 
@@ -119,11 +95,7 @@ struct UniformBufferObject {
 }
 ```
 
-We can exactly match the definition in the shader using data types in the `cgmath` crate. The data in the matrices is binary compatible with the way the shader expects it, so we can later just copy a `UniformBufferObject` to a `vk::Buffer`.
-
 使用 `cgmath` crate 中的数据类型，我们可以完全匹配着色器中的定义。矩阵中的数据与着色器期望的数据是二进制兼容的，所以之后我们可以直接将 `UniformBufferObject` 复制到 `vk::Buffer` 中。
-
-We need to provide details about every descriptor binding used in the shaders for pipeline creation, just like we had to do for every vertex attribute and its `location` index. We'll set up a new function to define all of this information called `^create_descriptor_set_layout`. It should be called right before pipeline creation, because we're going to need it there.
 
 我们需要提供管线创建时着色器中使用的每个描述符绑定的详细信息，就像我们为每个顶点属性及其 `location` 索引所做的那样。我们将创建一个名为 `create_descriptor_set_layout` 的新的函数来定义所有这些信息。它应该在创建管线之前被调用，因为我们将在创建管线时用到这些信息。
 
@@ -146,8 +118,6 @@ unsafe fn create_descriptor_set_layout(
 }
 ```
 
-Every binding needs to be described through a `vk::DescriptorSetLayoutBinding` struct.
-
 每个绑定都需要使用 `vk::DescriptorSetLayoutBinding` 来描述。
 
 ```rust,noplaypen
@@ -164,20 +134,11 @@ unsafe fn create_descriptor_set_layout(
     Ok(())
 }
 ```
-
-The first two fields specify the `binding` used in the shader and the type of descriptor, which is a uniform buffer object. It is possible for the shader variable to represent an array of uniform buffer objects, and `descriptor_count` specifies the number of values in the array. This could be used to specify a transformation for each of the bones in a skeleton for skeletal animation, for example. Our MVP transformation is in a single uniform buffer object, so we're using a `descriptor_count` of `1`.
-
-前两个字段指定了着色器中使用的 `binding` 和描述符的类型 —— 这里是 uniform 缓冲对象。着色器变量可以表示由 uniform 缓冲对象组成的数组，`descriptor_count` 指定了数组中的值的数量。例如，这可以用来为骨骼中的每个骨骼指定一个变换。我们的 MVP 变换在一个单独的 uniform 缓冲对象中，所以我们令 `descriptor_count` 为 `1`。
-
-We also need to specify in which shader stages the descriptor is going to be referenced. The `stage_flags` field can be a combination of `vk::ShaderStageFlags` values or the value `vk::ShaderStageFlags::ALL_GRAPHICS`. In our case, we're only referencing the descriptor from the vertex shader.
+前两个字段指定了着色器中使用的 `binding` 和描述符的类型 —— 这里是 uniform 缓冲对象。着色器变量可以表示由 uniform 缓冲对象组成的数组，`descriptor_count` 指定了数组中的值的数量。在实际的应用中，uniform 缓冲对象数组大有用处，例如它可以用来为骨骼中的每个骨骼指定一个变换。我们的 MVP 变换只用到了一个 uniform 缓冲对象，所以我们将 `descriptor_count` 设为 `1`。
 
 我们还需要指定描述符将会在哪些着色器阶段被引用。`stage_flags` 字段可以是一系列 `vk::ShaderStageFlags` 值的组合，也可以是 `vk::ShaderStageFlags::ALL_GRAPHICS`。在我们的场景中，我们只在顶点着色器中使用这个描述符。
 
-There is also an `immutable_samplers` field which is only relevant for image sampling related descriptors, which we'll look at later. You can leave this to its default value.
-
 还有一个 `immutable_samplers` 字段，它只与图像采样相关的描述符有关，我们之后会看到。现在我们可以将它保留为默认值。
-
-All of the descriptor bindings are combined into a single `vk::DescriptorSetLayout` object. Define a new `AppData` field above `pipeline_layout`:
 
 所有描述符绑定会被合并到一个 `vk::DescriptorSetLayout` 对象中。在 `AppData` 中，`pipeline_layout` 的上面新增一个字段：
 
@@ -190,8 +151,6 @@ struct AppData {
 }
 ```
 
-We can then create it using `create_descriptor_set_layout`. This function accepts a simple `vk::DescriptorSetLayoutCreateInfo` with the array of bindings:
-
 接着我们可以使用 `create_descriptor_set_layout` 来创建它。这个函数接受一个简单的 `vk::DescriptorSetLayoutCreateInfo`，其中包含了绑定的数组：
 
 ```rust,noplaypen
@@ -202,7 +161,9 @@ let info = vk::DescriptorSetLayoutCreateInfo::builder()
 data.descriptor_set_layout = device.create_descriptor_set_layout(&info, None)?;
 ```
 
-We need to specify the descriptor set layout during pipeline creation to tell Vulkan which descriptors the shaders will be using. Descriptor set layouts are specified in the pipeline layout object. Modify the `vk::PipelineLayoutCreateInfo` to reference the layout object:
+我们需要在创建管线时指定描述符集合布局，以告诉 Vulkan 着色器将会使用哪些描述符。描述符集合布局被指定在管线布局对象中。修改 `vk::PipelineLayoutCreateInfo` 来引用布局对象：
+
+```rust,noplaypen
 
 ```rust,noplaypen
 let set_layouts = &[data.descriptor_set_layout];
@@ -210,9 +171,9 @@ let layout_info = vk::PipelineLayoutCreateInfo::builder()
     .set_layouts(set_layouts);
 ```
 
-You may be wondering why it's possible to specify multiple descriptor set layouts here, because a single one already includes all of the bindings. We'll get back to that in the next chapter, where we'll look into descriptor pools and descriptor sets.
+你可能会好奇，为什么一个描述符集合布局就可以囊括所有绑定，这里却可以指定多个描述符集合布局。我们将会在下一章讨论描述符池和描述符集合时再来审视这个问题。
 
-The descriptor layout should stick around while we may create new graphics pipelines i.e. until the program ends:
+描述符几何应该在我们创建新的图形管线时一直存在，直到程序结束：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -222,13 +183,13 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Uniform buffer
+## Uniform 缓冲
 
-In the next chapter we'll specify the buffer that contains the UBO data for the shader, but we need to create this buffer first. We're going to copy new data to the uniform buffer every frame, so it doesn't really make any sense to have a staging buffer. It would just add extra overhead in this case and likely degrade performance instead of improving it.
+在下一章中我们将会为 shader 指定包含了 UBO 数据的缓冲，但我们得先创建这个缓冲。我们将在每一帧中都将新的数据复制到 uniform 缓冲中，所以使用一个暂存缓冲并没有什么意义。在这种情况下，暂存缓冲对提升性能没有帮助，只会增加额外的开销，反而可能降低性能。
 
-We should have multiple buffers, because multiple frames may be in flight at the same time and we don't want to update the buffer in preparation of the next frame while a previous one is still reading from it! We could either have a uniform buffer per frame or per swapchain image. However, since we need to refer to the uniform buffer from the command buffer that we have per swapchain image, it makes the most sense to also have a uniform buffer per swapchain image.
+我们应该有多个缓冲，因为可能有多个帧同时在参与渲染，并且我们并不希望在前一帧仍在读取缓冲时就为了下一帧更新缓冲！我们可以为每一帧或每一张交换链图像都创建一个 uniform 缓冲。然而，由于我们需要在每一张交换链图像的指令缓冲中引用 uniform 缓冲，所以为每一张交换链图像创建一个 uniform 缓冲是最合理的。
 
-To that end, add new `AppData` fields for `uniform_buffers`, and `uniform_buffers_memory`:
+为此，在 `AppData` 中新增 `uniform_buffers` 和 `uniform_buffers_memory` 字段：
 
 ```rust,noplaypen
 struct AppData {
@@ -241,7 +202,7 @@ struct AppData {
 }
 ```
 
-Similarly, create a new function `create_uniform_buffers` that is called after `create_index_buffer` and allocates the buffers:
+类似地，创建一个新函数 `create_uniform_buffers`，并在 `create_index_buffer` 之后调用它来分配缓冲：
 
 ```rust,noplaypen
 impl App {
@@ -280,7 +241,7 @@ unsafe fn create_uniform_buffers(
 }
 ```
 
-We're going to write a separate function that updates the uniform buffer with a new transformation every frame, so there will be no `map_memory` here. The uniform data will be used for all draw calls, so the buffer containing it should only be destroyed when we stop rendering. Since it also depends on the number of swapchain images, which could change after a recreation, we'll clean it up in `destroy_swapchain`:
+我们另写一个函数来在每一帧中使用新的变换更新 uniform 缓冲，所以这里不需要 `map_memory`。uniform 数据将用于所有绘制调用，所以包含它的缓冲只应该在我们停止渲染时才被销毁。由于它还取决于交换链图像的数量，而交换链图像的数量在重建后可能会发生变化，所以我们将在 `destroy_swapchain` 中清理它：
 
 ```rust,noplaypen
 unsafe fn destroy_swapchain(&mut self) {
@@ -294,7 +255,7 @@ unsafe fn destroy_swapchain(&mut self) {
 }
 ```
 
-This means that we also need to recreate it in `recreate_swapchain`:
+这也就意味着我们也得在 `recreate_swapchain` 中重建它：
 
 ```rust,noplaypen
 unsafe fn recreate_swapchain(&mut self, window: &Window) -> Result<()> {
@@ -306,9 +267,9 @@ unsafe fn recreate_swapchain(&mut self, window: &Window) -> Result<()> {
 }
 ```
 
-## Updating uniform data
+## 更新 uniform 数据
 
-Create a new method `App::update_uniform_buffer` and add a call to it from the `App::render` method right after we wait for the fence for the acquired swapchain image to be signalled:
+创建一个新的方法 `App::update_uniform_buffer` 并在 `App::render` 方法中获取到交换链图像之后调用它：
 
 ```rust,noplaypen
 impl App {
@@ -337,19 +298,19 @@ impl App {
 }
 ```
 
-It is important that the uniform buffer is not updated until after this fence is signalled!
+注意在围墙发出信号之前不要更新 uniform 缓冲！
 
-As a quick refresher on the usage of fences as introduced in the [`Rendering and Presentation` chapter](../drawing/rendering_and_presentation.html#frames-in-flight), we are using fences so that the GPU can notify the CPU once it is done processing a previously submitted frame. These notifications are used for two purposes: to prevent the CPU from submitting more frames when there are already `MAX_FRAMES_IN_FLIGHT` unfinished frames submitted to the GPU and also to ensure the CPU doesn't alter or delete resources like uniform buffers or command buffers while they are still being used by the GPU to process a frame.
+快速回顾一下在 [`渲染与呈现` 章节](../drawing/rendering_and_presentation.html#frames-in-flight)中介绍的围墙的用法，我们使用围墙来让 GPU 在处理完之前提交的帧后通知 CPU。这些通知有两个用途：防止 CPU 在已经提交了 `MAX_FRAMES_IN_FLIGHT` 个未完成的帧给 GPU 时提交更多的帧；确保 CPU 不会在 GPU 仍在使用资源（如 uniform 缓冲或指令缓冲）处理帧时修改或删除这些资源。
 
-Our uniform buffers are associated with our swapchain images, so we need to be sure that any previous frame that rendered to the acquired swapchain image is complete before we can safely update the uniform buffer. By only updating the uniform buffer after the GPU has notified the CPU that this is the case we can safely do whatever we want with the uniform buffer.
+我们的 uniform 缓冲与交换链图像相关联，所以在获取到交换链图像之后，我们需要确保任何之前渲染到这一张图像的帧都已经完成，然后我们才能安全地更新 uniform 缓冲。只有在 GPU 通知 CPU 这种情况发生后才更新 uniform 缓冲，我们才能安全地对 uniform 缓冲做任何操作。
 
-Going back to `App::update_uniform_buffer`, this method will generate a new transformation every frame to make the geometry spin around. We need to add an import to implement this functionality:
+回到 `App::update_uniform_buffer`，这个方法将会在每一帧中生成一个新的变换，使得几何体旋转起来。我们需要添加一个导入来实现这个功能：
 
 ```rust,noplaypen
 use std::time::Instant;
 ```
 
-The `Instant` struct will allow us to do precise timekeeping. We'll use this to make sure that the geometry rotates 90 degrees per second regardless of frame rate. Add a field to `App` to track the time the application started and initialize the field to `Instant::now()` in `App::create`:
+`Instant` 结构体提供了精准的时间记录功能。我们将使用它来确保几何体每秒旋转 90 度，而不管帧率如何。在 `App` 中添加一个字段来跟踪应用程序启动的时间，并在 `App::create` 中将该字段初始化为 `Instant::now()`：
 
 ```rust,noplaypen
 struct App {
@@ -358,7 +319,7 @@ struct App {
 }
 ```
 
-We can now use that field to determine how many seconds it has been since the application started:
+现在我们可以使用该字段来确定应用程序启动后经过了多少秒：
 
 ```rust,noplaypen
 unsafe fn update_uniform_buffer(&self, image_index: usize) -> Result<()> {
@@ -368,7 +329,7 @@ unsafe fn update_uniform_buffer(&self, image_index: usize) -> Result<()> {
 }
 ```
 
-We will now define the model, view and projection transformations in the uniform buffer object. The model rotation will be a simple rotation around the Z-axis using the `time` variable:
+现在我们在 uniform 缓冲对象中定义模型、视图和投影变换。模型旋转将是一个简单的绕 Z 轴旋转，使用 `time` 变量：
 
 ```rust,noplaypen
 let model = Mat4::from_axis_angle(
@@ -377,7 +338,7 @@ let model = Mat4::from_axis_angle(
 );
 ```
 
-The `Mat4::from_axis_angle` function creates a transformation matrix from the given rotation angle and rotation axis. Using a rotation angle of `Deg(90.0) * time` accomplishes the purpose of rotating 90 degrees per second.
+`Mat4::from_axis_angle` 函数根据指定的旋转角度和转轴创建一个变换矩阵。使用 `Deg(90.0) * time` 作为旋转角度可以实现每秒旋转 90 度的目的。
 
 ```rust,noplaypen
 let view = Mat4::look_at_rh(
@@ -387,7 +348,7 @@ let view = Mat4::look_at_rh(
 );
 ```
 
-For the view transformation I've decided to look at the geometry from above at a 45 degree angle. The `Mat4::look_at_rh` function takes the eye position, center position and up axis as parameters. The `rh` at the end of this function indicates that it uses the "right-handed" coordinate system which is the coordinate system that Vulkan uses.
+至于视图变换，我决定从上方以 45 度的角度看几何体。`Mat4::look_at_rh` 函数接受眼睛位置、中心位置和上轴（up axis）作为参数。这个函数名中的 `rh` 表示它使用的是“右手系”，这也是 Vulkan 使用的坐标系。
 
 ```rust,noplaypen
 let mut proj = cgmath::perspective(
@@ -398,21 +359,21 @@ let mut proj = cgmath::perspective(
 );
 ```
 
-I've chosen to use a perspective projection with a 45 degree vertical field-of-view. The other parameters are the aspect ratio, near and far view planes. It is important to use the current swapchain extent to calculate the aspect ratio to take into account the new width and height of the window after a resize.
+我决定使用一个在垂直方向上具有 45 度视野（field-of-view）的透视投影。其他的参数分别是宽高比、近视平面和远视平面。使用当前的交换链的交换范围来计算宽高比是很重要的，这样可以将窗口在调整大小后的新尺寸考虑在内。
 
 ```rust,noplaypen
 proj[1][1] *= -1.0;
 ```
 
-`cgmath` was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted. The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix. If you don't do this, then the image will be rendered upside down.
+`cgmath` 原先是为 OpenGL 设计的，因此裁剪空间坐标中的 Y 坐标是反的。要修复这一点，最简单的方法是在反转投影矩阵的 Y 轴缩放因子的符号。如果不这样做，渲染出来的图像会上下翻转。
 
 ```rust,noplaypen
 let ubo = UniformBufferObject { model, view, proj };
 ```
 
-Lastly we combine our matrices into a uniform buffer object.
+最后我们将矩阵组合成一个 uniform 缓冲对象。
 
-All of the transformations are defined now, so we can copy the data in the uniform buffer object to the current uniform buffer. This happens in exactly the same way as we did for vertex buffers, except without a staging buffer:
+现在我们已经定义了所有的变换，可以将 uniform 缓冲对象中的数据复制到当前的 uniform 缓冲中了。这与我们为顶点缓冲所做的完全相同，只是没有用到暂存缓冲：
 
 ```rust,noplaypen
 let memory = self.device.map_memory(
@@ -427,6 +388,6 @@ memcpy(&ubo, memory.cast(), 1);
 self.device.unmap_memory(self.data.uniform_buffers_memory[image_index]);
 ```
 
-Using a UBO this way is not the most efficient way to pass frequently changing values to the shader. A more efficient way to pass a small buffer of data to shaders are *push constants*. We may look at these in a future chapter.
+以这种方式使用 UBO 并不是将频繁变化的值传递给着色器的最有效的方法。要将少量数据传递给着色器，更有效的方法是使用*推式常量（push constants）*。我们会在以后的章节中介绍它们。
 
-If you run the program now, you'll get errors about unbound descriptor sets from the validation layer and nothing will be rendered. In the next chapter we'll look at these descriptor sets, which will actually bind the `vk::Buffer`s to the uniform buffer descriptors so that the shader can access this transformation data and get our program in running order again.
+如果你现在运行程序，你将会得到来自验证层的未绑定描述符集合的错误，并且什么都不会被渲染。在下一章中我们将会看到这些描述符集合，它们将会将 `vk::Buffer` 绑定到 uniform 缓冲描述符，这样着色器就可以访问这些变换数据，然后我们的程序就可以正常运行了。
