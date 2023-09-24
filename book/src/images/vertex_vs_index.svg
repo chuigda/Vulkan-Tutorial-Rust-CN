@@ -78,8 +78,8 @@
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4142"
-         x="179.28067"
-         y="113.35439">Vertex buffer only</tspan></text>
+         x="204.28067"
+         y="113.35439">只用顶点缓冲</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:17.7554493px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -89,8 +89,8 @@
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4142-7"
-         x="392.70364"
-         y="113.81391">Vertex + index buffer</tspan></text>
+         x="405.70364"
+         y="113.81391">顶点缓冲 + 索引缓冲</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:1.77554488;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect4136-9"
@@ -233,10 +233,10 @@
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4312"
-         x="492.57816"
-         y="291.54303">Indices</tspan><tspan
+         x="490.57816"
+         y="291.54303">索引</tspan><tspan
          sodipodi:role="line"
-         x="492.57816"
+         x="490.57816"
          y="308.18875"
          id="tspan4314">{0, 1, 2, 2, 3, 0}</tspan></text>
   </g>

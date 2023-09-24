@@ -1,18 +1,22 @@
-# Index buffer
+# 索引缓冲
 
-**Code:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/20_index_buffer.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/index_buffer.html>
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-The 3D meshes you'll be rendering in a real world application will often share vertices between multiple triangles. This already happens even with something simple like drawing a rectangle:
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/20_index_buffer.rs)
+
+在真正的应用程序中，你渲染的 3D 网格通常中的许多三角形之间都会共享顶点。即使是像绘制矩形这样简单的事情，也会遇到这种情况：
 
 ![](../images/vertex_vs_index.svg)
 
-Drawing a rectangle takes two triangles, which means that we need a vertex buffer with 6 vertices. The problem is that the data of two vertices needs to be duplicated resulting in 50% redundancy. It only gets worse with more complex meshes, where vertices are reused in an average number of 3 triangles. The solution to this problem is to use an *index buffer*.
+渲染一个矩形需要两个三角形，也就是说我们需要一个 6 个顶点的顶点缓冲。问题在于，有两个顶点的数据是重复的，这就导致了 50% 的冗余。对于更复杂的网格而言，平均每个顶点会被 3 个三角形使用，情况只会变得更糟。解决这个问题的方法就是使用*索引缓冲*。
 
-An index buffer is essentially an array of pointers into the vertex buffer. It allows you to reorder the vertex data, and reuse existing data for multiple vertices. The illustration above demonstrates what the index buffer would look like for the rectangle if we have a vertex buffer containing each of the four unique vertices. The first three indices define the upper-right triangle and the last three indices define the vertices for the bottom-left triangle.
+一个索引缓冲实质上就是一个指向顶点缓冲的指针构成的数组。它允许你重排顶点数据，并为多个顶点复用现有数据。上面的插图展示了如果我们有一个包含每个独特顶点的顶点缓冲，那么矩形的索引缓冲会是什么样子。前三个索引定义了右上角的三角形，最后三个索引定义了左下角三角形的顶点。
 
-## Index buffer creation
+## 创建索引缓冲
 
-In this chapter we're going to modify the vertex data and add index data to draw a rectangle like the one in the illustration. Modify the vertex data to represent the four corners:
+在本章中，我们将修改顶点数据，并添加索引数据来绘制一个像插图中那样的矩形。修改顶点数据以表示四个角：
 
 ```rust,noplaypen
 static VERTICES: [Vertex; 4] = [
@@ -23,15 +27,15 @@ static VERTICES: [Vertex; 4] = [
 ];
 ```
 
-The top-left corner is red, top-right is green, bottom-right is blue and the bottom-left is white. We'll add a new array `INDICES` to represent the contents of the index buffer. It should match the indices in the illustration to draw the upper-right triangle and bottom-left triangle.
+左上角是红色的，右上角是绿色的，右下角是蓝色的，而左下角是白色的。我们将添加一个新的数组 `INDICES` 来表示索引缓冲的内容。它应该与插图中的索引匹配，以绘制右上角的三角形和左下角的三角形。
 
 ```rust,noplaypen
 const INDICES: &[u16] = &[0, 1, 2, 2, 3, 0];
 ```
 
-It is possible to use either `u16` or `u32` for your index buffer depending on the number of entries in `VERTICES`. We can stick to `u16` for now because we're using less than 65,536 unique vertices.
+取决于 `VERTICES` 中的条目数量，为索引缓冲使用 `u16` 和 `u32` 都是可以的。因为我们使用的顶点数量少于 65,536 个，所以我们可以使用 `u16`。
 
-Just like the vertex data, the indices need to be uploaded into a `vk::Buffer` for the GPU to be able to access them. Define two new `AppData` fields to hold the resources for the index buffer:
+和顶点数据一样，索引也需要被上传到 `vk::Buffer` 中，GPU 才能访问它们。定义两个新的 `AppData` 字段来保存索引缓冲的资源：
 
 ```rust,noplaypen
 struct AppData {
@@ -43,7 +47,7 @@ struct AppData {
 }
 ```
 
-The `create_index_buffer` function that we'll add now is almost identical to `create_vertex_buffer`:
+接下来我们要添加的 `create_index_buffer` 函数和之前的 `create_vertex_buffer` 函数几乎一模一样：
 
 ```rust,noplaypen
 impl App {
@@ -103,9 +107,9 @@ unsafe fn create_index_buffer(
 }
 ```
 
-There are only two notable differences. The `size` is now equal to the number of indices times the size of the index type, either `u16` or `u32`. The usage of the `index_buffer` should be `vk::BufferUsageFlags::INDEX_BUFFER` instead of `vk::BufferUsageFlags::VERTEX_BUFFER`, which makes sense. Other than that, the process is exactly the same. We create a staging buffer to copy the contents of `INDICES` to and then copy it to the final device local index buffer.
+不过还是有两个值得一提的区别，`size` 现在等于索引数量乘以索引类型 —— 即 `u16` 或 `u32` —— 的大小。`index_buffer` 的用途应该是 `vk::BufferUsageFlags::INDEX_BUFFER` 而不是 `vk::BufferUsageFlags::VERTEX_BUFFER`，这是有道理的。除此之外，整个过程完全一样：我们创建一个暂存缓冲，将 `INDICES` 的内容复制到其中，然后将其复制到最终的设备本地索引缓冲。
 
-The index buffer should be cleaned up at the end of the program, just like the vertex buffer:
+在程序结束时，和顶点缓冲一样，索引缓冲也应该被清理：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -118,29 +122,29 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-## Using an index buffer
+## 使用索引缓冲
 
-Using an index buffer for drawing involves two changes to `create_command_buffers`. We first need to bind the index buffer, just like we did for the vertex buffer. The difference is that you can only have a single index buffer. It's unfortunately not possible to use different indices for each vertex attribute, so we do still have to completely duplicate vertex data even if just one attribute varies.
+在绘制中使用索引缓冲需要修改 `create_command_buffer` 中的两个地方。首先我们需要绑定索引缓冲，就像绑定顶点缓冲时一样。区别在于索引缓冲只能有一个。很不幸，为每个顶点属性使用不同的索引是不可行的，因此即使只有一个属性变化，我们仍然必须完全复制顶点数据。
 
 ```rust,noplaypen
 device.cmd_bind_vertex_buffers(*command_buffer, 0, &[data.vertex_buffer], &[0]);
 device.cmd_bind_index_buffer(*command_buffer, data.index_buffer, 0, vk::IndexType::UINT16);
 ```
 
-An index buffer is bound with `cmd_bind_index_buffer` which has the index buffer, a byte offset into it, and the type of index data as parameters. As mentioned before, the possible types are `vk::IndexType::UINT16` and `vk::IndexType::UINT32`.
+一个索引缓冲通过 `cmd_bind_index_buffer` 来绑定，这个函数接受索引缓冲、字节偏移量和索引数据类型作为参数。如前所述，可能的类型有 `vk::IndexType::UINT16` 和 `vk::IndexType::UINT32`。
 
-Just binding an index buffer doesn't change anything yet, we also need to change the drawing command to tell Vulkan to use the index buffer. Remove the `cmd_draw` line and replace it with `cmd_draw_indexed`:
+只绑定索引缓冲还不够，我们要改变绘图命令，以告诉 Vulkan 使用索引缓冲。删除 `cmd_draw` 那一行，并用 `cmd_draw_indexed` 替换：
 
 ```rust,noplaypen
 device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
 ```
 
-A call to this function is very similar to `cmd_draw`. The first two parameters after the command buffer specify the number of indices and the number of instances. We're not using instancing, so just specify `1` instance. The number of indices represents the number of vertices that will be passed to the vertex buffer. The next parameter specifies an offset into the index buffer, using a value of `1` would cause the graphics card to start reading at the second index. The second to last parameter specifies an offset to add to the indices in the index buffer. The final parameter specifies an offset for instancing, which we're not using.
+`cmd_draw_indexed` 和 `cmd_draw` 的调用方式非常类似。命令缓冲后面的前两个参数指定了索引的数量和实例的数量。我们没有使用实例化，所以只指定 `1` 个实例。索引的数量表示将传递给顶点缓冲的顶点数量。下一个参数指定了索引缓冲的偏移量，传递 `0` 会让显卡从第一个索引开始读取。倒数第二个参数指定了要添加到索引缓冲中的索引的偏移量。最后一个参数指定了实例化（我们没有使用）的偏移量。
 
-Now run your program and you should see the following:
+现在运行程序，然后你应该会看到如下画面：
 
 ![](../images/indexed_rectangle.png)
 
-You now know how to save memory by reusing vertices with index buffers. This will become especially important in a future chapter where we're going to load complex 3D models.
+现在你知道如何使用索引缓冲来重用顶点并节约内存了。这会在我们之后的章节中加载 3D 模型时变得尤为重要。
 
-The previous chapter already mentioned that you should allocate multiple resources like buffers from a single memory allocation, but in fact you should go a step further. [Driver developers recommend](https://developer.nvidia.com/vulkan-memory-management) that you also store multiple buffers, like the vertex and index buffer, into a single `vk::Buffer` and use offsets in commands like `cmd_bind_vertex_buffers`. The advantage is that your data is more cache friendly in that case, because it's closer together. It is even possible to reuse the same chunk of memory for multiple resources if they are not used during the same render operations, provided that their data is refreshed, of course. This is known as *aliasing* and some Vulkan functions have explicit flags to specify that you want to do this.
+上一章已经提到过，你应该使用一次内存分配来分配多个资源，但事实上你应该更进一步。[驱动开发者建议](https://developer.nvidia.com/vulkan-memory-management)你将多个缓冲，例如顶点缓冲和索引缓冲，存储到一个 `vk::Buffer` 中，并在 `cmd_bind_vertex_buffers` 这样的命令中使用偏移量。这样做的好处是你的数据会因存放得更近而更缓存友好。如果这些资源在相同的渲染操作期间没有被使用，那么甚至可以重用同一块内存 —— 当然前提是数据被更新过。这被称为*别名*（aliasing），并且一些 Vulkan 函数有显式的参数来指定你想要这样做。
