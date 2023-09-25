@@ -518,7 +518,7 @@ let region = vk::BufferImageCopy::builder()
 
 这里的大部分字段无需解释。`buffer_offset` 指定了缓冲中像素值开始的字节偏移量。`buffer_row_length` 和 `buffer_image_height` 字段指定了像素在内存中的布局。例如，你可以在图像的行之间有一些填充字节。对于这两个字段都指定 `0` 表示像素就像我们现在这样紧密地排列。`image_subresource`、`image_offset` 和 `image_extent` 字段指示我们要将像素复制到图像的哪个部分。
 
-从缓冲到图像的复制操作使用 `cmd_copy_buffer_to_image` 函数进入队列：
+使用 `cmd_copy_buffer_to_image` 函数将从缓冲到图像的复制操作加入队列：
 
 ```rust,noplaypen
 device.cmd_copy_buffer_to_image(
