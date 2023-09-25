@@ -53,7 +53,7 @@
 
 本教程旨在成为社区的共同努力。 Vulkan 仍然是一个相当新的 API，而最佳实践已经完全建立。 如果您对教程或者网站本身有任何类型的反馈，请随时向 [GitHub 存储库](https://github.com/KyleMayes/vulkanalia) 提交问题或拉取请求。
 
-> 译者注：本译本也有 GitHub 仓库，如果你对中文翻译有任何疑问或者改进建议，欢迎提交 Issue 和 PR :)
+> 译者注：本译本也有 [GitHub 仓库](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN)，如果你对中文翻译有任何疑问或者改进建议，欢迎提交 Issue 和 PR :)
 
 在你完成了第一个 Vulkan 三角形的绘制之后，我们会开始扩展程序，包括线性变换、纹理和 3D 模型。
 
