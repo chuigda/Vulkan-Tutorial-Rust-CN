@@ -6,24 +6,24 @@
 
 **本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/23_texture_image.rs)
 
-我们已经使用了每个顶点的颜色来给几何体上色，但这是一种相当有限的方法。在本章教程中，我们将实现纹理映射（texture mapping）来让几何体看上去更有趣。这也使得我们可以在以后的章节中加载并绘制出基础的 3D 模型。
+我们已经使用了逐顶点颜色来为几何体上色，但这是一种相当受限的方法。在本章教程中，我们将实现纹理映射（texture mapping）来让几何体看上去更有趣。这也使得我们可以在后续的章节中加载并绘制出基础的 3D 模型。
 
 向我们的应用添加纹理需要以下步骤：
 
-* 创建一个设备内存支持的图像对象
+* 创建一个设备内存中的图像对象
 * 从图像文件向其中填充像素
 * 创建一个图像采样器
-* 添加一个组合图像采样器描述符用来从纹理中采样颜色
+* 添加一个组合图像采样器描述符，用来从纹理中采样颜色
 
-我们以前已经处理过图像对象了，但那些是由交换链扩展自动创建的。这次我们将自己创建一个。创建一个图像向其中填充数据与创建顶点缓冲类似。我们先创建一个暂存资源并向它填充像素数据，然后再将这些数据复制到最终用来渲染的图像对象中。虽然可以为此创建一个暂存图像，但 Vulkan 也允许你从 `vk::Buffer` 复制像素到图像中。这个 API 在某些硬件上实际上[更快](https://developer.nvidia.com/vulkan-memory-management)。我们首先创建这个缓冲并用像素值填充它，然后我们创建一个图像来把像素复制入内。创建图像与创建缓冲并没有太大的区别。它涉及到查询内存需求，分配设备内存并绑定，就像我们以前看到的那样。
+我们以前已经处理过图像对象了，但那些是由交换链扩展自动创建的。这次我们将自己创建一个图像对象。创建一个图像并向其中填充数据的过程与创建顶点缓冲类似。我们先创建一个暂存资源并向它填充像素数据，然后再将这些数据复制到最终用来渲染的图像对象中。虽然可以为此创建一个暂存图像，但 Vulkan 也允许你从 `vk::Buffer` 复制像素到图像中。这个 API 在某些硬件上实际上[更快](https://developer.nvidia.com/vulkan-memory-management)。我们首先创建一个暂存缓冲并用像素值填充它，然后我们创建一个图像，并将像素复制到其中。创建图像与创建缓冲并没有太大的区别。它涉及到查询内存需求、分配设备内存并绑定，就像我们以前看到的那样。
 
 然而，当使用图像时，我们还需要注意一些额外的事情。图像可以有不同的*布局*，它们会影响像素在内存中的组织方式。受限于图形硬件的工作方式，简单地按行存储像素可能无法带来最佳性能。当对图像执行任何操作时，你必须确保它们具有最适合在该操作中使用的布局。我们其实在指定渲染流程时已经见到了其中一些布局：
 
-* `vk::ImageLayout::PRESENT_SRC_KHR` &ndash; 最佳用作呈现&nbsp;
-* `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` &ndash; 最佳用作从片元着色器写入颜色的附件&nbsp;
-* `vk::ImageLayout::TRANSFER_SRC_OPTIMAL` &ndash; 最佳用作一个传输操作的源，例如 `cmd_copy_image_to_buffer`&nbsp;
-* `vk::ImageLayout::TRANSFER_DST_OPTIMAL` &ndash; 最佳用作一个传输操作的目标，例如 `cmd_copy_buffer_to_image`&nbsp;
-* `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` &ndash; 最佳用于从一个着色器中采样&nbsp;
+* `vk::ImageLayout::PRESENT_SRC_KHR` &ndash; 最适合用作呈现的布局&nbsp;
+* `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` &ndash; 最适合用作从片元着色器写入颜色的附件的布局&nbsp;
+* `vk::ImageLayout::TRANSFER_SRC_OPTIMAL` &ndash; 最适合用作 `cmd_copy_image_to_buffer` 这类传输操作的数据源的布局&nbsp;
+* `vk::ImageLayout::TRANSFER_DST_OPTIMAL` &ndash; 最适合用作 `cmd_copy_buffer_to_image` 这类传输操作的目标的布局&nbsp;
+* `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` &ndash; 最适合用于从一个着色器中采样的布局&nbsp;
 
 转换图像布局最常见的方法之一是*管线屏障（pipeline barrier）*。管线屏障主要用于同步对资源的访问，例如确保图像在读取之前已经被写入。但管线屏障也可以用于转换布局。在本章中，我们将看到管线屏障是如何用于转换布局的。当使用 `vk::SharingMode::EXCLUSIVE` 时，屏障还可以用于传输队列族所有权。
 
@@ -60,7 +60,7 @@ unsafe fn create_texture_image(
 }
 ```
 
-创建一个与 `shaders` 目录同一级的新目录 `resources` 用来存放纹理图像。我们将从该目录加载一个名为 `texture.png` 的图像。我选择使用了下面这张 [CC0 协议的图像](https://pixabay.com/en/statue-sculpture-fig-historically-1275469/)，并将其调整为了 512 x 512 像素，但你可以随意选择任何你想要的（带有 alpha 通道的）PNG 图像。
+创建一个与 `shaders` 目录同一级的新目录 `resources` 用来存放纹理图像。我们将从该目录加载一个名为 `texture.png` 的图像。我选择使用下面这张 [以 CC0 协议发布的图像](https://pixabay.com/en/statue-sculpture-fig-historically-1275469/)，并将其调整到 512 x 512 像素大小，你也可以随意选择任何你想要的（带有 alpha 通道的）PNG 图像。
 
 ![](../images/texture.png)
 
@@ -121,7 +121,7 @@ device.unmap_memory(staging_buffer_memory);
 
 ## 纹理图像
 
-尽管我们可以设置着色器来访问缓冲中的像素值，最好还是使用 Vulkan 中的图像对象来实现这一目标。图像对象将使我们能够使用 2D 坐标更轻松、更快速地检索颜色。图像对象中的像素称为纹素（texel），我们从现在起会开始使用这个名字。将下列新的字段添加入 `AppData` 中：
+尽管我们可以让着色器直接访问缓冲中的像素值，最好还是使用 Vulkan 中的图像对象来实现这一目标。使用图像对象，我们能够使用 2D 坐标更轻松、更快速地检索颜色。图像对象中的像素称为纹素（texel），我们从现在起会开始使用这个名字。将下列新的字段添加到 `AppData` 中：
 
 ```rust,noplaypen
 struct AppData {
@@ -148,7 +148,7 @@ let info = vk::ImageCreateInfo::builder()
     .format(vk::Format::R8G8B8A8_SRGB)
 ```
 
-Vulkan 支持许多可能的图像格式，但我们应该给纹素使用与缓冲中的像素相同的格式，否则复制操作将会失败。
+Vulkan 支持许多图像格式，但我们应该给纹素使用与缓冲中的像素相同的格式，否则复制操作将会失败。
 
 ```rust,noplaypen
     .tiling(vk::ImageTiling::OPTIMAL)
@@ -170,19 +170,19 @@ Vulkan 支持许多可能的图像格式，但我们应该给纹素使用与缓�
 * `vk::ImageLayout::UNDEFINED` &ndash; 不可被 GPU 使用，第一次转换将会丢弃纹素。
 * `vk::ImageLayout::PREINITIALIZED` &ndash; 不可被 GPU 使用，但第一次转换将会保留纹素。
 
-在少数情况下，第一次转换时需要保留纹素。但有一个例子是，如果你想要使用某个图像作为一个与 `vk::ImageTiling::LINEAR` 布局结合使用的暂存图像，在这种情况下，你需要将纹素数据上传到其中，然后将图像转换为传输源而不会丢失数据。然而，在我们的例子中，我们首先将图像转换为传输目标，然后再从缓冲对象中将纹素数据复制到其中，所以我们不需要这个属性，可以安全地使用 `vk::ImageLayout::UNDEFINED`。
+在少数情况下，第一次转换时需要保留纹素。例如，如果你想要使用某个图像作为一个与 `vk::ImageTiling::LINEAR` 布局结合使用的暂存图像，在这种情况下，你需要将纹素数据上传到其中，然后将图像转换为传输源而不会丢失数据。然而，在我们的例子中，我们首先将图像转换为传输目标，然后再从缓冲对象中将纹素数据复制到其中，所以我们不需要这个属性，可以安全地使用 `vk::ImageLayout::UNDEFINED`。
 
 ```rust,noplaypen
     .usage(vk::ImageUsageFlags::SAMPLED | vk::ImageUsageFlags::TRANSFER_DST)
 ```
 
-`usage` 字段的语义与缓冲创建时的语义相同。图像将被用作缓冲复制的目标，因此它应该被设置为传输目标。我们还希望能够从着色器中访问图像用来给网格上色，所以 `usage` 也应该需要 `vk::ImageUsageFlags::SAMPLED`。
+`usage` 字段的语义与缓冲创建时的语义相同。图像将被用作缓冲复制的目标，因此它应该被设置为传输目标。我们还希望能够从着色器中访问图像来给网格上色，所以 `usage` 也应该需要 `vk::ImageUsageFlags::SAMPLED`。
 
 ```rust,noplaypen
     .sharing_mode(vk::SharingMode::EXCLUSIVE)
 ```
 
-图像只会被一个队列族使用，即支持图形（因此也支持）传输操作的队列族。
+图像只会被一个队列族使用，即支持图形操作（因此也支持传输）的队列族。
 
 ```rust,noplaypen
     .samples(vk::SampleCountFlags::_1)
@@ -194,13 +194,13 @@ Vulkan 支持许多可能的图像格式，但我们应该给纹素使用与缓�
     .flags(vk::ImageCreateFlags::empty()); // Optional.
 ```
 
-在图像上还有一些可选的标志，允许控制诸如稀疏图像（sparse image）之类的更高级属性。稀疏图像是只有某些区域由内存支持的图像。例如，如果你使用一个 3D 纹理来存储体素地形，那么你可以使用它来避免分配内存来存储大量的“空气”值。我们在本教程中不会使用它，所以你可以省略这个字段的生成器方法，这将把它设置为默认值（一个空的标志集）。
+在图像上还有一些可选的标志，允许控制诸如稀疏图像（sparse image）之类的更高级属性。稀疏图像是只有某些区域储存在内存中的图像。例如，如果你使用一个 3D 纹理来存储体素地形，那么你可以使用稀疏图像来避免分配内存来存储大量的“空气”值。我们在本教程中不会使用它，所以你可以省略这个字段的生成器方法，这将把它设置为默认值（一个空的标志集）。
 
 ```rust,noplaypen
 data.texture_image = device.create_image(&info, None)?;
 ```
 
-图像使用 `create_image` 创建，没有任何特别值得注意的参数。`vk::Format::R8G8B8A8_SRGB` 格式可能不被图形硬件支持。这时你需要有一系列可用的替代格式，并选择其中能被支持的最好的一个。然而，这个特定格式的支持十分广泛，我们将跳过这一步。使用不同的格式也需要烦人的转换。我们将在深度缓冲章节中回到这一点来实现这样的一个系统。
+图像使用 `create_image` 创建，没有任何特别值得注意的参数。图形硬件可能不支持 `vk::Format::R8G8B8A8_SRGB` 格式，这时你需要有一系列可用的替代格式，并选择其中能被支持的最好的一个。然而，这个格式的支持十分广泛，我们将跳过这一步。使用不同的格式也需要烦人的转换。我们将在深度缓冲章节中回过头来实现这样的一个系统。
 
 ```rust,noplaypen
 let requirements = device.get_image_memory_requirements(data.texture_image);
@@ -416,7 +416,7 @@ unsafe fn transition_image_layout(
 }
 ```
 
-最常用的转换布局的方法之一是使用*图像内存屏障（image memory barrier）*。这样的管线屏障通常用于同步对资源的访问，例如确保对缓冲的写入在读取之前完成，但它也可以在使用 `vk::SharingMode::EXCLUSIVE` 时用于转换图像布局与移交队列族所有权。对于缓冲，有一个等效的*缓冲内存屏障（buffer memory barrier）*。
+最常用的转换布局的方法之一是使用*图像内存屏障（image memory barrier）*。这样的管线屏障通常用于同步对资源的访问，例如确保对缓冲的写入在读取之前完成，但它也可以用于转换图像布局，以及在使用 `vk::SharingMode::EXCLUSIVE` 时移交队列族所有权。对于缓冲，有一个等效的*缓冲内存屏障（buffer memory barrier）*。
 
 ```rust,noplaypen
 let barrier = vk::ImageMemoryBarrier::builder()
@@ -439,7 +439,7 @@ let barrier = vk::ImageMemoryBarrier::builder()
     .subresource_range(subresource)
 ```
 
-`image` 和 `subresource_range` 指定了受影响的图像和图像的特定部分。我们需要在定义图像内存屏障之前定义 `subresource`：
+`image` 和 `subresource_range` 指定了受影响的图像和图像中的特定部分。我们需要在定义图像内存屏障之前定义 `subresource`：
 
 ```rust,noplaypen
 let subresource = vk::ImageSubresourceRange::builder()
@@ -471,7 +471,7 @@ device.cmd_pipeline_barrier(
 );
 ```
 
-所有类型的管线屏障都使用相同函数提交。指令缓冲之后的第一个参数指定了在屏障之前应该发生的操作所在的管线阶段。第二个参数指定了在屏障处等待的操作所在的管线阶段。在屏障之前和之后允许指定的管线阶段取决于在屏障之前和之后如何使用资源。允许的值在 Vulkan 规范的[这个表格](https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-access-types-supported)中列出。例如，如果你想在屏障之后读取一个 uniform，你应该指定一个 `vk::AccessFlags::UNIFORM_READ` 的用途和最早从 uniform 中读取的着色器作为管线阶段，比如 `vk::PipelineStageFlags::FRAGMENT_SHADER`。对于这类用途，指定非着色器管线阶段是没有意义的。验证层会在你指定与用途类型不匹配的管线阶段时发出警告。
+所有类型的管线屏障都使用相同函数提交。指令缓冲之后的第一个参数指定了在屏障之前应该发生的操作所在的管线阶段。第二个参数指定了在屏障处等待的操作所在的管线阶段。在屏障之前和之后允许指定的管线阶段取决于在屏障之前和之后如何使用资源。允许的值在 Vulkan 规范的[这个表格](https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-access-types-supported)中列出。例如，如果你想在屏障之后读取一个 uniform，你应该指定一个 `vk::AccessFlags::UNIFORM_READ` 的用途和最早从 uniform 中读取的着色器作为管线阶段，比如 `vk::PipelineStageFlags::FRAGMENT_SHADER`。对于这类用途，指定非着色器管线阶段是没有意义的。校验层会在你指定与用途类型不匹配的管线阶段时发出警告。
 
 第四个参数是一个空的 `vk::DependencyFlags` 集合或 `vk::DependencyFlags::BY_REGION`。后者将屏障变成每个区域的条件。举例来说，这意味着你可以从在此之前已经写入的资源的部分开始读取。
 
@@ -534,12 +534,12 @@ device.cmd_copy_buffer_to_image(
 
 ## 准备纹理图像
 
-我们现在已经拥有了完成纹理图像所需的所有工具，所以我们要回到 `create_texture_image` 函数。我们在那里做的最后一件事是创建纹理图像。下一步是将暂存缓冲复制到纹理图像。这涉及到两个步骤：
+我们现在已经拥有了完成纹理图像所需的所有工具，所以我们要回到 `create_texture_image` 函数。我们先前在那里做的最后一件事是创建纹理图像。下一步是将暂存缓冲复制到纹理图像。这涉及到两个步骤：
 
 * 转换纹理图像为 `vk::ImageLayout::TRANSFER_DST_OPTIMAL`
 * 执行从缓冲到图像的复制操作
 
-这很容易用我们刚刚创建的函数来完成：
+这可以我们刚刚创建的函数轻易完成：
 
 ```rust,noplaypen
 transition_image_layout(
@@ -561,9 +561,9 @@ copy_buffer_to_image(
 )?;
 ```
 
-图像是使用 `vk::ImageLayout::UNDEFINED` 布局创建的，所以在转换 `texture_image` 时应该指定它作为旧布局。请记住，我们可以这样做是因为在执行复制操作之前我们不关心它的内容。
+图像是使用 `vk::ImageLayout::UNDEFINED` 布局创建的，所以在转换 `texture_image` 时将它指定为旧布局。请记住，我们可以这样做是因为在执行复制操作之前我们不关心它的内容。
 
-为了能够从着色器中开始采样纹理图像，我们需要最后一个转换以供着色器访问：
+为了能够开始从着色器中采样纹理图像，我们需要最后一个转换以供着色器访问：
 
 ```rust,noplaypen
 transition_image_layout(
@@ -578,7 +578,7 @@ transition_image_layout(
 
 ## 转换屏障掩码
 
-如果你现在启用验证层运行你的应用程序，那么你会看到它警告 `transition_image_layout` 中的访问掩码和管线阶段无效。我们仍然需要根据转换中的布局来设置它们。
+如果你现在启用校验层并运行你的应用程序，那么你会看到它警告 `transition_image_layout` 中的访问掩码和管线阶段无效。我们仍然需要根据转换中的布局来设置它们。
 
 我们需要处理两个转换：
 
@@ -640,7 +640,7 @@ device.cmd_pipeline_barrier(
 
 如果我们将来需要做更多的转换，那么我们会扩展这个函数。现在，程序应该可以成功运行。当然，现在还不会有视觉上的变化。
 
-有一件事需要注意，那就是指令缓冲的提交在一开始时会导致隐式的 `vk::AccessFlags::HOST_WRITE` 同步。由于 `transition_image_layout` 函数执行的指令缓冲只有一个指令，如果你在布局转换中需要一个 `vk::AccessFlags::HOST_WRITE` 依赖，那么你可以使用这个隐式同步并将 `src_access_mask` 设置为 `vk::AccessFlags::empty()`。你可以选择是否要明确地指定它，但我个人不喜欢依赖这些类似 OpenGL 的“隐藏”操作。
+有一件事需要注意，那就是提交指令缓冲在一开始时会导致隐式的 `vk::AccessFlags::HOST_WRITE` 同步。由于 `transition_image_layout` 函数执行的指令缓冲只有一个指令，如果你在布局转换中需要一个 `vk::AccessFlags::HOST_WRITE` 依赖，那么你可以使用这个隐式同步并将 `src_access_mask` 设置为 `vk::AccessFlags::empty()`。你可以选择是否要明确地指定它，但我个人不喜欢依赖这些类似 OpenGL 的“隐藏”操作。
 
 实际上有一种特殊的图像布局类型 `vk::ImageLayout::GENERAL`，它支持所有操作。当然，它的问题也就是它不一定能为任何操作提供最佳性能。对于一些特殊情况它是必需的，比如将图像同时用作输入和输出，或者在它离开预初始化布局后读取图像。
 
