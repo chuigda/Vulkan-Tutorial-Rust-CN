@@ -1,41 +1,45 @@
-# Images
+# 图像
 
-**Code:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/23_texture_image.rs)
+> 原文链接：<https://kylemayes.github.io/vulkanalia/texture/images.html>
+>
+> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-The geometry has been colored using per-vertex colors so far, which is a rather limited approach. In this part of the tutorial we're going to implement texture mapping to make the geometry look more interesting. This will also allow us to load and draw basic 3D models in a future chapter.
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/23_texture_image.rs)
 
-Adding a texture to our application will involve the following steps:
+我们已经使用了每个顶点的颜色来给几何体上色，但这是一种相当有限的方法。在本章教程中，我们将实现纹理映射（texture mapping）来让几何体看上去更有趣。这也使得我们可以在以后的章节中加载并绘制出基础的 3D 模型。
 
-* Create an image object backed by device memory
-* Fill it with pixels from an image file
-* Create an image sampler
-* Add a combined image sampler descriptor to sample colors from the texture
+向我们的应用添加纹理需要以下步骤：
 
-We've already worked with image objects before, but those were automatically created by the swapchain extension. This time we'll have to create one by ourselves. Creating an image and filling it with data is similar to vertex buffer creation. We'll start by creating a staging resource and filling it with pixel data and then we copy this to the final image object that we'll use for rendering. Although it is possible to create a staging image for this purpose, Vulkan also allows you to copy pixels from a `vk::Buffer` to an image and the API for this is actually [faster on some hardware](https://developer.nvidia.com/vulkan-memory-management). We'll first create this buffer and fill it with pixel values, and then we'll create an image to copy the pixels to. Creating an image is not very different from creating buffers. It involves querying the memory requirements, allocating device memory and binding it, just like we've seen before.
+* 创建一个设备内存支持的图像对象
+* 从图像文件向其中填充像素
+* 创建一个图像采样器
+* 添加一个组合图像采样器描述符用来从纹理中采样颜色
 
-However, there is something extra that we'll have to take care of when working with images. Images can have different *layouts* that affect how the pixels are organized in memory. Due to the way graphics hardware works, simply storing the pixels row by row may not lead to the best performance, for example. When performing any operation on images, you must make sure that they have the layout that is optimal for use in that operation. We've actually already seen some of these layouts when we specified the render pass:
+我们以前已经处理过图像对象了，但那些是由交换链扩展自动创建的。这次我们将自己创建一个。创建一个图像向其中填充数据与创建顶点缓冲类似。我们先创建一个暂存资源并向它填充像素数据，然后再将这些数据复制到最终用来渲染的图像对象中。虽然可以为此创建一个暂存图像，但 Vulkan 也允许你从 `vk::Buffer` 复制像素到图像中。这个 API 在某些硬件上实际上[更快](https://developer.nvidia.com/vulkan-memory-management)。我们首先创建这个缓冲并用像素值填充它，然后我们创建一个图像来把像素复制入内。创建图像与创建缓冲并没有太大的区别。它涉及到查询内存需求，分配设备内存并绑定，就像我们以前看到的那样。
 
-* `vk::ImageLayout::PRESENT_SRC_KHR` &ndash; Optimal for presentation&nbsp;
-* `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` &ndash; Optimal as attachment for writing colors from the fragment shader&nbsp;
-* `vk::ImageLayout::TRANSFER_SRC_OPTIMAL` &ndash; Optimal as source in a transfer operation, like `cmd_copy_image_to_buffer`&nbsp;
-* `vk::ImageLayout::TRANSFER_DST_OPTIMAL` &ndash; Optimal as destination in a transfer operation, like `cmd_copy_buffer_to_image`&nbsp;
-* `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` &ndash; Optimal for sampling from a shader&nbsp;
+然而，当使用图像时，我们还需要注意一些额外的事情。图像可以有不同的*布局*，它们会影响像素在内存中的组织方式。受限于图形硬件的工作方式，简单地按行存储像素可能无法带来最佳性能。当对图像执行任何操作时，你必须确保它们具有最适合在该操作中使用的布局。我们其实在指定渲染流程时已经见到了其中一些布局：
 
-One of the most common ways to transition the layout of an image is a *pipeline barrier*. Pipeline barriers are primarily used for synchronizing access to resources, like making sure that an image was written to before it is read, but they can also be used to transition layouts. In this chapter we'll see how pipeline barriers are used for this purpose. Barriers can additionally be used to transfer queue family ownership when using `vk::SharingMode::EXCLUSIVE`.
+* `vk::ImageLayout::PRESENT_SRC_KHR` &ndash; 最佳用作呈现&nbsp;
+* `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL` &ndash; 最佳用作从片元着色器写入颜色的附件&nbsp;
+* `vk::ImageLayout::TRANSFER_SRC_OPTIMAL` &ndash; 最佳用作一个传输操作的源，例如 `cmd_copy_image_to_buffer`&nbsp;
+* `vk::ImageLayout::TRANSFER_DST_OPTIMAL` &ndash; 最佳用作一个传输操作的目标，例如 `cmd_copy_buffer_to_image`&nbsp;
+* `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` &ndash; 最佳用于从一个着色器中采样&nbsp;
 
-## Image library
+转换图像布局最常见的方法之一是*管线屏障（pipeline barrier）*。管线屏障主要用于同步对资源的访问，例如确保图像在读取之前已经被写入。但管线屏障也可以用于转换布局。在本章中，我们将看到管线屏障是如何用于转换布局的。当使用 `vk::SharingMode::EXCLUSIVE` 时，屏障还可以用于传输队列族所有权。
 
-There are many libraries available for loading images, and you can even write your own code to load simple formats like BMP and PPM. In this tutorial we'll be using the [`png`](https://crates.io/crates/png) crate which you should have already added to your program's dependencies.
+## 图像库
 
-## Loading an image
+加载图像的库有很多，你甚至可以自己编写代码来加载 BMP 和 PPM 等简单格式。在本教程中，我们将使用 [`png`](https://crates.io/crates/png) crate，你应该已经将它添加到程序的依赖中了。
 
-We'll need to open the image file, so add the following import:
+## 加载图像
+
+我们需要打开图像文件。添加以下导入：
 
 ```rust,noplaypen
 use std::fs::File;
 ```
 
-Create a new function `create_texture_image` where we'll load an image and upload it into a Vulkan image object. We're going to use command buffers, so it should be called after `^create_command_pool`.
+创建一个新函数 `create_texture_image`，我们将用它加载图像并将其上传到一个 Vulkan 图像对象中。我们要使用指令缓冲，所以它应该在 `create_command_pool` 之后调用。
 
 ```rust,noplaypen
 impl App {
@@ -56,11 +60,11 @@ unsafe fn create_texture_image(
 }
 ```
 
-Create a new directory `resources` next to the `shaders` directory to store texture images in. We're going to load an image called `texture.png` from that directory. I've chosen to use the following [CC0 licensed image](https://pixabay.com/en/statue-sculpture-fig-historically-1275469/) resized to 512 x 512 pixels, but feel free to pick any PNG image (with an alpha channel) you want.
+创建一个与 `shaders` 目录同一级的新目录 `resources` 用来存放纹理图像。我们将从该目录加载一个名为 `texture.png` 的图像。我选择使用了下面这张 [CC0 协议的图像](https://pixabay.com/en/statue-sculpture-fig-historically-1275469/)，并将其调整为了 512 x 512 像素，但你可以随意选择任何你想要的（带有 alpha 通道的）PNG 图像。
 
 ![](../images/texture.png)
 
-Loading an image with this library is really easy:
+使用这个库加载图像非常简单：
 
 ```rust,noplaypen
 unsafe fn create_texture_image(
@@ -83,11 +87,11 @@ unsafe fn create_texture_image(
 }
 ```
 
-This code will populate the `pixels` list with the pixels data with 4 bytes per pixel which will result in a total of `width * height * 4` values. Note that the `png` crate [does not have support for converting RGB images into RGBA images (at the time of writing)](https://github.com/image-rs/image-png/issues/239) and the following code is expecting the pixel data to have an alpha channel. As a result you will need to make sure you use PNG images with alpha channels (such as the above image).
+这段代码将用每像素 4 个字节的数据填充 `pixels` 列表，总共将会有 `width * height * 4` 个值。注意 `png` crate [目前还不支持将 RGB 图像转换为 RGBA 图像](https://github.com/image-rs/image-png/issues/239)，并且后续代码将假设像素数据拥有 Alpha 通道。因此，你需要确保使用带有 Alpha 通道的 PNG 图像（例如上面的图像）。
 
-## Staging buffer
+## 暂存缓冲
 
-We're now going to create a buffer in host visible memory so that we can use `map_memory` and copy the pixels to it. The buffer should be in host visible memory so that we can map it and it should be usable as a transfer source so that we can copy it to an image later on:
+我们现在将在主机可见的内存中创建一个缓冲，以便我们使用 `map_memory` 并将像素复制到其中。缓冲应该在主机可见的内存中，这样我们可以将其映射。它还应该能被用作传输源，以便我们稍后能将其复制到图像中：
 
 ```rust,noplaypen
 let (staging_buffer, staging_buffer_memory) = create_buffer(
@@ -100,7 +104,7 @@ let (staging_buffer, staging_buffer_memory) = create_buffer(
 )?;
 ```
 
-We can then directly copy the pixel values that we got from the image loading library to the buffer:
+然后，我们可以直接将从图像加载库中获取的像素值复制到缓冲中：
 
 ```rust,noplaypen
 let memory = device.map_memory(
@@ -115,9 +119,9 @@ memcpy(pixels.as_ptr(), memory.cast(), pixels.len());
 device.unmap_memory(staging_buffer_memory);
 ```
 
-## Texture Image
+## 纹理图像
 
-Although we could set up the shader to access the pixel values in the buffer, it's better to use image objects in Vulkan for this purpose. Image objects will make it easier and faster to retrieve colors by allowing us to use 2D coordinates, for one. Pixels within an image object are known as texels and we'll use that name from this point on. Add the following new `AppData` fields:
+尽管我们可以设置着色器来访问缓冲中的像素值，最好还是使用 Vulkan 中的图像对象来实现这一目标。图像对象将使我们能够使用 2D 坐标更轻松、更快速地检索颜色。图像对象中的像素称为纹素（texel），我们从现在起会开始使用这个名字。将下列新的字段添加入 `AppData` 中：
 
 ```rust,noplaypen
 struct AppData {
@@ -127,7 +131,7 @@ struct AppData {
 }
 ```
 
-The parameters for an image are specified in a `vk::ImageCreateInfo` struct:
+图像的参数在 `vk::ImageCreateInfo` 结构体中指定：
 
 ```rust,noplaypen
 let info = vk::ImageCreateInfo::builder()
@@ -138,65 +142,65 @@ let info = vk::ImageCreateInfo::builder()
     // continued...
 ```
 
-The image type, specified in the `image_type` field, tells Vulkan with what kind of coordinate system the texels in the image are going to be addressed. It is possible to create 1D, 2D and 3D images. One dimensional images can be used to store an array of data or gradient, two dimensional images are mainly used for textures, and three dimensional images can be used to store voxel volumes, for example. The `extent` field specifies the dimensions of the image, basically how many texels there are on each axis. That's why `depth` must be `1` instead of `0`. Our texture will not be an array and we won't be using mipmapping for now.
+在 `image_type` 字段中指定的图像类型会告诉 Vulkan 图像中的纹素将使用什么样的坐标系来寻址。我们可以创建 1D、2D 和 3D 图像。例如，一维图像可以用来存储数据或渐变；二维图像主要用于纹理；三维图像可以用来存储体素（voxel）体积。`extent` 字段指定了图像的尺寸，也就是每个坐标轴上有多少个纹素。这就是为什么 `depth` 必须是 `1` 而不是 `0`。我们的纹理不会是一个数组，并且我们现在也不会使用多级渐远。
 
 ```rust,noplaypen
     .format(vk::Format::R8G8B8A8_SRGB)
 ```
 
-Vulkan supports many possible image formats, but we should use the same format for the texels as the pixels in the buffer, otherwise the copy operation will fail.
+Vulkan 支持许多可能的图像格式，但我们应该给纹素使用与缓冲中的像素相同的格式，否则复制操作将会失败。
 
 ```rust,noplaypen
     .tiling(vk::ImageTiling::OPTIMAL)
 ```
 
-The `tiling` field can have one of two values:
+`tiling` 字段可以从以下两个值中选择：
 
-* `vk::ImageTiling::LINEAR` &ndash; Texels are laid out in row-major order like our `pixels` array
-* `vk::ImageTiling::OPTIMAL` &ndash; Texels are laid out in an implementation defined order for optimal access
+* `vk::ImageTiling::LINEAR` &ndash; 纹素按行主序排列，和我们的 `pixels` 数组一样
+* `vk::ImageTiling::OPTIMAL` &ndash; 纹素按实现定义的最佳访问顺序排列
 
-Unlike the layout of an image, the tiling mode cannot be changed at a later time. If you want to be able to directly access texels in the memory of the image, then you must use `vk::ImageTiling::LINEAR`. We will be using a staging buffer instead of a staging image, so this won't be necessary. We will be using `vk::ImageTiling::OPTIMAL` for efficient access from the shader.
+与图像的布局不同，平铺（tiling）模式无法在之后更改。如果你想要能直接访问图像内存中的纹素，那么你必须使用 `vk::ImageTiling::LINEAR`。我们不需要这样，因为我们会使用暂存缓冲而不是暂存图像。我们将使用 `vk::ImageTiling::OPTIMAL` 来实现着色器的高效访问。
 
 ```rust,noplaypen
     .initial_layout(vk::ImageLayout::UNDEFINED)
 ```
 
-There are only two possible values for the `initial_layout` of an image:
+图像的 `initial_layout` 只有两个可能的值：
 
-* `vk::ImageLayout::UNDEFINED` &ndash; Not usable by the GPU and the very first transition will discard the texels.
-* `vk::ImageLayout::PREINITIALIZED` &ndash; Not usable by the GPU, but the first transition will preserve the texels.
+* `vk::ImageLayout::UNDEFINED` &ndash; 不可被 GPU 使用，第一次转换将会丢弃纹素。
+* `vk::ImageLayout::PREINITIALIZED` &ndash; 不可被 GPU 使用，但第一次转换将会保留纹素。
 
-There are few situations where it is necessary for the texels to be preserved during the first transition. One example, however, would be if you wanted to use an image as a staging image in combination with the `vk::ImageTiling::LINEAR` layout. In that case, you'd want to upload the texel data to it and then transition the image to be a transfer source without losing the data. In our case, however, we're first going to transition the image to be a transfer destination and then copy texel data to it from a buffer object, so we don't need this property and can safely use `vk::ImageLayout::UNDEFINED`.
+在少数情况下，第一次转换时需要保留纹素。但有一个例子是，如果你想要使用某个图像作为一个与 `vk::ImageTiling::LINEAR` 布局结合使用的暂存图像，在这种情况下，你需要将纹素数据上传到其中，然后将图像转换为传输源而不会丢失数据。然而，在我们的例子中，我们首先将图像转换为传输目标，然后再从缓冲对象中将纹素数据复制到其中，所以我们不需要这个属性，可以安全地使用 `vk::ImageLayout::UNDEFINED`。
 
 ```rust,noplaypen
     .usage(vk::ImageUsageFlags::SAMPLED | vk::ImageUsageFlags::TRANSFER_DST)
 ```
 
-The `usage` field has the same semantics as the one during buffer creation. The image is going to be used as destination for the buffer copy, so it should be set up as a transfer destination. We also want to be able to access the image from the shader to color our mesh, so the usage should include `vk::ImageUsageFlags::SAMPLED`.
+`usage` 字段的语义与缓冲创建时的语义相同。图像将被用作缓冲复制的目标，因此它应该被设置为传输目标。我们还希望能够从着色器中访问图像用来给网格上色，所以 `usage` 也应该需要 `vk::ImageUsageFlags::SAMPLED`。
 
 ```rust,noplaypen
     .sharing_mode(vk::SharingMode::EXCLUSIVE)
 ```
 
-The image will only be used by one queue family: the one that supports graphics (and therefore also) transfer operations.
+图像只会被一个队列族使用，即支持图形（因此也支持）传输操作的队列族。
 
 ```rust,noplaypen
     .samples(vk::SampleCountFlags::_1)
 ```
 
-The `samples` flag is related to multisampling. This is only relevant for images that will be used as attachments, so stick to one sample.
+`samples` 标志与多重采样有关。这只与用作附件的图像有关，所以我们只需要一个采样。
 
 ```rust,noplaypen
     .flags(vk::ImageCreateFlags::empty()); // Optional.
 ```
 
-There are also some optional flags for images that allow controlling more advanced properties for things like sparse images. Sparse images are images where only certain regions are actually backed by memory. If you were using a 3D texture for a voxel terrain, for example, then you could use this to avoid allocating memory to store large volumes of "air" values. We won't be using it in this tutorial, so you can omit the builder method for this field which will set it to the default (an empty set of flags).
+在图像上还有一些可选的标志，允许控制诸如稀疏图像（sparse image）之类的更高级属性。稀疏图像是只有某些区域由内存支持的图像。例如，如果你使用一个 3D 纹理来存储体素地形，那么你可以使用它来避免分配内存来存储大量的“空气”值。我们在本教程中不会使用它，所以你可以省略这个字段的生成器方法，这将把它设置为默认值（一个空的标志集）。
 
-```c++
+```rust,noplaypen
 data.texture_image = device.create_image(&info, None)?;
 ```
 
-The image is created using `create_image`, which doesn't have any particularly noteworthy parameters. It is possible that the `vk::Format::R8G8B8A8_SRGB` format is not supported by the graphics hardware. You should have a list of acceptable alternatives and go with the best one that is supported. However, support for this particular format is so widespread that we'll skip this step. Using different formats would also require annoying conversions. We will get back to this in the depth buffer chapter, where we'll implement such a system.
+图像使用 `create_image` 创建，没有任何特别值得注意的参数。`vk::Format::R8G8B8A8_SRGB` 格式可能不被图形硬件支持。这时你需要有一系列可用的替代格式，并选择其中能被支持的最好的一个。然而，这个特定格式的支持十分广泛，我们将跳过这一步。使用不同的格式也需要烦人的转换。我们将在深度缓冲章节中回到这一点来实现这样的一个系统。
 
 ```rust,noplaypen
 let requirements = device.get_image_memory_requirements(data.texture_image);
@@ -215,9 +219,9 @@ data.texture_image_memory = device.allocate_memory(&info, None)?;
 device.bind_image_memory(data.texture_image, data.texture_image_memory, 0)?;
 ```
 
-Allocating memory for an image works in exactly the same way as allocating memory for a buffer. Use `get_image_memory_requirements` instead of `get_buffer_memory_requirements`, and use `bind_image_memory` instead of `bind_buffer_memory`.
+给图像分配内存的方式与给缓冲分配内存的方式完全相同，除了现在需要使用 `get_image_memory_requirements` 而不是 `get_buffer_memory_requirements`，使用 `bind_image_memory` 而不是 `bind_buffer_memory`。
 
-This function is already getting quite large and there'll be a need to create more images in later chapters, so we should abstract image creation into a `^create_image` function, like we did for buffers. Create the function and move the image object creation and memory allocation to it:
+这个函数已经变得相当长了，并且在后面的章节中还需要创建更多的图像，所以我们应该为图像创建抽象出一个 `create_image` 函数，和缓冲一样。创建这个函数并将图像对象的创建和内存分配移入其中：
 
 ```rust,noplaypen
 unsafe fn create_image(
@@ -268,9 +272,9 @@ unsafe fn create_image(
 }
 ```
 
-I've made the width, height, format, tiling mode, usage, and memory properties parameters, because these will all vary between the images we'll be creating throughout this tutorial.
+我把宽度、高度、格式、平铺模式、用途和内存属性变成了参数，因为这些都将在不同图像之间变化。
 
-The `create_texture_image` function can now be simplified to:
+`create_texture_image` 函数现在可以简化为：
 
 ```rust,noplaypen
 unsafe fn create_texture_image(
@@ -328,9 +332,9 @@ unsafe fn create_texture_image(
 }
 ```
 
-## Layout transitions
+## 布局转换
 
-The function we're going to write now involves recording and executing a command buffer again, so now's a good time to move that logic into a helper function or two:
+我们现在要写的函数再次涉及到记录和执行指令缓冲，所以现在是将这些逻辑移入几个辅助函数的好时机：
 
 ```rust,noplaypen
 unsafe fn begin_single_time_commands(
@@ -372,7 +376,7 @@ unsafe fn end_single_time_commands(
 }
 ```
 
-The code for these functions is based on the existing code in `copy_buffer`. You can now simplify that function to:
+这些函数的代码基于 `copy_buffer` 中现有的代码。你现在可以将这个函数简化为：
 
 ```rust,noplaypen
 unsafe fn copy_buffer(
@@ -393,7 +397,7 @@ unsafe fn copy_buffer(
 }
 ```
 
-If we were still using buffers, then we could now write a function to record and execute `cmd_copy_buffer_to_image` to finish the job, but this command requires the image to be in the right layout first. Create a new function to handle layout transitions:
+如果我们还在用缓冲，那么我们现在可以编写一个函数来记录和执行 `cmd_copy_buffer_to_image` 来完成这件事。但这个指令首先要求图像处于正确的布局。创建一个新函数来处理布局转换：
 
 ```rust,noplaypen
 unsafe fn transition_image_layout(
@@ -412,7 +416,7 @@ unsafe fn transition_image_layout(
 }
 ```
 
-One of the most common ways to perform layout transitions is using an *image memory barrier*. A pipeline barrier like that is generally used to synchronize access to resources, like ensuring that a write to a buffer completes before reading from it, but it can also be used to transition image layouts and transfer queue family ownership when `vk::SharingMode::EXCLUSIVE` is used. There is an equivalent *buffer memory barrier* to do this for buffers.
+最常用的转换布局的方法之一是使用*图像内存屏障（image memory barrier）*。这样的管线屏障通常用于同步对资源的访问，例如确保对缓冲的写入在读取之前完成，但它也可以在使用 `vk::SharingMode::EXCLUSIVE` 时用于转换图像布局与移交队列族所有权。对于缓冲，有一个等效的*缓冲内存屏障（buffer memory barrier）*。
 
 ```rust,noplaypen
 let barrier = vk::ImageMemoryBarrier::builder()
@@ -421,21 +425,21 @@ let barrier = vk::ImageMemoryBarrier::builder()
     // continued...
 ```
 
-The first two fields specify layout transition. It is possible to use `vk::ImageLayout::UNDEFINED` as `old_layout` if you don't care about the existing contents of the image.
+前两个字段指定了布局转换。如果你不关心图像中现有的内容，那么可以使用 `vk::ImageLayout::UNDEFINED` 作为 `old_layout`。
 
 ```rust,noplaypen
     .src_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
     .dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
 ```
 
-If you are using the barrier to transfer queue family ownership, then these two fields should be the indices of the queue families. They must be set to `vk::QUEUE_FAMILY_IGNORED` if you don't want to do this (not the default value!).
+如果你使用屏障来传输队列族所有权，那么这两个字段应该是队列族的索引。如果你不想这样做，那么它们必须被设置为 `vk::QUEUE_FAMILY_IGNORED`（不是默认值！）。
 
 ```rust,noplaypen
     .image(image)
     .subresource_range(subresource)
 ```
 
-The `image` and `subresource_range` specify the image that is affected and the specific part of the image. We'll need to define `subresource` before our image memory barrier:
+`image` 和 `subresource_range` 指定了受影响的图像和图像的特定部分。我们需要在定义图像内存屏障之前定义 `subresource`：
 
 ```rust,noplaypen
 let subresource = vk::ImageSubresourceRange::builder()
@@ -446,14 +450,14 @@ let subresource = vk::ImageSubresourceRange::builder()
     .layer_count(1);
 ```
 
-Our image is not an array and does not have mipmapping levels, so only one level and layer are specified.
+我们的图像不是一个数组，也没有多级渐远层级，所以只指定了一个多级渐远层级和数组层。
 
 ```rust,noplaypen
     .src_access_mask(vk::AccessFlags::empty())  // TODO
     .dst_access_mask(vk::AccessFlags::empty()); // TODO
 ```
 
-Barriers are primarily used for synchronization purposes, so you must specify which types of operations that involve the resource must happen before the barrier, and which operations that involve the resource must wait on the barrier. We need to do that despite already using `queue_wait_idle` to manually synchronize. The right values depend on the old and new layout, so we'll get back to this once we've figured out which transitions we're going to use.
+屏障主要用于同步，所以你必须指定哪些涉及资源的操作类型需要在屏障之前发生，以及哪些涉及资源的操作需要在屏障处等待。尽管我们已经使用 `queue_wait_idle` 来手动同步，但我们仍然需要这样做。这些值取决于旧布局和新布局，所以我们会在弄清楚要使用哪些转换之后再回到这里。
 
 ```rust,noplaypen
 device.cmd_pipeline_barrier(
@@ -467,15 +471,15 @@ device.cmd_pipeline_barrier(
 );
 ```
 
-All types of pipeline barriers are submitted using the same function. The first parameter after the command buffer specifies in which pipeline stage the operations occur that should happen before the barrier. The second parameter specifies the pipeline stage in which operations will wait on the barrier. The pipeline stages that you are allowed to specify before and after the barrier depend on how you use the resource before and after the barrier. The allowed values are listed in [this table](https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-access-types-supported) of the specification. For example, if you're going to read from a uniform after the barrier, you would specify a usage of `vk::AccessFlags::UNIFORM_READ` and the earliest shader that will read from the uniform as pipeline stage, for example `vk::PipelineStageFlags::FRAGMENT_SHADER`. It would not make sense to specify a non-shader pipeline stage for this type of usage and the validation layers will warn you when you specify a pipeline stage that does not match the type of usage.
+所有类型的管线屏障都使用相同函数提交。指令缓冲之后的第一个参数指定了在屏障之前应该发生的操作所在的管线阶段。第二个参数指定了在屏障处等待的操作所在的管线阶段。在屏障之前和之后允许指定的管线阶段取决于在屏障之前和之后如何使用资源。允许的值在 Vulkan 规范的[这个表格](https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-access-types-supported)中列出。例如，如果你想在屏障之后读取一个 uniform，你应该指定一个 `vk::AccessFlags::UNIFORM_READ` 的用途和最早从 uniform 中读取的着色器作为管线阶段，比如 `vk::PipelineStageFlags::FRAGMENT_SHADER`。对于这类用途，指定非着色器管线阶段是没有意义的。验证层会在你指定与用途类型不匹配的管线阶段时发出警告。
 
-The fourth parameter is either an empty set of `vk::DependencyFlags` or `vk::DependencyFlags::BY_REGION`. The latter turns the barrier into a per-region condition. That means that the implementation is allowed to already begin reading from the parts of a resource that were written so far, for example.
+第四个参数是一个空的 `vk::DependencyFlags` 集合或 `vk::DependencyFlags::BY_REGION`。后者将屏障变成每个区域的条件。举例来说，这意味着你可以从在此之前已经写入的资源的部分开始读取。
 
-The last three parameters reference slices of pipeline barriers of the three available types: memory barriers, buffer memory barriers, and image memory barriers like the one we're using here. Note that we're not using the `vk::Format` parameter yet, but we'll be using that one for special transitions in the depth buffer chapter.
+最后三个参数引用了三种可用类型的管线屏障的切片：内存屏障、缓冲内存屏障以及我们这里使用的图像内存屏障。注意，我们目前还没有使用 `vk::Format` 参数，但我们将在深度缓冲章节中使用它来进行特殊的转换。
 
-## Copying buffer to image
+## 复制缓冲至图像
 
-Before we get back to `create_texture_image`, we're going to write one more helper function: `copy_buffer_to_image`:
+在我们回到 `create_texture_image` 之前，我们还要写另一个辅助函数 `copy_buffer_to_image`：
 
 ```rust,noplaypen
 unsafe fn copy_buffer_to_image(
@@ -494,7 +498,7 @@ unsafe fn copy_buffer_to_image(
 }
 ```
 
-Just like with buffer copies, you need to specify which part of the buffer is going to be copied to which part of the image. This happens through `vk::BufferImageCopy` structs:
+正如缓冲复制一样，你需要指定缓冲的哪一部分将被复制到图像的哪一部分。这是通过 `vk::BufferImageCopy` 结构体来完成的：
 
 ```rust,noplaypen
 let subresource = vk::ImageSubresourceLayers::builder()
@@ -512,9 +516,9 @@ let region = vk::BufferImageCopy::builder()
     .image_extent(vk::Extent3D { width, height, depth: 1 });
 ```
 
-Most of these fields are self-explanatory. The `buffer_offset` specifies the byte offset in the buffer at which the pixel values start. The `buffer_row_length` and `buffer_image_height` fields specify how the pixels are laid out in memory. For example, you could have some padding bytes between rows of the image. Specifying `0` for both indicates that the pixels are simply tightly packed like they are in our case. The `image_subresource`, `image_offset` and `image_extent` fields indicate to which part of the image we want to copy the pixels.
+这里的大部分字段无需解释。`buffer_offset` 指定了缓冲中像素值开始的字节偏移量。`buffer_row_length` 和 `buffer_image_height` 字段指定了像素在内存中的布局。例如，你可以在图像的行之间有一些填充字节。对于这两个字段都指定 `0` 表示像素就像我们现在这样紧密地排列。`image_subresource`、`image_offset` 和 `image_extent` 字段指示我们要将像素复制到图像的哪个部分。
 
-Buffer to image copy operations are enqueued using the `cmd_copy_buffer_to_image` function:
+从缓冲到图像的复制操作使用 `cmd_copy_buffer_to_image` 函数进入队列：
 
 ```rust,noplaypen
 device.cmd_copy_buffer_to_image(
@@ -526,16 +530,16 @@ device.cmd_copy_buffer_to_image(
 );
 ```
 
-The fourth parameter indicates which layout the image is currently using. I'm assuming here that the image has already been transitioned to the layout that is optimal for copying pixels to. Right now we're only copying one chunk of pixels to the whole image, but it's possible to specify an array of `vk::BufferImageCopy` to perform many different copies from this buffer to the image in one operation.
+第四个参数表示图像当前使用哪一种布局。我在这里假设图像已经转换为最适合复制像素的布局。现在我们只复制一段像素到整个图像，但也可以指定一个 `vk::BufferImageCopy` 数组来在一次操作中将这个缓冲的多个不同拷贝复制到图像中。
 
-## Preparing the texture image
+## 准备纹理图像
 
-We now have all of the tools we need to finish setting up the texture image, so we're going back to the `create_texture_image` function. The last thing we did there was creating the texture image. The next step is to copy the staging buffer to the texture image. This involves two steps:
+我们现在已经拥有了完成纹理图像所需的所有工具，所以我们要回到 `create_texture_image` 函数。我们在那里做的最后一件事是创建纹理图像。下一步是将暂存缓冲复制到纹理图像。这涉及到两个步骤：
 
-* Transition the texture image to `vk::ImageLayout::TRANSFER_DST_OPTIMAL`&nbsp;
-* Execute the buffer to image copy operation
+* 转换纹理图像为 `vk::ImageLayout::TRANSFER_DST_OPTIMAL`
+* 执行从缓冲到图像的复制操作
 
-This is easy to do with the functions we just created:
+这很容易用我们刚刚创建的函数来完成：
 
 ```rust,noplaypen
 transition_image_layout(
@@ -557,9 +561,9 @@ copy_buffer_to_image(
 )?;
 ```
 
-The image was created with the `vk::ImageLayout::UNDEFINED` layout, so that one should be specified as old layout when transitioning `texture_image`. Remember that we can do this because we don't care about its contents before performing the copy operation.
+图像是使用 `vk::ImageLayout::UNDEFINED` 布局创建的，所以在转换 `texture_image` 时应该指定它作为旧布局。请记住，我们可以这样做是因为在执行复制操作之前我们不关心它的内容。
 
-To be able to start sampling from the texture image in the shader, we need one last transition to prepare it for shader access:
+为了能够从着色器中开始采样纹理图像，我们需要最后一个转换以供着色器访问：
 
 ```rust,noplaypen
 transition_image_layout(
@@ -572,16 +576,16 @@ transition_image_layout(
 )?;
 ```
 
-## Transition barrier masks
+## 转换屏障掩码
 
-If you run your application with validation layers enabled now, then you'll see that it complains about the access masks and pipeline stages in `transition_image_layout` being invalid. We still need to set those based on the layouts in the transition.
+如果你现在启用验证层运行你的应用程序，那么你会看到它警告 `transition_image_layout` 中的访问掩码和管线阶段无效。我们仍然需要根据转换中的布局来设置它们。
 
-There are two transitions we need to handle:
+我们需要处理两个转换：
 
-* Undefined → transfer destination &ndash; transfer writes that don't need to wait on anything
-* Transfer destination → shader reading &ndash; shader reads should wait on transfer writes, specifically the shader reads in the fragment shader, because that's where we're going to use the texture
+* 未定义 → 传输目标 &ndash; 不需要等待任何东西的传输写入
+* 传输目标 → 着色器读取 &ndash; 着色器读取应该等待传输写入，特别是片段着色器中的着色器读取，因为我们会在那里使用纹理
 
-These rules are specified using the following access masks and pipeline stages which should be added at the beginning of `transition_image_layout`:
+这些规则可以使用以下访问掩码和管线阶段来指定，它们应该被加在 `transition_image_layout` 的开头：
 
 ```rust,noplaypen
 let (
@@ -606,7 +610,7 @@ let (
 };
 ```
 
-Then update the `vk::ImageMemoryBarrier` struct and the `cmd_pipeline_barrier` call with the access flags and pipeline stage masks:
+然后使用访问标志和管线阶段掩码更新 `vk::ImageMemoryBarrier` 结构体和 `cmd_pipeline_barrier` 调用：
 
 ```rust,noplaypen
 let barrier = vk::ImageMemoryBarrier::builder()
@@ -630,28 +634,28 @@ device.cmd_pipeline_barrier(
 );
 ```
 
-As you can see in the aforementioned table, transfer writes must occur in the pipeline transfer stage. Since the writes don't have to wait on anything, you may specify an empty access mask and the earliest possible pipeline stage `vk::PipelineStageFlags::TOP_OF_PIPE` for the pre-barrier operations. It should be noted that `vk::PipelineStageFlags::TRANSFER` is not a *real* stage within the graphics and compute pipelines. It is more of a pseudo-stage where transfers happen. See [the documentation](https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkPipelineStageFlagBits.html) for more information and other examples of pseudo-stages.
+如你在之前提到的列表中所见，传输写入必须发生在管线传输阶段。由于写入不需要任何等待，你可以为屏障前操作指定空访问掩码与最早的管线阶段 `vk::PipelineStageFlags::TOP_OF_PIPE`。注意，`vk::PipelineStageFlags::TRANSFER` 不是一个在图形与计算管线中的*真实*阶段。它更像是一个传输操作发生的伪阶段。欲知更多详情与其它伪阶段的例子，请见[文档](https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkPipelineStageFlagBits.html)。
 
-The image will be written in the same pipeline stage and subsequently read by the fragment shader, which is why we specify shader reading access in the fragment shader pipeline stage.
+图像将在相同的管线阶段被写入，然后在片段着色器中被读取。这就是为什么我们在片段着色器管线阶段指定了着色器读取访问。
 
-If we need to do more transitions in the future, then we'll extend the function. The application should now run successfully, although there are of course no visual changes yet.
+如果我们将来需要做更多的转换，那么我们会扩展这个函数。现在，程序应该可以成功运行。当然，现在还不会有视觉上的变化。
 
-One thing to note is that command buffer submission results in implicit `vk::AccessFlags::HOST_WRITE` synchronization at the beginning. Since the `transition_image_layout` function executes a command buffer with only a single command, you could use this implicit synchronization and set `src_access_mask` to `vk::AccessFlags::empty()` if you ever needed a `vk::AccessFlags::HOST_WRITE` dependency in a layout transition. It's up to you if you want to be explicit about it or not, but I'm personally not a fan of relying on these OpenGL-like "hidden" operations.
+有一件事需要注意，那就是指令缓冲的提交在一开始时会导致隐式的 `vk::AccessFlags::HOST_WRITE` 同步。由于 `transition_image_layout` 函数执行的指令缓冲只有一个指令，如果你在布局转换中需要一个 `vk::AccessFlags::HOST_WRITE` 依赖，那么你可以使用这个隐式同步并将 `src_access_mask` 设置为 `vk::AccessFlags::empty()`。你可以选择是否要明确地指定它，但我个人不喜欢依赖这些类似 OpenGL 的“隐藏”操作。
 
-There is actually a special type of image layout that supports all operations, `vk::ImageLayout::GENERAL`. The problem with it, of course, is that it doesn't necessarily offer the best performance for any operation. It is required for some special cases, like using an image as both input and output, or for reading an image after it has left the preinitialized layout.
+实际上有一种特殊的图像布局类型 `vk::ImageLayout::GENERAL`，它支持所有操作。当然，它的问题也就是它不一定能为任何操作提供最佳性能。对于一些特殊情况它是必需的，比如将图像同时用作输入和输出，或者在它离开预初始化布局后读取图像。
 
-All of the helper functions that submit commands so far have been set up to execute synchronously by waiting for the queue to become idle. For practical applications it is recommended to combine these operations in a single command buffer and execute them asynchronously for higher throughput, especially the transitions and copy in the `create_texture_image` function. Try to experiment with this by creating a `setup_command_buffer` that the helper functions record commands into, and add a `flush_setup_commands` to execute the commands that have been recorded so far. It's best to do this after the texture mapping works to check if the texture resources are still set up correctly.
+到目前为止，所有提交指令的辅助函数都被设置为同步执行，因为它们会等待队列空闲。对于实际应用程序，建议将这些操作组合到一个单独的指令缓冲中，并异步执行以获得更高的吞吐量，对于在 `create_texture_image` 函数中的转换和复制更是如此。试试看通过创建 `setup_command_buffer` 来让辅助函数记录指令，并添加一个 `flush_setup_commands` 来执行到目前为止已经记录的指令。最好在纹理映射能正常运行之后这样做，以检查纹理资源是否仍然配置正确。
 
-## Cleanup
+## 善后
 
-Finish the `create_texture_image` function by cleaning up the staging buffer and its memory at the end:
+在 `create_texture_image` 函数的最后将暂存缓冲及其内存清理掉：
 
 ```rust,noplaypen
 device.destroy_buffer(staging_buffer, None);
 device.free_memory(staging_buffer_memory, None);
 ```
 
-The main texture image is used until the end of the program:
+主要纹理图像将会一直使用到程序结束：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -662,4 +666,4 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-The image now contains the texture, but we still need a way to access it from the graphics pipeline. We'll work on that in the next chapter.
+图像现在包含了纹理，但我们仍然需要一种方法来从图形管线中访问它。我们将在下一章中讨论这个问题。
