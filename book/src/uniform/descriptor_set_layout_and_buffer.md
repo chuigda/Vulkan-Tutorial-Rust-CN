@@ -1,4 +1,4 @@
-# 描述符布局与缓冲
+# 描述符集合布局与缓冲
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/uniform/descriptor_layout_and_buffer.html>
 >
@@ -6,11 +6,11 @@
 
 **本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_set_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
 
-现在我们可以将每个顶点的任何属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-试图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
+现在我们可以将任何顶点属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-试图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
 
-在 Vulkan 中，正确的解决方式是使用*资源描述符（resource descriptor）*。描述符是一种让着色器自由访问缓冲和图像等资源的方法。我们将设置一个包含变换矩阵的缓冲，并让顶点着色器通过描述符访问它们。描述符的使用包括三个部分：
+在 Vulkan 中，正确的解决方式是使用*资源描述符（resource descriptor）*。描述符是一种能够让着色器自由访问缓冲和图像等资源的方法。我们将设置一个包含变换矩阵的缓冲，并让顶点着色器通过描述符访问它们。描述符的使用包括三个部分：
 
-* 在创建管线时指定描述符布局
+* 在创建管线时指定描述符集合布局
 * 从描述符池中分配一个描述符集合
 * 在渲染时绑定描述符集合
 
@@ -71,11 +71,11 @@ void main() {
 }
 ```
 
-注意 `uniform`、`in` 和 `out` 声明之间的顺序是无关紧要的。`binding` 指令和属性的 `location` 指令类似。我们将会在描述符布局中引用这个绑定。`gl_Position` 所在的那一行被修改为使用变换来计算最终的裁剪坐标。与 2D 三角形不同，裁剪坐标的最后一个分量可能不是 `1`，这将导致在转换为屏幕上的最终归一化设备坐标时进行除法运算。这在透视投影中被称为*透视除法*，对于使得更近的物体看起来比更远的物体更大是至关重要的。
+注意 `uniform`、`in` 和 `out` 声明之间的顺序是无关紧要的。`binding` 指令和属性的 `location` 指令类似。我们将会在描述符集合布局中引用这个绑定。`gl_Position` 所在的那一行被修改为使用变换来计算最终的裁剪坐标。与 2D 三角形不同，裁剪坐标的最后一个分量可能不是 `1`，这将导致在转换为屏幕上的最终归一化设备坐标时进行除法运算。这在透视投影中被称为*透视除法*，这对于实现今大远小的视觉效果是至关重要的。
 
 ## 描述符集合布局（descriptor set layout）
 
-下一步就是在 Rust 这边定义 UBO，并告诉 Vulkan 在顶点着色器中关于这个描述符的信息。首先我们添加一些导入和类型别名：
+下一步就是在 Rust 这边定义 UBO 中的数据，并告诉 Vulkan 在顶点着色器中关于这个描述符的信息。首先我们添加一些导入和类型别名：
 
 ```rust,noplaypen
 use cgmath::{point3, Deg};
@@ -161,7 +161,7 @@ let info = vk::DescriptorSetLayoutCreateInfo::builder()
 data.descriptor_set_layout = device.create_descriptor_set_layout(&info, None)?;
 ```
 
-我们需要在创建管线时指定描述符集合布局，以告诉 Vulkan 着色器将会使用哪些描述符。描述符集合布局被指定在管线布局对象中。修改 `vk::PipelineLayoutCreateInfo` 来引用布局对象：
+我们需要在创建管线时指定描述符集合布局，以告诉 Vulkan 着色器将会使用哪些描述符。修改 `vk::PipelineLayoutCreateInfo` 来引用描述符集合布局对象：
 
 ```rust,noplaypen
 
@@ -171,9 +171,9 @@ let layout_info = vk::PipelineLayoutCreateInfo::builder()
     .set_layouts(set_layouts);
 ```
 
-你可能会好奇，为什么一个描述符集合布局就可以囊括所有绑定，这里却可以指定多个描述符集合布局。我们将会在下一章讨论描述符池和描述符集合时再来审视这个问题。
+你可能会好奇，为什么一个描述符集合布局就可以囊括所有绑定，这里却可以指定多个描述符集合布局。我们会在下一章讨论描述符池和描述符集合时再来审视这个问题。
 
-描述符几何应该在我们创建新的图形管线时一直存在，直到程序结束：
+描述符集合布局应该在我们创建新的图形管线时一直存在，直到程序结束：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -241,7 +241,7 @@ unsafe fn create_uniform_buffers(
 }
 ```
 
-我们另写一个函数来在每一帧中使用新的变换更新 uniform 缓冲，所以这里不需要 `map_memory`。uniform 数据将用于所有绘制调用，所以包含它的缓冲只应该在我们停止渲染时才被销毁。由于它还取决于交换链图像的数量，而交换链图像的数量在重建后可能会发生变化，所以我们将在 `destroy_swapchain` 中清理它：
+我们会另写一个函数来在每一帧中使用新的变换更新 uniform 缓冲，所以这里不需要 `map_memory`。uniform 数据将用于所有绘制调用，所以包含它的缓冲只应该在我们停止渲染时才被销毁。由于它还取决于交换链图像的数量，而交换链图像的数量在重建后可能会发生变化，所以我们将在 `destroy_swapchain` 中清理它：
 
 ```rust,noplaypen
 unsafe fn destroy_swapchain(&mut self) {
@@ -300,7 +300,7 @@ impl App {
 
 注意在此栅栏 (fence) 发出信号之前不要更新 uniform 缓冲！
 
-快速回顾一下在 [`渲染与呈现` 章节](../drawing/rendering_and_presentation.html#frames-in-flight)中介绍的围墙的用法，我们使用栅栏 (fences) 来让 GPU 在处理完之前提交的帧后通知 CPU。这些通知有两个用途：防止 CPU 在已经提交了 `MAX_FRAMES_IN_FLIGHT` 个未完成的帧给 GPU 时提交更多的帧；确保 CPU 不会在 GPU 仍在使用资源（如 uniform 缓冲或指令缓冲）处理帧时修改或删除这些资源。
+快速回顾一下在 [`渲染与呈现` 章节](../drawing/rendering_and_presentation.html#frames-in-flight)中介绍过的栅栏的用法，我们使用栅栏 (fences) 来让 GPU 在处理完之前提交的帧后通知 CPU。这些通知有两个用途：防止 CPU 在已经提交了 `MAX_FRAMES_IN_FLIGHT` 个未完成的帧给 GPU 时继续提交更多的帧；确保 CPU 不会在 GPU 仍在使用资源（如 uniform 缓冲或指令缓冲）处理帧时修改或删除这些资源。
 
 我们的 uniform 缓冲与交换链图像相关联，所以在获取到交换链图像之后，我们需要确保任何之前渲染到这一张图像的帧都已经完成，然后我们才能安全地更新 uniform 缓冲。只有在 GPU 通知 CPU 这种情况发生后才更新 uniform 缓冲，我们才能安全地对 uniform 缓冲做任何操作。
 
@@ -329,7 +329,7 @@ unsafe fn update_uniform_buffer(&self, image_index: usize) -> Result<()> {
 }
 ```
 
-现在我们在 uniform 缓冲对象中定义模型、视图和投影变换。模型旋转将是一个简单的绕 Z 轴旋转，使用 `time` 变量：
+现在我们定义 uniform 缓冲对象中的模型、视图和投影变换。模型旋转将是一个简单的绕 Z 轴旋转，使用 `time` 变量：
 
 ```rust,noplaypen
 let model = Mat4::from_axis_angle(
@@ -365,7 +365,7 @@ let mut proj = cgmath::perspective(
 proj[1][1] *= -1.0;
 ```
 
-`cgmath` 原先是为 OpenGL 设计的，因此裁剪空间坐标中的 Y 坐标是反的。要修复这一点，最简单的方法是在反转投影矩阵的 Y 轴缩放因子的符号。如果不这样做，渲染出来的图像会上下翻转。
+`cgmath` 原先是为 OpenGL 设计的，因此裁剪空间坐标中的 Y 坐标是反的。要修复这一点，最简单的方法是在反转投影矩阵的 Y 轴缩放因子的符号。如果不这样做，渲染出来的图像会呈现为上下翻转。
 
 ```rust,noplaypen
 let ubo = UniformBufferObject { model, view, proj };
@@ -373,7 +373,7 @@ let ubo = UniformBufferObject { model, view, proj };
 
 最后我们将矩阵组合成一个 uniform 缓冲对象。
 
-现在我们已经定义了所有的变换，可以将 uniform 缓冲对象中的数据复制到当前的 uniform 缓冲中了。这与我们为顶点缓冲所做的完全相同，只是没有用到暂存缓冲：
+现在我们已经定义了所有的变换，可以将 uniform 缓冲对象中的数据复制到当前的 uniform 缓冲中了。这与我们为顶点缓冲所做的完全相同，除了没有用到暂存缓冲：
 
 ```rust,noplaypen
 let memory = self.device.map_memory(
