@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
+**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_set_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
 
 现在我们可以将每个顶点的任何属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-试图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
 
@@ -14,7 +14,7 @@
 * 从描述符池中分配一个描述符集合
 * 在渲染时绑定描述符集合
 
-*描述符布局（descriptor layout）*指定了管线将要访问的资源类型，就像渲染流程指定了将要访问的附件类型一样。*描述符集合（descriptor set）*指定了将要绑定到描述符的实际缓冲或图像资源，就像帧缓冲指定了要绑定到渲染流程附件的实际图像视图一样。然后，描述符集合就像顶点缓冲和帧缓冲一样，绑定到绘制命令中。
+*描述符集合布局（descriptor set layout）*指定了管线将要访问的资源类型，就像渲染流程指定了将要访问的附件类型一样。*描述符集合（descriptor set）*指定了将要绑定到描述符的实际缓冲或图像资源，就像帧缓冲指定了要绑定到渲染流程附件的实际图像视图一样。然后，描述符集合就像顶点缓冲和帧缓冲一样，绑定到绘制命令中。
 
 描述符有很多种，但在本章中我们将使用 uniform 缓冲对象（uniform buffer object，UBO）。我们将在以后的章节中介绍其他类型的描述符，但基本过程是相同的。假设我们有一个结构体，其中包含了我们希望顶点着色器能够访问的数据：
 
