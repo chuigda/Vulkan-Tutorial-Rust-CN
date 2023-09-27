@@ -298,9 +298,9 @@ impl App {
 }
 ```
 
-注意在围墙发出信号之前不要更新 uniform 缓冲！
+注意在此栅栏 (fence) 发出信号之前不要更新 uniform 缓冲！
 
-快速回顾一下在 [`渲染与呈现` 章节](../drawing/rendering_and_presentation.html#frames-in-flight)中介绍的围墙的用法，我们使用围墙来让 GPU 在处理完之前提交的帧后通知 CPU。这些通知有两个用途：防止 CPU 在已经提交了 `MAX_FRAMES_IN_FLIGHT` 个未完成的帧给 GPU 时提交更多的帧；确保 CPU 不会在 GPU 仍在使用资源（如 uniform 缓冲或指令缓冲）处理帧时修改或删除这些资源。
+快速回顾一下在 [`渲染与呈现` 章节](../drawing/rendering_and_presentation.html#frames-in-flight)中介绍的围墙的用法，我们使用栅栏 (fences) 来让 GPU 在处理完之前提交的帧后通知 CPU。这些通知有两个用途：防止 CPU 在已经提交了 `MAX_FRAMES_IN_FLIGHT` 个未完成的帧给 GPU 时提交更多的帧；确保 CPU 不会在 GPU 仍在使用资源（如 uniform 缓冲或指令缓冲）处理帧时修改或删除这些资源。
 
 我们的 uniform 缓冲与交换链图像相关联，所以在获取到交换链图像之后，我们需要确保任何之前渲染到这一张图像的帧都已经完成，然后我们才能安全地更新 uniform 缓冲。只有在 GPU 通知 CPU 这种情况发生后才更新 uniform 缓冲，我们才能安全地对 uniform 缓冲做任何操作。
 
