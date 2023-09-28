@@ -68,7 +68,7 @@ struct AppData {
 
 Add a new `AppData` field to store the handle of the descriptor pool so you can call `create_descriptor_pool` to create it.
 
-在 `AppData` 中添加一个新的字段来存储描述符池的句柄，并可以调用 `create_descriptor_pool` 来创建它。
+在 `AppData` 中添加一个新的字段来存储描述符池的句柄，并调用 `create_descriptor_pool` 来创建它。
 
 ```rust,noplaypen
 data.descriptor_pool = device.create_descriptor_pool(&info, None)?;
@@ -139,7 +139,7 @@ let info = vk::DescriptorSetAllocateInfo::builder()
 
 In our case we will create one descriptor set for each swapchain image, all with the same layout. Unfortunately we do need all the copies of the layout because the next function expects an array matching the number of sets.
 
-在我们的例子中，我们将为每个交换链图像创建一个描述符集合，所有的描述符集合都具有相同的布局。不幸的是，我们确实需要把描述符集合布局复制多次，因为 `set_layouts` 字段需要一个与描述符集合数量相匹配的数组。
+在我们的例子中，我们将为每个交换链图像创建一个描述符集合，所有的描述符集合都具有相同的布局。不幸的是，我们只能把描述符集合布局复制多次，因为 `set_layouts` 字段需要一个与描述符集合数量相匹配的数组。
 
 Add an `AppData` field to hold the descriptor set handles:
 
@@ -204,7 +204,7 @@ let ubo_write = vk::WriteDescriptorSet::builder()
 
 The first two fields specify the descriptor set to update and the binding. We gave our uniform buffer binding index `0`. Remember that descriptors can be arrays, so we also need to specify the first index in the array that we want to update. We're not using an array, so the index is simply `0`.
 
-前两个字段指定了要更新的描述符集合和绑定。我们给 uniform 缓冲绑定索引 `0`。请记住，描述符可以是数组，因此我们还需要指定要更新的数组中的第一个索引。我们没有使用数组，所以索引是 `0`。
+前两个字段指定了要更新的描述符集合和绑定。我们给 uniform 缓冲绑定索引 `0`。请记住，描述符可以是数组，因此我们还需要用 `dst_array_element` 字段指定要更新的数组中的第一个索引。我们没有使用数组，所以索引是 `0`。
 
 ```rust,noplaypen
     .descriptor_type(vk::DescriptorType::UNIFORM_BUFFER)
@@ -212,7 +212,7 @@ The first two fields specify the descriptor set to update and the binding. We ga
 
 We need to specify the type of descriptor again. It's possible to update multiple descriptors at once in an array, starting at index `dst_array_element`.
 
-我们需要再次指定描述符的类型。<!-- 后面半句放在这个位置很奇怪，先搁置 -->
+我们需要再次指定描述符的类型。
 
 ```rust,noplaypen
     .buffer_info(buffer_info);
@@ -254,7 +254,7 @@ Unlike vertex and index buffers, descriptor sets are not unique to graphics pipe
 
 If you run your program now, then you'll notice that unfortunately nothing is visible. The problem is that because of the Y-flip we did in the projection matrix, the vertices are now being drawn in counter-clockwise order instead of clockwise order. This causes backface culling to kick in and prevents any geometry from being drawn. Go to the `^create_pipeline` function and modify the `front_face` in `vk::PipelineRasterizationStateCreateInfo` to correct this:
 
-如果你现在运行程序，那么很不幸，你看不到任何东西。问题在于我们在投影矩阵中翻转了 Y 坐标，现在顶点是按逆时针顺序而不是顺时针顺序绘制的。这导致背面剔除启动并阻止任何几何图形被绘制。进入 `create_pipeline` 函数并修改 `vk::PipelineRasterizationStateCreateInfo` 中的 `front_face` 以纠正这个问题：
+如果你现在运行程序，那么很不幸，你看不到任何东西。问题在于我们在投影矩阵中翻转了 Y 坐标，现在顶点是按逆时针顺序而不是顺时针顺序绘制的。这导致背面剔除生效，并阻止任何几何图形被绘制。进入 `create_pipeline` 函数并修改 `vk::PipelineRasterizationStateCreateInfo` 中的 `front_face` 以纠正这个问题：
 
 ```rust,noplaypen
     .cull_mode(vk::CullModeFlags::BACK)
@@ -345,7 +345,7 @@ You can find the full list of alignment requirements in [the specification](http
 
 Our original shader with just three `mat4` fields already met the alignment requirements. As each `mat4` is 4 x 4 x 4 = 64 bytes in size, `model` has an offset of `0`, `view` has an offset of 64 and `proj` has an offset of 128. All of these are multiples of 16 and that's why it worked fine.
 
-我们原先的着色器只有三个 `mat4` 字段，已经满足了对齐要求。由于每个 `mat4` 的大小为 4 x 4 x 4 = 64 字节，`model` 的偏移量为 `0`，`view` 的偏移量为 64，`proj` 的偏移量为 128。所有这些都是 16 的倍数，这就是为什么它能正常工作的原因。
+我们原先的着色器只有三个 `mat4` 字段，已经满足了对齐要求。由于每个 `mat4` 的大小为 4 x 4 x 4 = 64 字节，`model` 的偏移量为 `0`，`view` 的偏移量为 64，`proj` 的偏移量为 128。所有这些都是 16 的倍数，这就是为什么它碰巧能正常工作。
 
 The new structure starts with a `vec2` which is only 8 bytes in size and therefore throws off all of the offsets. Now `model` has an offset of `8`, `view` an offset of `72` and `proj` an offset of `136`, none of which are multiples of 16. Unfortunately Rust does not have great support for controlling the alignment of fields in structs, but we can use some manual padding to fix the alignment issues:
 
