@@ -43,7 +43,7 @@ let ubo_size = vk::DescriptorPoolSize::builder()
 
 We will allocate one of these descriptors for every frame. This pool size structure is referenced by the main `vk::DescriptorPoolCreateInfo` along with the maximum number of descriptor sets that may be allocated:
 
-我们会为每一帧分配一个这样的描述符。这个池大小结构与主 `vk::DescriptorPoolCreateInfo` 一起引用，以及可能分配的描述符集合的最大数量：
+我们会为每一帧分配一个这样的描述符。包含了最大描述符集合数量信息的 `vk::DescriptorPoolSize` 结构会被主要的 `vk::DescriptorPoolCreateInfo` 引用：
 
 ```rust,noplaypen
 let pool_sizes = &[ubo_size];
@@ -54,7 +54,7 @@ let info = vk::DescriptorPoolCreateInfo::builder()
 
 The structure has an optional flag similar to command pools that determines if individual descriptor sets can be freed or not: `vk::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET`. We're not going to touch the descriptor set after creating it, so we don't need this flag.
 
-这个结构有一个类似于指令池的可选标志 `vk::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET`，用于确定是否可以释放单个描述符集合。我们在创建描述符集合后不会再修改它，所以我们不需要这个标志。
+类似于指令池，这个结构有一个的可选标志 `vk::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET`，用于确定是否可以释放单个描述符集合。我们在创建描述符集合后不会再修改它，所以我们不需要这个标志。
 
 ```rust,noplaypen
 struct AppData {
@@ -139,7 +139,7 @@ let info = vk::DescriptorSetAllocateInfo::builder()
 
 In our case we will create one descriptor set for each swapchain image, all with the same layout. Unfortunately we do need all the copies of the layout because the next function expects an array matching the number of sets.
 
-在我们的例子中，我们将为每个交换链图像创建一个描述符集合，所有的描述符集合都具有相同的布局。不幸的是，我们确实需要把描述符集合布局复制多次，因为下一个函数需要一个与集合数量相匹配的数组。
+在我们的例子中，我们将为每个交换链图像创建一个描述符集合，所有的描述符集合都具有相同的布局。不幸的是，我们确实需要把描述符集合布局复制多次，因为 `set_layouts` 字段需要一个与描述符集合数量相匹配的数组。
 
 Add an `AppData` field to hold the descriptor set handles:
 
@@ -250,7 +250,7 @@ device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
 
 Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we need to specify if we want to bind descriptor sets to the graphics or compute pipeline. The next parameter is the layout that the descriptors are based on. The next two parameters specify the index of the first descriptor set and the array of sets to bind. We'll get back to this in a moment. The last parameter specifies an array of offsets that are used for dynamic descriptors. We'll look at these in a future chapter.
 
-不同于顶点和索引缓冲的是，描述符集合对于图形管线而言并不是唯一的。因此我们需要指定我们想要将描述符集合绑定到图形管线还是计算管线。下一个参数是描述符基于的布局。接下来的两个参数指定了第一个描述符集合的索引和要绑定的集合数组。我们稍后会回到这个问题。最后一个参数指定了用于动态描述符的偏移量数组。我们将在后面的章节中看到这些。
+不同于顶点和索引缓冲的是，描述符集合并不是专为图形管线而设的。因此我们需要指定我们想要将描述符集合绑定到图形管线还是计算管线。下一个参数是描述符基于的管线布局。接下来的两个参数指定了第一个描述符集合的索引和要绑定的集合数组。我们稍后会回到这个问题。最后一个参数指定了用于动态描述符的偏移量数组。我们将在后面的章节中看到这些。
 
 If you run your program now, then you'll notice that unfortunately nothing is visible. The problem is that because of the Y-flip we did in the projection matrix, the vertices are now being drawn in counter-clockwise order instead of clockwise order. This causes backface culling to kick in and prevents any geometry from being drawn. Go to the `^create_pipeline` function and modify the `front_face` in `vk::PipelineRasterizationStateCreateInfo` to correct this:
 
@@ -321,7 +321,7 @@ layout(binding = 0) uniform UniformBufferObject {
 
 Recompile your shader and your program and run it and you'll find that the colorful square you worked so far has disappeared! That's because we haven't taken into account the *alignment requirements*.
 
-重新编译你的着色器和程序并运行它，你会发现你所做的五颜六色的正方形已经消失了！这是因为我们没有考虑到*对齐要求（alignment requirements）*。
+重新编译你的着色器和程序并运行它，你会发现五颜六色的正方形消失了！这是因为我们没有考虑到*对齐要求（alignment requirements）*。
 
 Vulkan expects the data in your structure to be aligned in memory in a specific way, for example:
 
@@ -379,4 +379,4 @@ layout(set = 0, binding = 0) uniform UniformBufferObject { ... }
 
 You can use this feature to put descriptors that vary per-object and descriptors that are shared into separate descriptor sets. In that case you avoid rebinding most of the descriptors across draw calls which is potentially more efficient.
 
-你可以使用这个特性将每个对象都不同的描述符和共享的描述符放入单独的描述符集合中。在这种情况下，你可以避免在绘制调用之间重新绑定大多数描述符，这可能更有效率。
+你可以利用这个特性，将每个对象都不同的描述符和在对象之间共享的描述符分别放入不同的描述符集合中。在这种情况下，你可以避免在绘制调用之间重新绑定大多数描述符，这可能更有效率。
