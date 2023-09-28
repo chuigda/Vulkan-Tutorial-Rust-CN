@@ -133,13 +133,13 @@ device.cmd_bind_index_buffer(*command_buffer, data.index_buffer, 0, vk::IndexTyp
 
 一个索引缓冲通过 `cmd_bind_index_buffer` 来绑定，这个函数接受索引缓冲、字节偏移量和索引数据类型作为参数。如前所述，可能的类型有 `vk::IndexType::UINT16` 和 `vk::IndexType::UINT32`。
 
-只绑定索引缓冲还不够，我们要改变绘图命令，以告诉 Vulkan 使用索引缓冲。删除 `cmd_draw` 那一行，并用 `cmd_draw_indexed` 替换：
+只绑定索引缓冲还不够，我们要改变绘图指令，以告诉 Vulkan 使用索引缓冲。删除 `cmd_draw` 那一行，并用 `cmd_draw_indexed` 替换：
 
 ```rust,noplaypen
 device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
 ```
 
-`cmd_draw_indexed` 和 `cmd_draw` 的调用方式非常类似。命令缓冲后面的前两个参数指定了索引的数量和实例的数量。我们没有使用实例化，所以只指定 `1` 个实例。索引的数量表示将传递给顶点缓冲的顶点数量。下一个参数指定了索引缓冲的偏移量，传递 `0` 会让显卡从第一个索引开始读取。倒数第二个参数指定了要添加到索引缓冲中的索引的偏移量。最后一个参数指定了实例化（我们没有使用）的偏移量。
+`cmd_draw_indexed` 和 `cmd_draw` 的调用方式非常类似。指令缓冲后面的前两个参数指定了索引的数量和实例的数量。我们没有使用实例化，所以只指定 `1` 个实例。索引的数量表示将传递给顶点缓冲的顶点数量。下一个参数指定了索引缓冲的偏移量，传递 `0` 会让显卡从第一个索引开始读取。倒数第二个参数指定了要添加到索引缓冲中的索引的偏移量。最后一个参数指定了实例化（我们没有使用）的偏移量。
 
 现在运行程序，然后你应该会看到如下画面：
 
@@ -147,4 +147,4 @@ device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
 
 现在你知道如何使用索引缓冲来重用顶点并节约内存了。这会在我们之后的章节中加载 3D 模型时变得尤为重要。
 
-上一章已经提到过，你应该使用一次内存分配来分配多个资源，但事实上你应该更进一步。[驱动开发者建议](https://developer.nvidia.com/vulkan-memory-management)你将多个缓冲，例如顶点缓冲和索引缓冲，存储到一个 `vk::Buffer` 中，并在 `cmd_bind_vertex_buffers` 这样的命令中使用偏移量。这样做的好处是你的数据会因存放得更近而更缓存友好。如果这些资源在相同的渲染操作期间没有被使用，那么甚至可以重用同一块内存 —— 当然前提是数据被更新过。这被称为*别名*（aliasing），并且一些 Vulkan 函数有显式的参数来指定你想要这样做。
+上一章已经提到过，你应该使用一次内存分配来分配多个资源，但事实上你应该更进一步。[驱动开发者建议](https://developer.nvidia.com/vulkan-memory-management)你将多个缓冲，例如顶点缓冲和索引缓冲，存储到一个 `vk::Buffer` 中，并在 `cmd_bind_vertex_buffers` 这样的函数中使用偏移量。这样做的好处是你的数据会因存放得更近而更缓存友好。如果这些资源在相同的渲染操作期间没有被使用，那么甚至可以重用同一块内存 —— 当然前提是数据被更新过。这被称为*别名*（aliasing），并且一些 Vulkan 函数有显式的参数来指定你想要这样做。

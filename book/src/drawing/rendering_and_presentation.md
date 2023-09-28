@@ -102,7 +102,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
 
 下一个参数指定了在呈现引擎使用完图像后要发出信号的同步对象，可以是信号量或者栅栏，也可以两者都指定。我们将在这里使用 `image_available_semaphore`，它发出信号的时刻就是我们可以开始绘制的时候。
 
-这个函数返回将会被获取的交换链图像的索引。这个索引指向 `swapchain_images` 数组中的 `vk::Image`。我们将使用这个索引来选择正确的命令缓冲。
+这个函数返回将会被获取的交换链图像的索引。这个索引指向 `swapchain_images` 数组中的 `vk::Image`。我们将使用这个索引来选择正确的指令缓冲。
 
 ## 提交指令缓冲
 
@@ -229,7 +229,7 @@ Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
 <!-- C++ 版的教程是这么翻译的 -->
 ## 多帧并行渲染
 
-如果你启用校验层并运行应用程序，你会看到一些错误信息，或者观察到内存使用量在缓慢增长。这是因为应用程序在 `App::render` 函数中快速提交了大量工作，但实际上并没有等待它们完成。如果 CPU 提交工作的速度比 GPU 处理工作的速度快，那么队列就会慢慢地被工作填满。更糟糕的是，我们同时还在重复使用 `image_available_semaphore` 和 `render_finished_semaphore` 信号量，以及命令缓冲。
+如果你启用校验层并运行应用程序，你会看到一些错误信息，或者观察到内存使用量在缓慢增长。这是因为应用程序在 `App::render` 函数中快速提交了大量工作，但实际上并没有等待它们完成。如果 CPU 提交工作的速度比 GPU 处理工作的速度快，那么队列就会慢慢地被工作填满。更糟糕的是，我们同时还在重复使用 `image_available_semaphore` 和 `render_finished_semaphore` 信号量，以及指令缓冲。
 
 最简单的解决方式就是在提交之后等待工作完成，例如使用 `queue_wait_idle`（注意：不要真的这么做）：
 
@@ -386,7 +386,7 @@ unsafe fn destroy(&mut self) {
 }
 ```
 
-现在我们修改 `App::render` 函数并将栅栏用于同步。`queue_submit` 调用包含一个可选的参数，为其传递一个栅栏，当命令缓冲执行完毕时该栅栏会发出信号。我们可以使用这个来发出帧已经完成的信号。
+现在我们修改 `App::render` 函数并将栅栏用于同步。`queue_submit` 调用包含一个可选的参数，为其传递一个栅栏，当指令缓冲执行完毕时该栅栏会发出信号。我们可以使用这个来发出帧已经完成的信号。
 
 ```rust,noplaypen
 unsafe fn render(&mut self, window: &Window) -> Result<()> {

@@ -12,7 +12,7 @@
 
 本教程会教授一些 [Vulkan](https://khronos.org/vulkan) 图形与计算 API 的基础知识。Vulkan 是一个由 [Khronos 组织](https://www.khronos.org/) （因 OpenGL 而为人所知）提出的新 API，针对现代显卡的特性提供了更好的抽象。新的接口可以让你更好地描述你的应用程序要做什么，从而带来相比于诸如 [OpenGL](https://en.wikipedia.org/wiki/OpenGL) 和 [Direct3D](https://en.wikipedia.org/wiki/Direct3D) 之类的现有的图形 API 更好的性能和更少的意外驱动程序行为。Vulkan 的设计思想与 [Direct3D 12](https://en.wikipedia.org/wiki/Direct3D#Direct3D_12) 和 [Metal](https://en.wikipedia.org/wiki/Metal_(API)) 的思路相似，但 Vulkan 在跨平台方面具有优势，可以让你同时开发 Windows，Linux 和 Android 应用程序（并借由 [MoltenVK](https://github.com/KhronosGroup/MoltenVK) 开发 iOS 与 MacOS 应用程序）。
 
-然而，为了这些增益，你所付出的代价便是你要使用一个更加冗长的 API。每个和图形 API 相关的细节都需要在你的应用程序中从头开始设置，包括最初的帧缓冲（framebuffer）创建以及缓冲区和纹理图像一类对象的内存管理。图形驱动程序会做更少手把手的指导，也就意味着你要在你的应用程序中做更多工作来确保正确的行为。
+然而，为了这些增益，你所付出的代价便是你要使用一个更加冗长的 API。每个和图形 API 相关的细节都需要在你的应用程序中从头开始设置，包括最初的帧缓冲（framebuffer）创建以及缓冲和纹理图像一类对象的内存管理。图形驱动程序会做更少手把手的指导，也就意味着你要在你的应用程序中做更多工作来确保正确的行为。
 
 简而言之，Vulkan 并不是适合所有人使用的 API。它面向的是那些热衷于高性能计算机图形学，并且愿意为其投入精力的程序员们。如果你更感兴趣的是游戏开发而不是计算机图形学，那么你可能还是应该坚持使用 OpenGL 或者 Direct3D，因为它们不会那么快被 Vulkan 取代。另一个选择是使用像 [Unreal Engine](https://en.wikipedia.org/wiki/Unreal_Engine#Unreal_Engine_4) 这样的引擎，它们可以使用 Vulkan，但向你暴露一个更高层次的 API。
 
@@ -51,7 +51,7 @@
 
 每一章也包含了一个链接，指向了该章节完成后的最终代码。如果你对代码的结构有任何疑问，或者你遇到了 bug，想要对比一下，你可以参考这些代码。
 
-本教程旨在成为社区的共同努力。 Vulkan 仍然是一个相当新的 API，而最佳实践已经完全建立。 如果您对教程或者网站本身有任何类型的反馈，请随时向 [GitHub 存储库](https://github.com/KyleMayes/vulkanalia) 提交问题或拉取请求。
+本教程旨在成为社区的共同努力。 Vulkan 仍然是一个相当新的 API，而最佳实践已经完全建立。 如果你对教程或者网站本身有任何类型的反馈，请随时向 [GitHub 存储库](https://github.com/KyleMayes/vulkanalia) 提交问题或拉取请求。
 
 > 译者注：本译本也有 [GitHub 仓库](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN)，如果你对中文翻译有任何疑问或者改进建议，欢迎提交 Issue 和 PR :)
 
