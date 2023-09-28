@@ -57,7 +57,7 @@
 
 # 模型
 
-- [Depth buffering](./model/depth_buffering.md)
+- [深度缓冲](./model/depth_buffering.md)
 - [Loading models](./model/loading_models.md)
 
 # 渲染质量
