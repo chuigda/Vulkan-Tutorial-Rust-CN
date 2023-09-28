@@ -87,7 +87,7 @@ unsafe fn create_vertex_buffer(
 }
 ```
 
-缓冲应该在程序结束之前在渲染命令中保持可用，并且缓冲不依赖于交换链，因此我们将在 `App::destroy` 方法中清理它：
+缓冲应该在程序结束之前在渲染指令中保持可用，并且缓冲不依赖于交换链，因此我们将在 `App::destroy` 方法中清理它：
 
 ```rust,noplaypen
 unsafe fn destroy(&mut self) {
@@ -99,13 +99,13 @@ unsafe fn destroy(&mut self) {
 
 ## 内存需求
 
-缓冲已经创建了，但实际上我们还没有为其分配任何内存。为缓冲分配内存的第一步是使用 `get_buffer_memory_requirements` 命令查询其内存需求。
+缓冲已经创建了，但实际上我们还没有为其分配任何内存。为缓冲分配内存的第一步是使用 `get_buffer_memory_requirements` 函数查询其内存需求。
 
 ```rust,noplaypen
 let requirements = device.get_buffer_memory_requirements(data.vertex_buffer);
 ```
 
-这个命令返回的 `vk::MemoryRequirements` 结构体有三个字段：
+这个函数返回的 `vk::MemoryRequirements` 结构体有三个字段：
 
 * `size` &ndash; 所需内存大小（以字节为单位），可能与 `buffer_info.size` 不同。
 * `alignment` &ndash; 缓冲在内存分配的区域中开始的偏移量（以字节为单位），取决于 `buffer_info.usage` 和 `buffer_info.flags`。
@@ -255,7 +255,7 @@ device.cmd_draw(*command_buffer, VERTICES.len() as u32, 1, 0, 0);
 // ...
 ```
 
-`cmd_bind_vertex_buffers` 指令用于将顶点缓冲绑定到绑定点，就像我们在上一章中设置的那样。第二个参数指定我们正在使用的顶点输入绑定的索引。最后两个参数指定要绑定的顶点缓冲和从中开始读取顶点数据的字节偏移量。你还应该更改对 `cmd_draw` 的调用，将缓冲中的顶点数传递给该函数，代替原先硬编码的数字 `3`。
+`cmd_bind_vertex_buffers` 函数用于将顶点缓冲绑定到绑定点，就像我们在上一章中设置的那样。第二个参数指定我们正在使用的顶点输入绑定的索引。最后两个参数指定要绑定的顶点缓冲和从中开始读取顶点数据的字节偏移量。你还应该更改对 `cmd_draw` 的调用，将缓冲中的顶点数传递给该函数，代替原先硬编码的数字 `3`。
 
 现在运行程序，您应该再次看到熟悉的三角形：
 

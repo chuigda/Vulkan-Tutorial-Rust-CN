@@ -89,11 +89,11 @@ unsafe fn destroy_swapchain(&mut self) {
 
 我们也可以从头开始重建指令池，不过那样就太浪费了。因此我选择使用 `free_command_buffers` 函数清理现有的指令缓冲。这样我们就可以重用现有的指令池来分配新的指令缓冲。
 
-这就是重建交换链所需的所有操作！然而，这样做的缺陷就是我们需要在创建新的交换链之前停止所有渲染操作。在旧交换链的图像上的绘制命令仍在执行时创建新的交换链是可能的。你需要将旧交换链传递给 `vk::SwapchainCreateInfoKHR` 结构体中的 `old_swapchain` 字段，并在使用完旧交换链后立即销毁它。
+这就是重建交换链所需的所有操作！然而，这样做的缺陷就是我们需要在创建新的交换链之前停止所有渲染操作。在旧交换链的图像上的绘制指令仍在执行时创建新的交换链是可能的。你需要将旧交换链传递给 `vk::SwapchainCreateInfoKHR` 结构体中的 `old_swapchain` 字段，并在使用完旧交换链后立即销毁它。
 
 ## 检测次优或过时的交换链
 
-现在我们只需要确定什么时候必须重建交换链，并且调用 `App::recreate_swapchain` 方法。幸运地是，Vulkan 通常会在交换链不再适用时告诉我们。`acquire_next_image_khr` 和 `queue_present_khr` 命令可以返回以下特殊值来指示这一点。
+现在我们只需要确定什么时候必须重建交换链，并且调用 `App::recreate_swapchain` 方法。幸运地是，Vulkan 通常会在交换链不再适用时告诉我们。`acquire_next_image_khr` 和 `queue_present_khr` 函数可以返回以下特殊值来指示这一点。
 
 * `vk::ErrorCode::OUT_OF_DATE_KHR` &ndash; 交换链与表面不再兼容，不能再用于渲染。通常发生在窗口大小调整之后。
 * `vk::SuccessCode::SUBOPTIMAL_KHR` &ndash; 交换链仍然能向表面呈现内容，但是表面的属性不再与交换链完全匹配。
