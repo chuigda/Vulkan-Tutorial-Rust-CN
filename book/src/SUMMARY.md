@@ -46,8 +46,8 @@
 
 # Uniform 缓冲
 
-- [描述符布局与缓冲](./uniform/descriptor_set_layout_and_buffer.md)
-- [Descriptor pool and sets](./uniform/descriptor_pool_and_sets.md)
+- [描述符集合布局与缓冲](./uniform/descriptor_set_layout_and_buffer.md)
+- [描述符池与描述符集合](./uniform/descriptor_pool_and_sets.md)
 
 # 纹理映射
 
