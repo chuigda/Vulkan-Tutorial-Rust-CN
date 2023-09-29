@@ -52,7 +52,7 @@
 # 纹理映射
 
 - [图像](./texture/images.md)
-- [Image view and sampler](./texture/image_view_and_sampler.md)
+- [图像视图与采样器](./texture/image_view_and_sampler.md)
 - [Combined image sampler](./texture/combined_image_sampler.md)
 
 # 模型
