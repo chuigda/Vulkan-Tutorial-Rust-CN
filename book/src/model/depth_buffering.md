@@ -215,17 +215,28 @@ unsafe fn create_depth_objects(
 
 Creating a depth image is fairly straightforward. It should have the same resolution as the color attachment, defined by the swapchain extent, an image usage appropriate for a depth attachment, optimal tiling and device local memory. The only question is: what is the right format for a depth image? The format must contain a depth component, indicated by `D??_` in the `vk::Format` variant.
 
-创建深度图像非常简单。它应该具有与颜色附件相同的分辨率，由交换链范围定义，适用于深度附件的图像用法，最佳平铺和设备本地内存。唯一的问题是：深度图像的正确格式是什么？格式必须包含一个深度分量，由 `vk::Format` 变体中的 `D??_` 表示。
+创建深度图像非常直观。它应该具有以下属性：由交换链范围定义的与颜色附件相同的分辨率、适用于深度附件的图像用法、最佳平铺模式、设备本地内存。唯一的问题是：深度图像的正确格式是什么？格式必须包含一个深度分量，由 `vk::Format` 变体中的 `D??_` 表示。
 
 Unlike the texture image, we don't necessarily need a specific format, because we won't be directly accessing the texels from the program. It just needs to have a reasonable accuracy, at least 24 bits is common in real-world applications. There are several formats that fit this requirement:
+
+<!-- 这里不使用术语 texel，因为上下文里其实没提到 texture -->
+不同于纹理图像的是，我们并不一定需要一个特定的像素格式，因为我们不会直接在程序中访问深度图像中的像素。深度图像中的像素只要有一个合理的精度就行。现实世界中的应用程序通常都使用至少 24 位的精度，有几种格式符合这个要求：
 
 * `vk::Format::D32_SFLOAT` &ndash; 32-bit float for depth
 * `vk::Format::D32_SFLOAT_S8_UINT` &ndash; 32-bit signed float for depth and 8 bit stencil component
 * `vk::Format::D24_UNORM_S8_UINT` &ndash; 24-bit float for depth and 8 bit stencil component
 
+* `vk::Format::D32_SFLOAT` &ndash; 为深度使用 32 位浮点数
+* `vk::Format::D32_SFLOAT_S8_UINT` &ndash; 为深度使用 32 位有符号浮点数，同时为模板分量使用 8 个位
+* `vk::Format::D24_UNORM_S8_UINT` &ndash; 为深度使用 24 位浮点数，同时为模板分量使用 8 个位
+
 The stencil component is used for [stencil tests](https://en.wikipedia.org/wiki/Stencil_buffer), which is an additional test that can be combined with depth testing. We'll look at this in a future chapter.
 
+模板分量可以被用于[模板测试](https://en.wikipedia.org/wiki/Stencil_buffer)，模板测试可以与深度测试结合使用。我们将在未来的章节中讨论这个。
+
 We could simply go for the `vk::Format::D32_SFLOAT` format, because support for it is extremely common (see the hardware database), but it's nice to add some extra flexibility to our application where possible. We're going to write a `get_supported_format` function that takes a list of candidate formats in order from most desirable to least desirable and returns the first that satisfies our requirements:
+
+我们可以直接选择 `vk::Format::D32_SFLOAT`，因为它的支持非常普遍（参见硬件数据库），但是在可能的情况下，为我们的应用程序增加一些额外的灵活性是很好的。我们将编写一个 `get_supported_format` 函数，它接受一个候选格式列表，将其中的格式按照最理想到最不理想的顺序排列，并返回第一个满足我们要求的格式：
 
 ```rust,noplaypen
 unsafe fn get_supported_format(
@@ -247,6 +258,8 @@ unsafe fn get_supported_format(
 
 The support of a format depends on the tiling mode and usage, so we must also include these as parameters. The support of a format can be queried using the `get_physical_device_format_properties` function:
 
+受支持的格式与图像的平铺模式和用法有关，因此我们必须将它们作为参数传递。可以使用 `get_physical_device_format_properties` 函数查询支持的格式：
+
 ```rust,noplaypen
 let properties = instance.get_physical_device_format_properties(
     data.physical_device,
@@ -256,11 +269,19 @@ let properties = instance.get_physical_device_format_properties(
 
 The `vk::FormatProperties` struct contains three fields:
 
+`vk::FormatProperties` 结构体有以下字段：
+
 * `linear_tiling_features` &ndash; Use cases that are supported with linear tiling
 * `optimal_tiling_features` &ndash; Use cases that are supported with optimal tiling
 * `buffer_features` &ndash; Use cases that are supported for buffers
 
+* `linear_tiling_features` &ndash; 支持线性平铺模式的用例
+* `optimal_tiling_features` &ndash; 支持最佳平铺模式的用例
+* `buffer_features` &ndash; 支持缓冲的用例
+
 Only the first two are relevant here, and the one we check depends on the value provided for the `tiling` parameter of the function:
+
+只有前两个与本章相关，我们根据 `tiling` 参数的值来检查其中的一个：
 
 ```rust,noplaypen
 match tiling {
@@ -271,6 +292,8 @@ match tiling {
 ```
 
 We'll use this function now to create a `get_depth_format` helper function to select a format with a depth component that supports usage as depth attachment:
+
+现在我们将使用这个函数来创建一个 `get_depth_format` 辅助函数，以选择一个支持用作深度附件的深度分量格式：
 
 ```rust,noplaypen
 unsafe fn get_depth_format(instance: &Instance, data: &AppData) -> Result<vk::Format> {
@@ -292,11 +315,15 @@ unsafe fn get_depth_format(instance: &Instance, data: &AppData) -> Result<vk::Fo
 
 Call the function to find a depth format from `create_depth_objects`:
 
+从 `create_depth_objects` 调用该函数来选择深度格式：
+
 ```rust,noplaypen
 let format = get_depth_format(instance, data)?;
 ```
 
 We now have all the required information to invoke our `^create_image` and `^create_image_view` helper functions:
+
+现在我们已经有了调用 `create_image` 和 `create_image_view` 辅助函数所需的所有信息：
 
 ```rust,noplaypen
 let (depth_image, depth_image_memory) = create_image(
@@ -321,6 +348,8 @@ data.depth_image_view = create_image_view(device, data.depth_image, format)?;
 
 However, the `^create_image_view` function currently assumes that the subresource always uses `vk::ImageAspectFlags::COLOR`, so we will need to turn that field into a parameter:
 
+然而，`create_image_view` 函数目前假设子资源总是使用 `vk::ImageAspectFlags::COLOR`，因此我们需要将该字段变成一个参数：
+
 ```rust,noplaypen
 unsafe fn create_image_view(
     device: &Device,
@@ -340,6 +369,8 @@ unsafe fn create_image_view(
 ```
 
 Update all calls to this function to use the right aspect:
+
+更新所有调用点，使用正确的 aspect：
 
 ```rust,noplaypen
 create_image_view(device, *i, data.swapchain_format, vk::ImageAspectFlags::COLOR)
@@ -365,11 +396,17 @@ data.texture_image_view = create_image_view(
 
 That's it for creating the depth image. We don't need to map it or copy another image to it, because we're going to clear it at the start of the render pass like the color attachment.
 
-### Explicitly transitioning the depth image
+创建深度图像就是这样。我们不需要映射它或将另一个图像复制到它，因为我们将在渲染通道的开始处清除它，就像颜色附件一样。
+
+### 显式转换深度图像
 
 We don't need to explicitly transition the layout of the image to a depth attachment because we'll take care of this in the render pass. However, for completeness I'll still describe the process in this section. You may skip it if you like.
 
+我们不需要显式地将图像的布局转换为深度附件，因为我们将在渲染通道中处理这个问题。然而，为了完整起见，我仍然会在本节中描述这个过程。如果你愿意，你可以跳过它。
+
 Make a call to `transition_image_layout` at the end of the `create_depth_objects` function like so:
+
+在 `create_depth_objects` 函数的最后，像这样调用 `transition_image_layout`：
 
 ```rust,noplaypen
 transition_image_layout(
@@ -383,6 +420,8 @@ transition_image_layout(
 ```
 
 The undefined layout can be used as initial layout, because there are no existing depth image contents that matter. We need to update some of the logic in `transition_image_layout` to use the right subresource aspect:
+
+未定义布局可以被作为初始布局，因为深度图像中没有需要考虑的现有内容。我们需要更新 `transition_image_layout` 中的一些逻辑，以使用正确的子资源 aspect：
 
 ```rust,noplaypen
 let aspect_mask = if new_layout == vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL {
@@ -405,7 +444,11 @@ let subresource = vk::ImageSubresourceRange::builder()
 
 Although we're not using the stencil component, we do need to include it in the layout transitions of the depth image.
 
+尽管我们没有用到模板分量，我们仍然需要在深度图像的布局转换中包含它。
+
 Finally, add the correct access masks and pipeline stages:
+
+最后，添加正确的访问掩码和管线阶段：
 
 ```rust,noplaypen
 let (
@@ -426,9 +469,13 @@ let (
 
 The depth buffer will be read from to perform depth tests to see if a fragment is visible, and will be written to when a new fragment is drawn. The reading happens in the `vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS` stage and the writing in the `vk::PipelineStageFlags::LATE_FRAGMENT_TESTS`. You should pick the earliest pipeline stage that matches the specified operations, so that it is ready for usage as depth attachment when it needs to be.
 
-## Render pass
+深度缓冲会被读取并进行深度测试来判断片元是否可见，并且当绘制新片元时会被写入。读取发生在 `vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS` 阶段，写入发生在 `vk::PipelineStageFlags::LATE_FRAGMENT_TESTS` 阶段。你应该选择最早的管线阶段来匹配指定的操作，这样就能确保深度图像在需要作为深度附件使用时已经就绪。
+
+## 渲染流程
 
 We're now going to modify `^create_render_pass` to include a depth attachment. First specify the `vk::AttachmentDescription`:
+
+我们将修改 `create_render_pass` 函数来包含一个深度附件。首先指定 `vk::AttachmentDescription`：
 
 ```rust,noplaypen
 let depth_stencil_attachment = vk::AttachmentDescription::builder()
@@ -444,6 +491,8 @@ let depth_stencil_attachment = vk::AttachmentDescription::builder()
 
 The `format` should be the same as the depth image itself. This time we don't care about storing the depth data (`store_op`), because it will not be used after drawing has finished. This may allow the hardware to perform additional optimizations. Just like the color buffer, we don't care about the previous depth contents, so we can use `vk::ImageLayout::UNDEFINED` as `initial_layout`.
 
+`format` 字段应该与深度图像的格式相同。这次我们不关心存储深度数据（`store_op`），因为在绘制完成后它将不会被使用。这可能允许硬件执行额外的优化。就像颜色缓冲一样，我们不关心之前的深度内容，所以我们可以使用 `vk::ImageLayout::UNDEFINED` 作为 `initial_layout`。
+
 ```rust,noplaypen
 let depth_stencil_attachment_ref = vk::AttachmentReference::builder()
     .attachment(1)
@@ -451,6 +500,8 @@ let depth_stencil_attachment_ref = vk::AttachmentReference::builder()
 ```
 
 Add a reference to the attachment for the first (and only) subpass:
+
+在第一个（也是唯一一个）子流程中添加对深度附件的引用：
 
 ```rust,noplaypen
 let subpass = vk::SubpassDescription::builder()
@@ -460,6 +511,8 @@ let subpass = vk::SubpassDescription::builder()
 ```
 
 Unlike color attachments, a subpass can only use a single depth (+stencil) attachment. It wouldn't really make any sense to do depth tests on multiple buffers.
+
+不同于颜色附件的是，一个子流程只能使用一个深度（以及模板）附件。在多个缓冲上进行深度测试没有任何意义。
 
 ```rust,noplaypen
 let attachments = &[color_attachment, depth_stencil_attachment];
@@ -472,6 +525,8 @@ let info = vk::RenderPassCreateInfo::builder()
 ```
 
 Next, update the `vk::RenderPassCreateInfo` struct to refer to both attachments.
+
+接着，更新 `vk::RenderPassCreateInfo` 结构体，引用两个附件。
 
 ```rust,noplaypen
 let dependency = vk::SubpassDependency::builder()
@@ -488,9 +543,14 @@ let dependency = vk::SubpassDependency::builder()
 
 Finally, we need to extend our subpass dependencies to make sure that there is no conflict between the transitioning of the depth image and it being cleared as part of its load operation. The depth image is first accessed in the early fragment test pipeline stage and because we have a load operation that *clears*, we should specify the access mask for writes.
 
-## Framebuffer
+<!-- TODO(chuigda): double check this -->
+最后我们需要扩展我们的子流程依赖，以确保深度图像的转换和它作为加载操作的一部分被清除之间没有冲突。深度图像首先在早期片元测试管线阶段被访问，因为我们有一个*清除*的加载操作，所以我们应该为写入指定访问掩码。
+
+## 帧缓冲
 
 The next step is to modify the framebuffer creation to bind the depth image to the depth attachment. Go to `create_framebuffers` and specify the depth image view as second attachment:
+
+下一步是修改帧缓冲的创建，将深度图像绑定到深度附件。转到 `create_framebuffers`，将深度图像视图指定为第二个附件：
 
 ```rust,noplaypen
 let attachments = &[*i, data.depth_image_view];
@@ -504,7 +564,11 @@ let create_info = vk::FramebufferCreateInfo::builder()
 
 The color attachment differs for every swapchain image, but the same depth image can be used by all of them because only a single subpass is running at the same time due to our semaphores.
 
+每个交换链图像都有各自的颜色附件，但是由于我们的信号量，因为同一时间只有一个子流程在运行，因此所有交换链图像都可以使用同一个深度图像。
+
 You'll also need to move the call to `create_framebuffers` to make sure that it is called after the depth image view has actually been created:
+
+你还需要移动对 `create_framebuffers` 的调用，以确保它在深度图像视图实际创建后被调用：
 
 ```rust,noplaypen
 unsafe fn create(window: &Window) -> Result<Self> {
@@ -515,9 +579,11 @@ unsafe fn create(window: &Window) -> Result<Self> {
 }
 ```
 
-## Clear values
+## 清除值
 
 Because we now have multiple attachments with `vk::AttachmentLoadOp::CLEAR`, we also need to specify multiple clear values. Go to `create_command_buffers` and add an instance of `vk::ClearValue` to the `clear_values` array:
+
+因为现在我们有多个具有 `vk::AttachmentLoadOp::CLEAR` 的附件，所以我们也需要指定多个清除值。转到 `create_command_buffers`，并在 `clear_values` 数组中添加一个 `vk::ClearValue` 实例：
 
 ```rust,noplaypen
 let color_clear_value = vk::ClearValue {
@@ -538,11 +604,17 @@ let clear_values = &[color_clear_value, depth_clear_value];
 
 The range of depths in the depth buffer is `0.0` to `1.0` in Vulkan, where `1.0` lies at the far view plane and `0.0` at the near view plane. The initial value at each point in the depth buffer should be the furthest possible depth, which is `1.0`.
 
+深度缓冲中的深度值范围是 `0.0` 到 `1.0`，其中 `1.0` 位于远平面，`0.0` 位于近平面。深度缓冲中每个点的初始值应该是最远的深度，即 `1.0`。
+
 Note that the order of `clear_values` should be identical to the order of your attachments.
 
-## Depth and stencil state
+注意 `clear_values` 的顺序应该与你的附件的顺序相同。
+
+## 深度与模板状态
 
 The depth attachment is ready to be used now, but depth testing still needs to be enabled in the graphics pipeline. It is configured through the `vk::PipelineDepthStencilStateCreateInfo` struct:
+
+深度附件现在已经可以使用了，但是深度测试仍然需要在图形管线中启用。它通过 `vk::PipelineDepthStencilStateCreateInfo` 结构体进行配置：
 
 ```rust,noplaypen
 let depth_stencil_state = vk::PipelineDepthStencilStateCreateInfo::builder()
@@ -553,11 +625,15 @@ let depth_stencil_state = vk::PipelineDepthStencilStateCreateInfo::builder()
 
 The `depth_test_enable` field specifies if the depth of new fragments should be compared to the depth buffer to see if they should be discarded. The `depth_write_enable` field specifies if the new depth of fragments that pass the depth test should actually be written to the depth buffer.
 
+`depth_test_enable` 字段指定新片元的深度是否应该与深度缓冲进行比较，以判断它们是否应该被丢弃。`depth_write_enable` 字段指定通过深度测试的片元的新深度是否应该被写入深度缓冲。
+
 ```rust,noplaypen
     .depth_compare_op(vk::CompareOp::LESS)
 ```
 
 The `depth_compare_op` field specifies the comparison that is performed to keep or discard fragments. We're sticking to the convention of lower depth = closer, so the depth of new fragments should be *less*.
+
+`depth_compare_op` 字段指定用于决定保留还是丢弃片元的比较方式。我们坚持使用较低的深度 = 更近的约定，因此新片元的深度应该是*较低的*。
 
 ```rust,noplaypen
     .depth_bounds_test_enable(false)
@@ -567,6 +643,8 @@ The `depth_compare_op` field specifies the comparison that is performed to keep 
 
 The `depth_bounds_test_enable`, `min_depth_bounds` and `max_depth_bounds` fields are used for the optional depth bound test. Basically, this allows you to only keep fragments that fall within the specified depth range. We won't be using this functionality.
 
+`depth_bounds_test_enable`、`min_depth_bounds` 和 `max_depth_bounds` 字段用于可选的深度范围测试。简单来说，这允许你只保留落在指定深度范围内的片元。我们不会使用这个功能。
+
 ```rust,noplaypen
     .stencil_test_enable(false)
     .front(/* vk::StencilOpState */) // Optional.
@@ -574,6 +652,8 @@ The `depth_bounds_test_enable`, `min_depth_bounds` and `max_depth_bounds` fields
 ```
 
 The last three fields configure stencil buffer operations, which we also won't be using in this tutorial. If you want to use these operations, then you will have to make sure that the format of the depth/stencil image contains a stencil component.
+
+最后三个字段配置模板缓冲操作，我们在本教程中也不会使用。如果你想使用这些操作，那么你必须确保深度/模板图像的格式包含模板分量。
 
 ```rust,noplaypen
 let info = vk::GraphicsPipelineCreateInfo::builder()
@@ -592,13 +672,19 @@ let info = vk::GraphicsPipelineCreateInfo::builder()
 
 Update the `vk::GraphicsPipelineCreateInfo` struct to reference the depth stencil state we just filled in. A depth stencil state must always be specified if the render pass contains a depth stencil attachment.
 
+更新 `vk::GraphicsPipelineCreateInfo` 结构体，引用我们刚刚填充的深度模板状态。如果渲染通道包含深度模板附件，则总是需要指定深度模板状态。
+
 If you run your program now, then you should see that the fragments of the geometry are now correctly ordered:
+
+如果你现在运行程序，你应该会看到几何体的片元现在被正确排序了：
 
 ![](../images/depth_correct.png)
 
-## Handling window resize
+## 处理窗口大小变化
 
 The resolution of the depth buffer should change when the window is resized to match the new color attachment resolution. Extend the `App::recreate_swapchain` method to recreate the depth resources in that case:
+
+当窗口大小改变时，深度缓冲的分辨率应该改变，以匹配新的颜色附件分辨率。在这种情况下，扩展 `App::recreate_swapchain` 方法来重新创建深度资源：
 
 ```rust,noplaypen
 unsafe fn recreate_swapchain(&mut self, window: &Window) -> Result<()> {
@@ -620,6 +706,8 @@ unsafe fn recreate_swapchain(&mut self, window: &Window) -> Result<()> {
 
 The cleanup operations should happen in the swapchain cleanup function:
 
+清理操作应该在交换链清理函数中发生：
+
 ```rust,noplaypen
 unsafe fn destroy_swapchain(&mut self) {
     self.device.destroy_image_view(self.data.depth_image_view, None);
@@ -630,3 +718,5 @@ unsafe fn destroy_swapchain(&mut self) {
 ```
 
 Congratulations, your application is now finally ready to render arbitrary 3D geometry and have it look right. We're going to try this out in the next chapter by drawing a textured model!
+
+恭喜，你的应用程序现在终于可以正确地渲染任意的 3D 几何体了。我们将在下一章中通过绘制一个带纹理的模型尝试这项功能！
