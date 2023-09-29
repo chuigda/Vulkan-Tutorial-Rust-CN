@@ -133,6 +133,7 @@ command,名词,Vulkan概念,函数,"Vulkan API 中的函数，例如 vkCreateGra
 uniform buffer object,名词,Vulkan概念,uniform 缓冲对象,注意我们不翻译 uniform 这个词,,
 descriptor set,名词,Vulkan概念,描述符集合,,,
 descriptor set layout,名词,Vulkan概念,描述符集合布局,,,
+combined image sampler,名词,Vulkan概念,组合图像采样器,,,
 ,,,,,,
 C style,形容词,C语言概念,类 C,,GLSL is a shading language with a C-style syntax,
 null-terminated C string,名词,C语言概念,以空字符结尾的C字符串,,,
