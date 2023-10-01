@@ -261,7 +261,7 @@ The `border_color` field specifies which color is returned when sampling beyond 
 
 The `unnormalized_coordinates` field specifies which coordinate system you want to use to address texels in an image. If this field is `true`, then you can simply use coordinates within the `[0, width)` and `[0, height)` range. If it is `false`, then the texels are addressed using the `[0, 1)` range on all axes. Real-world applications almost always use normalized coordinates, because then it's possible to use textures of varying resolutions with the exact same coordinates.
 
-`unnormalized_coordinates` 字段指定了你想要使用哪种坐标系来寻址图像中的纹素。如果这个字段是 `true`，那么你可以简单地使用 `[0, width)` 和 `[0, height)` 范围内的坐标。如果是 `false`，那么纹素将使用所有轴上的 `[0, 1)` 范围来寻址。现实世界中的应用几乎总是使用标准化坐标，因为这样就可以用完全相同的坐标使用不同分辨率的纹理。
+`unnormalized_coordinates` 字段指定了你是否要使用未标准化的坐标系来寻址图像中的纹素。如果这个字段是 `true`，那么你可以简单地使用 `[0, width)` 和 `[0, height)` 范围内的坐标。如果是 `false`，那么纹素将在所有轴上使用 `[0, 1)` 范围来寻址。现实世界中的应用几乎总是使用标准化坐标，因为这样就可以用完全相同的坐标使用不同分辨率的纹理。
 
 ```rust,noplaypen
     .compare_enable(false)
