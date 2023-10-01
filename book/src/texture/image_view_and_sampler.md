@@ -8,13 +8,13 @@
 
 In this chapter we're going to create two more resources that are needed for the graphics pipeline to sample an image. The first resource is one that we've already seen before while working with the swapchain images, but the second one is new - it relates to how the shader will read texels from the image.
 
-在本章中，我们将会创建两个新的资源，这些资源是图形管线中采样图像所必需的。第一个资源我们在之前使用交换链图像时已经见过了，但是第二个资源是全新的，它与着色器如何从图像中读取像素有关。
+在本章中，我们将会创建两个新的图形管线中采样图像所必须的资源。第一个资源我们在之前使用交换链图像时已经见过了，但是第二个资源是全新的，它与着色器如何从图像中读取像素有关。
 
 ## 纹理图像视图
 
 We've seen before, with the swapchain images and the framebuffer, that images are accessed through image views rather than directly. We will also need to create such an image view for the texture image.
 
-正如我们之前在交换链图像和帧缓冲中所见，图像不能直接访问，而是要通过图像视图来访问。我们也需要为纹理图像创建这样的图像视图。
+正如我们之前在交换链图像和帧缓冲中所见到的，图像不能直接访问，而是要通过图像视图来访问。我们也需要为纹理图像创建这样的图像视图。
 
 Add an `AppData` field to hold a `vk::ImageView` for the texture image and create a new function `create_texture_image_view` where we'll create it:
 
@@ -145,7 +145,7 @@ unsafe fn destroy(&mut self) {
 
 It is possible for shaders to read texels directly from images, but that is not very common when they are used as textures. Textures are usually accessed through samplers, which will apply filtering and transformations to compute the final color that is retrieved.
 
-着色器可以直接从图像中读取纹素，但当图像被用作纹理时，这种做法并不常见。纹理通常是通过采样器访问的，采样器会应用过滤和变换来计算最终的颜色。
+着色器可以直接从图像中读取像素，但当图像被用作纹理时，这种做法并不常见。纹理通常是通过采样器访问的，采样器会应用过滤和变换来计算最终的颜色。
 
 These filters are helpful to deal with problems like oversampling. Consider a texture that is mapped to geometry with more fragments than texels. If you simply took the closest texel for the texture coordinate in each fragment, then you would get a result like the first image:
 
@@ -155,7 +155,7 @@ These filters are helpful to deal with problems like oversampling. Consider a te
 
 If you combined the 4 closest texels through linear interpolation, then you would get a smoother result like the one on the right. Of course your application may have art style requirements that fit the left style more (think Minecraft), but the right is preferred in conventional graphics applications. A sampler object automatically applies this filtering for you when reading a color from the texture.
 
-如果你用线性插值结合了最近的 4 个纹素，那么你会得到一个更平滑的结果，如右图所示。当然，你的应用程序可能有更适合左图风格的艺术风格要求（想想 Minecraft），但是在传统的图形应用程序中，右图更受欢迎。当从纹理中读取颜色时，采样器对象会自动为你应用这种过滤。
+如果你用线性插值结合了最近的 4 个纹素，那么你会得到一个更平滑的结果，如右图所示。当然，左图可能更适合你的应用程序的艺术风格要求（想想 Minecraft），但是在传统的图形应用程序中，右图更受欢迎。当从纹理中读取颜色时，采样器对象会自动为你应用这种过滤。
 
 Undersampling is the opposite problem, where you have more texels than fragments. This will lead to artifacts when sampling high frequency patterns like a checkerboard texture at a sharp angle:
 
@@ -175,7 +175,7 @@ Aside from these filters, a sampler can also take care of transformations. It de
 
 We will now create a function `create_texture_sampler` to set up such a sampler object. We'll be using that sampler to read colors from the texture in the shader later on.
 
-现在我们创建一个 `create_texture_sampler` 函数来设置一个采样器对象。之后我们会在着色器中使用这个采样器来从纹理中读取颜色。
+现在我们创建一个 `create_texture_sampler` 函数来设置一个这样的采样器对象。之后我们会在着色器中使用这个采样器来从纹理中读取颜色。
 
 ```rust,noplaypen
 impl App {
@@ -206,7 +206,7 @@ let info = vk::SamplerCreateInfo::builder()
 
 The `mag_filter` and `min_filter` fields specify how to interpolate texels that are magnified or minified. Magnification concerns the oversampling problem describes above, and minification concerns undersampling. The choices are `vk::Filter::NEAREST` and `vk::Filter::LINEAR`, corresponding to the modes demonstrated in the images above.
 
-`mag_filter` 和 `min_filter` 字段指定了如何插值放大或缩小的纹素。放大涉及上面描述的采样过密问题，而缩小涉及到采样过疏。选择项是 `vk::Filter::NEAREST` 和 `vk::Filter::LINEAR`，对应于上面图像中演示的模式。
+`mag_filter` 和 `min_filter` 字段指定了如何插值放大或缩小的纹素。放大涉及上面描述的采样过密问题，而缩小涉及到采样过疏。选择项是 `vk::Filter::NEAREST` 和 `vk::Filter::LINEAR`，对应上面图像中演示的模式。
 
 ```rust,noplaypen
     .mipmap_mode(vk::SamplerMipmapMode::LINEAR)
@@ -231,12 +231,12 @@ The addressing mode can be specified per axis using the `address_mode` fields. T
 * `vk::SamplerAddressMode::REPEAT` &ndash; 超出图像尺寸时重复纹理。
 * `vk::SamplerAddressMode::MIRRORED_REPEAT` &ndash; 类似于重复，但是在超出尺寸时反转坐标以镜像图像。
 * `vk::SamplerAddressMode::CLAMP_TO_EDGE` &ndash; 超出图像尺寸时取最接近坐标的边缘的颜色。
-* `vk::SamplerAddressMode::MIRROR_CLAMP_TO_EDGE` &ndash; 类似于 clamp to edge，但是使用最接近边缘的相反边缘。
+* `vk::SamplerAddressMode::MIRROR_CLAMP_TO_EDGE` &ndash; 类似于 clamp to edge，但是使用与最接近边缘相反的边缘。
 * `vk::SamplerAddressMode::CLAMP_TO_BORDER` &ndash; 超出图像尺寸时返回一个纯色。
 
 It doesn't really matter which addressing mode we use here, because we're not going to sample outside of the image in this tutorial. However, the repeat mode is probably the most common mode, because it can be used to tile textures like floors and walls.
 
-这里我们用什么寻址模式都无所谓，因为在本教程中我们不会采样到图像外面。不过，重复模式可能是最常见的模式，因为它可以用来平铺纹理，比如地板和墙壁。
+这里我们用什么寻址模式都无所谓，因为在本教程中我们不会采样到图像外面。不过，重复模式可能是最常见的模式，因为它可以被用来在绘制像地板和墙壁这样的物体时平铺纹理。
 
 ```rust,noplaypen
     .anisotropy_enable(true)
@@ -245,7 +245,7 @@ It doesn't really matter which addressing mode we use here, because we're not go
 
 These two fields specify if anisotropic filtering should be used. There is no reason not to use this unless performance is a concern. The `max_anisotropy` field limits the amount of texel samples that can be used to calculate the final color. A lower value results in better performance, but lower quality results. There is no graphics hardware available today that will use more than 16 samples, because the difference is negligible beyond that point.
 
-如果要使用各向异性过滤，我们需要指定两个字段。除非遇到了性能问题，不然没理由不启用各向异性过滤。`max_anisotropy` 字段限制了用于计算最终颜色的纹素样本的数量。将其设为较低的值能带来更好的性能，但也会降低渲染的质量。目前没有任何图形硬件会使用超过 16 个样本，因为就算使用了超过这个数量的样本，也不会有什么区别。
+如果要使用各向异性过滤，我们需要指定两个字段。除非遇到了性能问题，不然没理由不启用各向异性过滤。`max_anisotropy` 字段限制了用于计算最终颜色的纹素样本的数量。将其设为较低的值能带来更好的性能，但也会降低渲染的质量。目前没有任何图形硬件会使用超过 16 个样本，因为就算使用了超过这个数量的样本，带来的视觉提升也可以忽略。
 
 ```rust,noplaypen
     .border_color(vk::BorderColor::INT_OPAQUE_BLACK)
