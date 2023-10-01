@@ -217,12 +217,12 @@ unsafe fn create_depth_objects(
 
 Creating a depth image is fairly straightforward. It should have the same resolution as the color attachment, defined by the swapchain extent, an image usage appropriate for a depth attachment, optimal tiling and device local memory. The only question is: what is the right format for a depth image? The format must contain a depth component, indicated by `D??_` in the `vk::Format` variant.
 
-创建深度图像非常直观。它应该具有以下属性：由交换链范围定义的与颜色附件相同的分辨率、适用于深度附件的图像用法、最佳平铺模式、设备本地内存。唯一的问题是：深度图像的正确格式是什么？格式必须包含一个深度分量，由 `vk::Format` 变体中的 `D??_` 表示。
+创建深度图像非常直观。深度图像应该具有以下属性：由交换链范围定义的、与颜色附件相同的分辨率，适用于深度附件的图像用法，最佳平铺模式，并且存储在设备本地内存中。唯一的问题是：深度图像的正确格式是什么？格式必须包含一个深度分量，由 `vk::Format` 变体中的 `D??_` 表示。
 
 Unlike the texture image, we don't necessarily need a specific format, because we won't be directly accessing the texels from the program. It just needs to have a reasonable accuracy, at least 24 bits is common in real-world applications. There are several formats that fit this requirement:
 
 <!-- 这里不使用术语 texel，因为上下文里其实没提到 texture -->
-不同于纹理图像的是，我们并不一定需要一个特定的像素格式，因为我们不会直接在程序中访问深度图像中的像素。深度图像中的像素只要有一个合理的精度就行。现实世界中的应用程序通常都使用至少 24 位的精度，有几种格式符合这个要求：
+不同于纹理图像的是，我们并不需要一个特定的像素格式，因为我们不会直接在程序中访问深度图像中的像素。深度图像中的像素只要有一个合理的精度就行。现实世界中的应用程序通常都使用至少 24 位的精度，有几种格式符合这个要求：
 
 * `vk::Format::D32_SFLOAT` &ndash; 32-bit float for depth
 * `vk::Format::D32_SFLOAT_S8_UINT` &ndash; 32-bit signed float for depth and 8 bit stencil component
@@ -372,7 +372,7 @@ unsafe fn create_image_view(
 
 Update all calls to this function to use the right aspect:
 
-更新所有调用点，使用正确的 aspect：
+更新所有调用点，传递正确的 `aspects`：
 
 ```rust,noplaypen
 create_image_view(device, *i, data.swapchain_format, vk::ImageAspectFlags::COLOR)
@@ -404,7 +404,7 @@ That's it for creating the depth image. We don't need to map it or copy another 
 
 We don't need to explicitly transition the layout of the image to a depth attachment because we'll take care of this in the render pass. However, for completeness I'll still describe the process in this section. You may skip it if you like.
 
-我们不需要显式地将图像的布局转换为深度附件，因为我们将在渲染通道中处理这个问题。然而，为了完整起见，我仍然会在本节中描述这个过程。如果你愿意，你可以跳过它。
+我们不需要显式地将图像的布局转换为深度附件，因为我们将在渲染流程中处理这个问题。然而，为了完整起见，我仍然会在本节中描述这个过程。如果你愿意，你可以跳过它。
 
 Make a call to `transition_image_layout` at the end of the `create_depth_objects` function like so:
 
