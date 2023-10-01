@@ -8,7 +8,7 @@
 
 The geometry we've worked with so far is projected into 3D, but it's still completely flat. In this chapter we're going to add a Z coordinate to the position to prepare for 3D meshes. We'll use this third coordinate to place a square over the current square to see a problem that arises when geometry is not sorted by depth.
 
-我们的几何图形已经被投影到了三维空间中，但到目前为止它还是完全扁平的。在本章中我们会为位置添加一个 Z 坐标，以为 3D 网格做准备。我们将使用这第三个坐标来将一个正方形放在当前正方形上方，以查看当几何图形没有按深度排序时会出现的问题。
+我们的几何图形已经被投影到了三维空间中，但到目前为止它还是完全扁平的。在本章中我们会为位置添加一个 Z 坐标，以为 3D 网格做准备。我们将使用这第三个坐标来将一个正方形放在当前正方形上方，以观察当几何图形没有按深度排序时会出现的问题。
 
 ## 3D 几何图形
 
@@ -80,7 +80,7 @@ void main() {
 
 Lastly, update the `vertices` container to include Z coordinates:
 
-最后，更新 `vertices` 来包含 Z 坐标：
+最后，更新 `VERTICES` 来包含 Z 坐标：
 
 ```rust,noplaypen
 static VERTICES: [Vertex; 4] = [
@@ -121,9 +121,11 @@ const INDICES: &[u16] = &[
 
 Run your program now and you'll see something resembling an Escher illustration:
 
-运行程序，你会看到类似于艾舍尔的插图：
+运行程序，你会看到类似于埃舍尔（Escher）艺术作品的图像：
 
 ![](../images/depth_issues.png)
+
+> 译注：[莫里茨·科内利斯·埃舍尔](https://zh.wikipedia.org/zh-cn/%E8%8E%AB%E9%87%8C%E8%8C%A8%C2%B7%E7%A7%91%E5%86%85%E5%88%A9%E6%96%AF%C2%B7%E5%9F%83%E8%88%8D%E5%B0%94) 是荷兰著名版画艺术家，因其视错觉艺术作品而闻名。
 
 The problem is that the fragments of the lower square are drawn over the fragments of the upper square, simply because it comes later in the index array. There are two ways to solve this:
 
