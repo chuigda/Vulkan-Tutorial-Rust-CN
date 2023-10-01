@@ -63,7 +63,7 @@
 # 渲染质量
 
 - [Generating mipmaps](./quality/generating_mipmaps.md)
-- [Multisampling](./quality/multisampling.md)
+- [多重采样](./quality/multisampling.md)
 
 # 动态场景
 
