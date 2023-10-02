@@ -8,7 +8,7 @@
 
 Our program can now load multiple levels of detail for textures which fixes artifacts when rendering objects far away from the viewer. The image is now a lot smoother, however on closer inspection you will notice jagged saw-like patterns along the edges of drawn geometric shapes. This is visible in one of our early programs when we rendered a quad:
 
-现在我们的程序为纹理加载多个细节级别了，这能修复渲染远离观察者的物体时的伪影。图像现在更加平滑了，但是如果仔细观察，你会发现在几何形状的边缘有锯齿状的图案。这在我们早期的程序中就能看到，当我们渲染一个四边形时：
+现在我们的程序为纹理加载了多个细节级别，这能修复渲染远离观察者的物体时的伪影。图像现在更加平滑了，但是如果仔细观察，你会发现在几何形状的边缘有锯齿状的图案。这在我们早期的程序中就能看到，当我们渲染一个四边形时：
 
 ![](../images/texcoord_visualization.png)
 
@@ -325,8 +325,6 @@ unsafe fn create_render_pass(
 You'll notice that we have changed the finalLayout from `vk::ImageLayout::PRESENT_SRC_KHR` to `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL`. That's because multisampled images cannot be presented directly. We first need to resolve them to a regular image. This requirement does not apply to the depth buffer, since it won't be presented at any point. Therefore we will have to add only one new attachment for color which is a so-called resolve attachment:
 
 你会注意到我们已经将 `final_layout` 从 `vk::ImageLayout::PRESENT_SRC_KHR` 改为了 `vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL`。这是因为多重采样图像不能直接呈现。我们首先需要将它们解析为普通图像。这个要求不适用于深度缓冲区，因为它不会在任何时候被呈现。因此，我们只需要为颜色添加一个新的附件，这是一个所谓的解析附件：
-
-```rust,noplaypen
 
 ```rust,noplaypen
 let color_resolve_attachment = vk::AttachmentDescription::builder()
