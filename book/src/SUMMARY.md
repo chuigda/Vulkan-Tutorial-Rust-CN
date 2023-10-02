@@ -57,12 +57,12 @@
 
 # 模型
 
-- [Depth buffering](./model/depth_buffering.md)
+- [深度缓冲](./model/depth_buffering.md)
 - [Loading models](./model/loading_models.md)
 
 # 渲染质量
 
-- [Generating mipmaps](./quality/generating_mipmaps.md)
+- [生成多级渐远](./quality/generating_mipmaps.md)
 - [多重采样](./quality/multisampling.md)
 
 # 动态场景
