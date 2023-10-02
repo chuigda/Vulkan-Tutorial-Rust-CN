@@ -35,7 +35,7 @@ For this tutorial I've decided to go with the [Viking room](https://sketchfab.co
 
 > **Note:** The `.obj` and `.png` files that are included in this tutorial may not be identical to the original files. Make sure you use the files from this tutorial (and beyond that, the `.obj` and `.png` files may also differ from the files used in the [original C++ tutorial](https://vulkan-tutorial.com)).
 
-> **注意：**本教程中包含的 `.obj` 和 `.png` 文件可能与原始文件不同。请确保使用本教程中的文件（除此之外，`.obj` 和 `.png` 文件也可能与[原始 C++ 教程](https://vulkan-tutorial.com)中使用的文件不同）。
+> **注意：**本教程中包含的 `.obj` 和 `.png` 文件可能与原始文件不同（并且可能也与[原始 C++ 教程](https://vulkan-tutorial.com)中使用的文件不同）。请确保使用本教程中的文件。
 
 Feel free to use your own model, but make sure that it only consists of one material and that is has dimensions of about 1.5 x 1.5 x 1.5 units. If it is larger than that, then you'll have to change the view matrix. Put the model file and texture image in the `resources` directory.
 
@@ -43,7 +43,7 @@ Feel free to use your own model, but make sure that it only consists of one mate
 
 Update `create_texture_image` to use this path variable:
 
-更新 `create_texture_image` 以使用这个路径变量：
+更新 `create_texture_image` 以从这个路径加载图像：
 
 ```rust,noplaypen
 let image = File::open("resources/viking_room.png")?;
@@ -133,7 +133,7 @@ fn load_model(data: &mut AppData) -> Result<()> {
 
 A model is loaded into the crate's data structures by calling the `tobj::load_obj_buf` function:
 
-通过调用 `tobj::load_obj_buf` 函数将模型加载到 `tobj` crate 的数据结构中：
+调用 `tobj::load_obj_buf` 函数来将模型加载到 `tobj` crate 的数据结构中：
 
 ```rust,noplaypen
 let mut reader = BufReader::new(File::open("resources/viking_room.obj")?);
@@ -159,11 +159,11 @@ The second `tobj::load_obj_buf` parameter specifies options for processing the l
 
 The third `tobj::load_obj_buf` parameter is a callback used to load any materials referenced in the OBJ file. As we are not interested in the materials, we just return an empty material.
 
-`tobj::load_obj_buf` 的第三个参数是一个回调，用于加载 OBJ 文件中引用的任何材质。由于我们对材质不感兴趣，所以我们只返回一个空材质。
+`tobj::load_obj_buf` 的第三个参数是一个回调，用于加载 OBJ 文件中引用的材质。我们对材质不感兴趣，所以我们只返回一个空材质。
 
 We're going to combine all of the faces in the file into a single model, so just iterate over all of the shapes:
 
-我们将把文件中的所有面组合成一个模型，所以只需遍历所有形状：
+我们将把文件中的所有面组合成一个模型，所以我们遍历所有模型：
 
 ```rust,noplaypen
 for model in &models {
@@ -246,7 +246,7 @@ All that hard work is finally beginning to pay off with a demo like this!
 
 Unfortunately we're not really taking advantage of the index buffer yet. The `vertices` vector contains a lot of duplicated vertex data, because many vertices are included in multiple triangles. We should keep only the unique vertices and use the index buffer to reuse them whenever they come up. A straightforward way to implement this is to use a `HashMap` to keep track of the unique vertices and respective indices:
 
-不幸的是，我们还没有真正地因索引缓冲而获得收益。`vertices` 现在包含了大量重复的顶点数据，因为许多顶点都被包含在多个三角形中。我们应该只保留唯一一个顶点，并使用索引缓冲区在它们出现时重用它们。要实现这一点，一种直接的方法是使用 `HashMap` 来跟踪唯一的顶点和相应的索引：
+不幸的是，我们还没有真正地从索引缓冲中获益。`vertices` 现在包含了大量重复的顶点数据，因为许多顶点都被包含在多个三角形中。我们应该只保留唯一一个顶点，并使用索引缓冲区在它们出现时重用它们。要实现这一点，一种直接的方法是使用 `HashMap` 来跟踪唯一的顶点和相应的索引：
 
 ```rust,noplaypen
 let mut unique_vertices = HashMap::new();
