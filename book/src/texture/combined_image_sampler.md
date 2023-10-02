@@ -8,7 +8,7 @@
 
 We looked at descriptors for the first time in the uniform buffers part of the tutorial. In this chapter we will look at a new type of descriptor: *combined image sampler*. This descriptor makes it possible for shaders to access an image resource through a sampler object like the one we created in the previous chapter.
 
-我们在 uniform 缓冲部分第一次认识了描述符。在本章中我们将看到一种新的描述符类型：*组合图像采样器*。这种描述符使得着色器可以通过像我们在上一章中创建的采样器对象来访问图像资源。
+我们在 uniform 缓冲部分第一次认识了描述符。在本章中我们将看到一种新的描述符：*组合图像采样器*。这种描述符使得着色器可以通过像我们在上一章中创建的采样器对象来访问图像资源。
 
 We'll start by modifying the descriptor set layout, descriptor pool and descriptor set to include such a combined image sampler descriptor. After that, we're going to add texture coordinates to `Vertex` and modify the fragment shader to read colors from the texture instead of just interpolating the vertex colors.
 
@@ -34,7 +34,7 @@ let info = vk::DescriptorSetLayoutCreateInfo::builder()
 
 Make sure to set the `stage_flags` to indicate that we intend to use the combined image sampler descriptor in the fragment shader. That's where the color of the fragment is going to be determined. It is possible to use texture sampling in the vertex shader, for example to dynamically deform a grid of vertices by a [heightmap](https://en.wikipedia.org/wiki/Heightmap).
 
-记得设置 `stage_flags` 以指示我们将会在片元着色器中使用组合图像采样器描述符。这是片元的颜色将会被确定的地方。在顶点着色器中使用纹理采样是可能的，例如通过[高度图](https://en.wikipedia.org/wiki/Heightmap)动态地变形顶点网格。
+记得将 `stage_flags` 设为 `vk::ShaderStageFlags::FRAGMENT`，以指示我们将会在片元着色器中使用组合图像采样器描述符 —— 这是片元的颜色将会被确定的地方。在顶点着色器中使用纹理采样是可能的，例如通过[高度图](https://en.wikipedia.org/wiki/Heightmap)动态地变形顶点网格。
 
 We must also create a larger descriptor pool to make room for the allocation of the combined image sampler by adding another `vk::DescriptorPoolSize` of type `vk::DescriptorType::COMBINED_IMAGE_SAMPLER` to the `vk::DescriptorPoolCreateInfo`. Go to the `^create_descriptor_pool` function and modify it to include a `vk::DescriptorPoolSize` for this descriptor:
 
@@ -179,7 +179,7 @@ void main() {
 
 Just like the per vertex colors, the `fragTexCoord` values will be smoothly interpolated across the area of the square by the rasterizer. We can visualize this by having the fragment shader output the texture coordinates as colors:
 
-和逐顶点颜色异样，`fragTexCoord` 值也会被光栅化器在正方形区域内平滑插值。我们可以通过让片元着色器将纹理坐标作为颜色输出来可视化这一点：
+和逐顶点颜色一样，`fragTexCoord` 值也会被光栅化器在正方形区域内平滑插值。我们可以通过让片元着色器将纹理坐标作为颜色输出来可视化这一点：
 
 ```glsl
 #version 450
@@ -242,7 +242,7 @@ void main() {
 
 You can also manipulate the texture colors using the vertex colors:
 
-你也可以用定点颜色来改变纹理颜色：
+你也可以用顶点颜色来改变纹理颜色：
 
 ```glsl
 void main() {
