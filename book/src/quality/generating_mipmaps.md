@@ -214,7 +214,7 @@ transition_image_layout(
 
 Our texture image now has multiple mip levels, but the staging buffer can only be used to fill mip level 0. The other levels are still undefined. To fill these levels we need to generate the data from the single level that we have. We will use the `cmd_blit_image` command. This command performs copying, scaling, and filtering operations. We will call this multiple times to *blit* data to each level of our texture image.
 
-现在我们的纹理图像有多个多级渐远级别了，但是暂存缓冲区只能用来填充级别 0。其他级别仍然是未定义的。要填充这些级别，我们需要从我们拥有的单个级别生成数据。我们将使用 `cmd_blit_image` 命令。这个命令执行复制、缩放和过滤操作。我们将多次调用它来将数据*blit*到我们纹理图像的每个级别。
+现在我们的纹理图像有多个多级渐远级别了，但目前为止我们只用暂存缓冲区填充了级别 0。其他级别仍然是未定义的。要填充这些级别，我们需要从我们拥有的单个级别生成数据。我们将使用 `cmd_blit_image` 命令。这个命令执行复制、缩放和过滤操作。我们将多次调用它来将数据*blit*到我们纹理图像的每个级别。
 
 `cmd_blit_image` is considered a transfer operation, so we must inform Vulkan that we intend to use the texture image as both the source and destination of a transfer. Add `vk::ImageUsageFlags::TRANSFER_SRC` to the texture image's usage flags in `create_texture_image`:
 
@@ -524,7 +524,7 @@ There are two alternatives in the case where this is not supported. You could im
 
 It should be noted that it is uncommon in practice to generate the mipmap levels at runtime anyway. Usually they are pregenerated and stored in the texture file alongside the base level to improve loading speed. Implementing resizing in software and loading multiple levels from a file is left as an exercise to the reader.
 
-应该指出的是，在实践中，通常不会在运行时生成多级渐远级别。通常，它们是预先生成的，并与基础级别一起存储在纹理文件中，以提高加载速度。在软件中实现调整大小并从文件加载多个级别的功能留给读者作为练习。
+应该指出的是，在实践中，程序通常不会在运行时生成多级渐远级别。通常，它们是预先生成的，并与基础级别一起存储在纹理文件中，以提高加载速度。在软件中实现调整大小并从文件加载多个级别的功能留给读者作为练习。
 
 ## 采样器
 
@@ -550,7 +550,7 @@ let color = if mipmap_mode == vk::SamplerMipmapMode::NEAREST {
 
 If `sampler_info.mipmap_mode` is `vk::SamplerMipmapMode::NEAREST`, `lod` selects the mip level to sample from. If the mipmap mode is `vk::SamplerMipmapMode::LINEAR`, `lod` is used to select two mip levels to be sampled. Those levels are sampled and the results are linearly blended.
 
-如果 `sampler_info.mipmap_mode`（多级渐远模式）是 `vk::SamplerMipmapMode::NEAREST`，则 `lod` 选择要从中采样的多级渐远级别。如果多级渐远模式是 `vk::SamplerMipmapMode::LINEAR`，则 `lod` 用于选择要采样的两个mip级别，对这些级别进行采样，并对结果线性混合。
+如果 `sampler_info.mipmap_mode`（多级渐远模式）是 `vk::SamplerMipmapMode::NEAREST`，则 `lod` 会选择一个用于采样的多级渐远级别。如果多级渐远模式是 `vk::SamplerMipmapMode::LINEAR`，则 `lod` 用于选择要采样的两个多级渐远级别，对这些级别进行采样，并对结果线性混合。
 
 The sample operation is also affected by `lod`:
 
