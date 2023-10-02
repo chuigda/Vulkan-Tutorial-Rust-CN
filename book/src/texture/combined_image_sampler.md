@@ -14,7 +14,7 @@ We'll start by modifying the descriptor set layout, descriptor pool and descript
 
 首先我们修改描述符集合布局、描述符池以及描述符集合，使其包含一个组合图像采样器描述符。然后我们将在 `Vertex` 中添加纹理坐标，并修改片元着色器，使其从纹理中读取颜色而不是仅仅插值顶点颜色。
 
-## Updating the descriptors
+## 更新描述符
 
 Browse to the `^create_descriptor_set_layout` function and add a `vk::DescriptorSetLayoutBinding` for a combined image sampler descriptor. We'll simply put it in the binding after the uniform buffer:
 
