@@ -67,7 +67,7 @@
 
 # 动态场景
 
-- [Push constants](./dynamic/push_constants.md)
+- [推送常量](./dynamic/push_constants.md)
 - [Recycling command buffers](./dynamic/recycling_command_buffers.md)
 - [Secondary command buffers](./dynamic/secondary_command_buffers.md)
 
