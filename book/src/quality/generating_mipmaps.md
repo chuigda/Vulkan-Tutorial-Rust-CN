@@ -12,7 +12,7 @@ Our program can now load and render 3D models. In this chapter, we will add one 
 
 Mipmaps are precalculated, downscaled versions of an image. Each new image is half the width and height of the previous one.  Mipmaps are used as a form of *Level of Detail* or *LOD.* Objects that are far away from the camera will sample their textures from the smaller mip images. Using smaller images increases the rendering speed and avoids artifacts such as [Moiré patterns](https://en.wikipedia.org/wiki/Moir%C3%A9_pattern). An example of what mipmaps look like:
 
-多级渐远是预先计算好的、缩小过的图像。每个新图像的宽度和高度都是上一个图像的一半。多级渐远被用作*细节级别*或*LOD*的一种形式。远离相机的物体将从较小的多级渐远图像中采样它们的纹理。使用较小的图像可以提高渲染速度并避免诸如[摩尔纹](https://en.wikipedia.org/wiki/Moir%C3%A9_pattern)之类的伪像。下面是多级渐远的一个例子：
+多级渐远是预先计算好的、缩小过的图像。每个新图像的宽度和高度都是上一个图像的一半。多级渐远被用作*细节级别（Level of Detail, LOD）*一种形式。远离相机的物体将从较小的多级渐远图像中采样它们的纹理。使用较小的图像可以提高渲染速度并避免诸如[摩尔纹](https://en.wikipedia.org/wiki/Moir%C3%A9_pattern)之类的伪像。下面是多级渐远的一个例子：
 
 ![](../images/mipmaps_example.jpg)
 
@@ -24,7 +24,7 @@ In Vulkan, each of the mip images is stored in different *mip levels* of a `vk::
 
 The number of mip levels is specified when the `vk::Image` is created. Up until now, we have always set this value to one. We need to calculate the number of mip levels from the dimensions of the image. First, add an `AppData` field to store this number:
 
-多级渐远级别的数量在创建 `vk::Image` 时指定。到目前为止，我们总是将这个值设置为 1。我们需要根据图像的尺寸计算多级渐远级别的数量。首先，在 `AppData` 中添加一个字段来存储这个数字：
+多级渐远级别的数量在创建 `vk::Image` 时指定。到目前为止，我们总是将这个值设置为 1，而现在我们需要根据图像的尺寸计算多级渐远级别的数量。首先，在 `AppData` 中添加一个字段来存储这个数字：
 
 ```rust,noplaypen
 struct AppData {
@@ -37,7 +37,7 @@ struct AppData {
 
 The value for `mip_levels` can be found once we've loaded the texture in `create_texture_image`:
 
-`mip_levels` 的值可以在我们在 `create_texture_image` 中加载纹理后被计算出来：
+`mip_levels` 的值可以在 `create_texture_image` 中加载纹理后被计算出来：
 
 ```rust,noplaypen
 let image = File::open("resources/viking_room.png")?;
@@ -52,11 +52,11 @@ data.mip_levels = (width.max(height) as f32).log2().floor() as u32 + 1;
 
 This calculates the number of levels in the mip chain. The `max` method selects the largest dimension. The `log2` method calculates how many times that dimension can be divided by 2. The `floor` method handles cases where the largest dimension is not a power of 2. `1` is added so that the original image has a mip level.
 
-这个计算了多级渐远链中的级别数量。`max` 方法选择长和宽中更大的那个。`log2` 方法计算该维度可以被 2 整除的次数。`floor` 方法处理该维度不是 2 的幂的情况。最后为了让原始图像也有一个多级渐远级别，我们加上 `1`。
+这个表达式计算了多级渐远链中的级别数量。`max` 方法选择长和宽中更大的维度。`log2` 方法计算该维度可以被 2 整除的次数。`floor` 方法处理该维度不是 2 的幂的情况。最后为了让原始图像也有一个多级渐远级别，我们加上 `1`。
 
 To use this value, we need to change the `^create_image`, `^create_image_view`, and `transition_image_layout` functions to allow us to specify the number of mip levels. Add a `mip_levels` parameter to the functions:
 
-为了使用这个值，我们需要改变 `create_image`、`create_image_view` 和 `transition_image_layout` 函数，以允许我们指定多级渐远级别的数量。在这些函数中添加一个 `mip_levels` 参数：
+要使用这个值，我们需要修改 `create_image`、`create_image_view` 和 `transition_image_layout` 函数，以允许我们指定多级渐远级别的数量。在这些函数中添加一个 `mip_levels` 参数：
 
 ```rust,noplaypen
 unsafe fn create_image(
@@ -124,7 +124,7 @@ Update all calls to these functions to use the right values:
 
 > Note: Be sure to use a value of `1` for all of the images and image views except the image and image view that is for the texture.
 
-> 注意：确保对除纹理图像和图像视图之外的所有图像和图像视图使用 `1`。
+> 注意：确保对除纹理之外的所有图像和图像视图使用 `1`。
 
 ```rust,noplaypen
 let (depth_image, depth_image_memory) = create_image(
@@ -218,7 +218,7 @@ Our texture image now has multiple mip levels, but the staging buffer can only b
 
 `cmd_blit_image` is considered a transfer operation, so we must inform Vulkan that we intend to use the texture image as both the source and destination of a transfer. Add `vk::ImageUsageFlags::TRANSFER_SRC` to the texture image's usage flags in `create_texture_image`:
 
-`cmd_blit_image` 被认为是一个传输操作，所以我们必须告诉 Vulkan 我们打算将纹图像用作传输源和传输目标。在 `create_texture_image` 中，将 `vk::ImageUsageFlags::TRANSFER_SRC` 添加到纹理图像的用法标志中：
+`cmd_blit_image` 被视为一个传输操作，所以我们必须告诉 Vulkan 我们打算将纹理图像用作传输源和传输目标。在 `create_texture_image` 中，将 `vk::ImageUsageFlags::TRANSFER_SRC` 添加到纹理图像的用法标志中：
 
 ```rust,noplaypen
 let (texture_image, texture_image_memory) = create_image(
@@ -243,7 +243,7 @@ Like other image operations, `cmd_blit_image` depends on the layout of the image
 
 `transition_image_layout` only performs layout transitions on the entire image, so we'll need to write a few more pipeline barrier commands. Remove the existing transition to `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` in `create_texture_image`.
 
-`transition_image_layout` 只对整个图像执行布局转换，所以我们需要写几个额外的管线屏障命令。在 `create_texture_image` 中删除对 `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` 的现有转换。
+`transition_image_layout` 只对整个图像执行布局转换，所以我们需要再写几个管线屏障命令。在 `create_texture_image` 中删除现有的将图像转换到 `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` 的操作。
 
 This will leave each level of the texture image in `vk::ImageLayout::TRANSFER_DST_OPTIMAL`. Each level will be transitioned to `vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL` after the blit command reading from it is finished.
 
@@ -416,7 +416,7 @@ if mip_height > 1 {
 
 At the end of the loop, we divide the current mip dimensions by two. We check each dimension before the division to ensure that dimension never becomes 0. This handles cases where the image is not square, since one of the mip dimensions would reach 1 before the other dimension. When this happens, that dimension should remain 1 for all remaining levels.
 
-在循环结束时，我们将当前的多级渐远维度除以 2。我们在除法之前检查每个维度，以确保该维度永远不会变为 0。这处理了图像不是正方形的情况，因为其中一个多级渐远维度会在另一个维度之前达到 1。当这种情况发生时，该维度应该保持 1，直到所有剩余的级别。
+在循环体结束时，我们将当前的多级渐远维度除以 2。我们在除法之前检查每个维度，以确保该维度永远不会变为 0。这处理了图像不是正方形的情况，因为如果图像不是正方形，其中一个多级渐远维度会在另一个维度之前达到 1。当这种情况发生时，在剩下的级别中该维度应该保持 1。
 
 ```rust,noplaypen
 barrier.subresource_range.base_mip_level = mip_levels - 1;
@@ -524,7 +524,7 @@ There are two alternatives in the case where this is not supported. You could im
 
 It should be noted that it is uncommon in practice to generate the mipmap levels at runtime anyway. Usually they are pregenerated and stored in the texture file alongside the base level to improve loading speed. Implementing resizing in software and loading multiple levels from a file is left as an exercise to the reader.
 
-应该指出的是，在实践中，通常不会在运行时生成多级渐远级别。通常，它们是预先生成的，并与基本级别一起存储在纹理文件中，以提高加载速度。在软件中实现调整大小并从文件加载多个级别的功能留给读者作为练习。
+应该指出的是，在实践中，通常不会在运行时生成多级渐远级别。通常，它们是预先生成的，并与基础级别一起存储在纹理文件中，以提高加载速度。在软件中实现调整大小并从文件加载多个级别的功能留给读者作为练习。
 
 ## 采样器
 
@@ -550,7 +550,7 @@ let color = if mipmap_mode == vk::SamplerMipmapMode::NEAREST {
 
 If `sampler_info.mipmap_mode` is `vk::SamplerMipmapMode::NEAREST`, `lod` selects the mip level to sample from. If the mipmap mode is `vk::SamplerMipmapMode::LINEAR`, `lod` is used to select two mip levels to be sampled. Those levels are sampled and the results are linearly blended.
 
-如果 `sampler_info.mipmap_mode` 是 `vk::SamplerMipmapMode::NEAREST`，`lod` 选择要从中采样的多级渐远级别。如果多级渐远模式是 `vk::SamplerMipmapMode::LINEAR`，`lod` 用于选择要采样的两个多级渐远级别。这些级别被采样，结果被线性混合。
+如果 `sampler_info.mipmap_mode`（多级渐远模式）是 `vk::SamplerMipmapMode::NEAREST`，则 `lod` 选择要从中采样的多级渐远级别。如果多级渐远模式是 `vk::SamplerMipmapMode::LINEAR`，则 `lod` 用于选择要采样的两个mip级别，对这些级别进行采样，并对结果线性混合。
 
 The sample operation is also affected by `lod`:
 
@@ -566,11 +566,11 @@ let color = if lod <= 0 {
 
 If the object is close to the camera, `mag_filter` is used as the filter. If the object is further from the camera, `min_filter` is used. Normally, `lod` is non-negative, and is only 0 when close the camera. `mip_lod_bias` lets us force Vulkan to use lower `lod` and `level` than it would normally use.
 
-如果物体靠近相机，`mag_filter` 被用作过滤器。如果物体离相机更远，`min_filter` 被用作过滤器。通常，`lod` 是非负的，只有在靠近相机时才是 0。`mip_lod_bias` 让我们强制 Vulkan 使用比它通常使用的更低的 `lod` 和 `level`。
+如果物体靠近相机，`mag_filter` 将被用作过滤器。如果物体离相机更远，`min_filter` 将被用作过滤器。通常，`lod` 是非负的，只有在靠近相机时才是 0。`mip_lod_bias` 让我们强制 Vulkan 使用比它通常使用的更低的 `lod` 和 `level`。
 
 To see the results of this chapter, we need to choose values for our `texture_sampler`. We've already set the `min_filter` and `mag_filter` to use `vk::Filter::LINEAR`. We just need to choose values for `min_lod`, `max_lod`, `mip_lod_bias`, and `mipmap_mode`.
 
-为了看到本章代码的效果，我们需要设置 `texture_sampler` 的值。我们已经将 `min_filter` 和 `mag_filter` 设置为使用 `vk::Filter::LINEAR`，现在我们只需要设置 `min_lod`、`max_lod`、`mip_lod_bias` 和 `mipmap_mode`。
+为了看到本章代码的效果，我们需要设置 `texture_sampler` 的字段。我们之前已经将 `min_filter` 和 `mag_filter` 设置为 `vk::Filter::LINEAR`，现在我们只需要设置 `min_lod`、`max_lod`、`mip_lod_bias` 和 `mipmap_mode`。
 
 ```rust,noplaypen
 unsafe fn create_texture_sampler(device: &Device, data: &mut AppData) -> Result<()> {
