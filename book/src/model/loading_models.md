@@ -147,7 +147,7 @@ let (models, _) = tobj::load_obj_buf(
 
 An OBJ file consists of positions, normals, texture coordinates and faces. Faces consist of an arbitrary amount of vertices, where each vertex refers to a position, normal and/or texture coordinate by index. This makes it possible to not just reuse entire vertices, but also individual attributes.
 
-OBJ 文件由位置、法线、纹理坐标和面组成。面由任意数量的顶点组成，其中每个顶点通过索引引用位置、法线和/或纹理坐标。这使得不仅可以重用整个顶点，还可以重用单个属性。
+OBJ 文件由位置、法线、纹理坐标和面组成。面由任意数量的顶点组成，其中每个顶点通过索引引用位置、法线和/或纹理坐标。这使得 OBJ 文件中的面不仅可以重用整个顶点，还可以重用顶点的单个属性。
 
 `tobj::load_obj_buf` returns a `Vec` of models and a `Vec` of materials. We are not interested in the materials, only the models, so the returned materials are ignored with `_`.
 
