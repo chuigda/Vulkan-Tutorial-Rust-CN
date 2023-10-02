@@ -68,7 +68,7 @@
 # 动态场景
 
 - [Push constants](./dynamic/push_constants.md)
-- [Recycling command buffers](./dynamic/recycling_command_buffers.md)
+- [重用指令缓冲](./dynamic/recycling_command_buffers.md)
 - [Secondary command buffers](./dynamic/secondary_command_buffers.md)
 
 # 总结
