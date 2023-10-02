@@ -14,7 +14,7 @@ Our program can now load multiple levels of detail for textures which fixes arti
 
 This undesired effect is called "aliasing" and it's a result of a limited numbers of pixels that are available for rendering. Since there are no displays out there with unlimited resolution, it will be always visible to some extent. There's a number of ways to fix this and in this chapter we'll focus on one of the more popular ones: [multisample anti-aliasing](https://en.wikipedia.org/wiki/Multisample_anti-aliasing) (MSAA).
 
-这种我们不希望看到的效果被称为“锯齿”（aliasing），它是由于渲染可用的像素数量有限造成的。因为没有显示器的分辨率是无限的，所以它总是会在某种程度上可见。有很多方法可以修复这个问题，在本章中我们将会专注于其中一个比较流行的方法：[多重采样抗锯齿](https://en.wikipedia.org/wiki/Multisample_anti-aliasing)（multisample anti-aliasing, MSAA）。
+这种我们不希望看到的效果被称为“锯齿”（aliasing），它是由于渲染可用的像素数量有限造成的。因为没有显示器的分辨率是无限的，所以锯齿总是会在某种程度上可见。有很多方法可以修复这个问题，在本章中我们将会专注于其中一个比较流行的方法：[多重采样抗锯齿](https://en.wikipedia.org/wiki/Multisample_anti-aliasing)（multisample anti-aliasing, MSAA）。
 
 In ordinary rendering, the pixel color is determined based on a single sample point which in most cases is the center of the target pixel on screen. If part of the drawn line passes through a certain pixel but doesn't cover the sample point, that pixel will be left blank, leading to the jagged "staircase" effect.
 
@@ -49,7 +49,7 @@ struct AppData {
 
 By default we'll be using only one sample per pixel which is equivalent to no multisampling, in which case the final image will remain unchanged. The exact maximum number of samples can be extracted from `vk::PhysicalDeviceProperties` associated with our selected physical device. We're using a depth buffer, so we have to take into account the sample count for both color and depth. The highest sample count that is supported by both (&) will be the maximum we can support. Add a function that will fetch this information for us:
 
-默认情况下，我们将每个像素使用一个样本，相当于没有多重采样，这种情况下最终图像将保持不变。最大样本数可以从与我们选择的物理设备相关联的 `vk::PhysicalDeviceProperties` 中提取。我们使用了深度缓冲，因此我们必须考虑将颜色和深度的样本数都考虑在内。两者都支持的最高样本数（使用 `&` 运算符）将是我们可以支持的最大样本数。添加一个函数来获取这些信息：
+默认情况下，我们为每个像素使用一个样本，相当于没有多重采样，这种情况下最终图像将保持不变。最大样本数可以从与我们选择的物理设备相关联的 `vk::PhysicalDeviceProperties` 中提取。我们使用了深度缓冲，因此我们必须考虑将颜色和深度的样本数都考虑在内。两者都支持的最高样本数（使用 `&` 运算符）将是我们可以支持的最大样本数。添加一个函数来获取这些信息：
 
 ```rust,noplaypen
 unsafe fn get_max_msaa_samples(
@@ -457,6 +457,6 @@ unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
 
 In this example we'll leave sample shading disabled but in certain scenarios the quality improvement may be noticeable:
 
-在这个例子中，我们将禁用采样着色。但在某些情况下，采样着色可以带来显著的质量提升：
+在这个例子中，我们将采样着色保持禁用。但在某些情况下，采样着色可以带来显著的质量提升：
 
 ![](../images/sample_shading.png)
