@@ -24,7 +24,7 @@ We will use the [`tobj`](https://crates.io/crates/tobj) crate to load vertices a
 
 In this chapter we won't be enabling lighting yet, so it helps to use a sample model that has lighting baked into the texture. An easy way to find such models is to look for 3D scans on [Sketchfab](https://sketchfab.com/). Many of the models on that site are available in OBJ format with a permissive license.
 
-在本章中我们不会启用光照，所以最好使用一个纹理上已经烘焙好光照的示例模型。查找这样的模型的简单方法是在 [Sketchfab](https://sketchfab.com/) 上寻找 3D 扫描模型。该网站上的许多模型都以 OBJ 格式提供，并且有宽松的许可证。
+在本章中我们不会启用光照，所以最好使用一个纹理上已经烘焙好光照的示例模型。查找这样的模型的一个简单方法是在 [Sketchfab](https://sketchfab.com/) 上寻找 3D 扫描模型。该网站上的许多模型都以 OBJ 格式提供，并且有宽松的许可证。
 
 For this tutorial I've decided to go with the [Viking room](https://sketchfab.com/3d-models/viking-room-a49f1b8e4f5c4ecf9e1fe7d81915ad38) model by [nigelgoh](https://sketchfab.com/nigelgoh) ([CC BY 4.0](https://web.archive.org/web/20200428202538/https://sketchfab.com/3d-models/viking-room-a49f1b8e4f5c4ecf9e1fe7d81915ad38)). I tweaked the size and orientation of the model to use it as a drop in replacement for the current geometry:
 
