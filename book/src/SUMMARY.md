@@ -73,4 +73,4 @@
 
 # 总结
 
-- [Conclusion](./conclusion.md)
+- [总结](./conclusion.md)
