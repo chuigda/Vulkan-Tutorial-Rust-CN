@@ -53,7 +53,7 @@
 
 - [图像](./texture/images.md)
 - [图像视图与采样器](./texture/image_view_and_sampler.md)
-- [Combined image sampler](./texture/combined_image_sampler.md)
+- [组合图像采样器](./texture/combined_image_sampler.md)
 
 # 模型
 
