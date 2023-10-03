@@ -34,11 +34,11 @@ let info = vk::DescriptorSetLayoutCreateInfo::builder()
 
 Make sure to set the `stage_flags` to indicate that we intend to use the combined image sampler descriptor in the fragment shader. That's where the color of the fragment is going to be determined. It is possible to use texture sampling in the vertex shader, for example to dynamically deform a grid of vertices by a [heightmap](https://en.wikipedia.org/wiki/Heightmap).
 
-记得将 `stage_flags` 设为 `vk::ShaderStageFlags::FRAGMENT`，以指示我们将会在片元着色器中使用组合图像采样器描述符 —— 这是片元的颜色将会被确定的地方。在顶点着色器中使用纹理采样是可能的，例如通过[高度图](https://en.wikipedia.org/wiki/Heightmap)动态地变形顶点网格。
+记得将 `stage_flags` 设为 `vk::ShaderStageFlags::FRAGMENT`，以指示我们将会在片元着色器中使用组合图像采样器描述符 —— 这是片元的颜色将会被确定的地方。在顶点着色器中使用纹理采样是可能的，例如通过[高度图](https://en.wikipedia.org/wiki/Heightmap)动态地改变顶点网格的形状。
 
 We must also create a larger descriptor pool to make room for the allocation of the combined image sampler by adding another `vk::DescriptorPoolSize` of type `vk::DescriptorType::COMBINED_IMAGE_SAMPLER` to the `vk::DescriptorPoolCreateInfo`. Go to the `^create_descriptor_pool` function and modify it to include a `vk::DescriptorPoolSize` for this descriptor:
 
-我们必须创建一个更大的描述符池，在 `vk::DescriptorPoolCreateInfo` 中添加另一个 `vk::DescriptorType::COMBINED_IMAGE_SAMPLER` 类型的 `vk::DescriptorPoolSize`，从而为组合图像采样器的分配腾出空间。转到 `create_descriptor_pool` 函数并修改它以包含此描述符的 `vk::DescriptorPoolSize`：
+我们必须创建一个更大的描述符池，在 `vk::DescriptorPoolCreateInfo` 中添加另一个 `vk::DescriptorType::COMBINED_IMAGE_SAMPLER` 类型的 `vk::DescriptorPoolSize`，从而为组合图像采样器的分配腾出空间。转到 `create_descriptor_pool` 函数，为组合图像采样器描述符添加一个 `vk::DescriptorPoolSize`：
 
 ```rust,noplaypen
 let sampler_size = vk::DescriptorPoolSize::builder()
