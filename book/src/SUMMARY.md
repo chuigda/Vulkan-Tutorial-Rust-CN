@@ -68,7 +68,7 @@
 # 动态场景
 
 - [推送常量](./dynamic/push_constants.md)
-- [Recycling command buffers](./dynamic/recycling_command_buffers.md)
+- [重用指令缓冲](./dynamic/recycling_command_buffers.md)
 - [次级指令缓冲](./dynamic/secondary_command_buffers.md)
 
 # 总结
