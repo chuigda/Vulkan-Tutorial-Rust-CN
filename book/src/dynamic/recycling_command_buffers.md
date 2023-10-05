@@ -241,7 +241,7 @@ unsafe fn update_command_buffer(&mut self, image_index: usize) -> Result<()> {
 
 You could now run the program and see that the program works exactly like it did before, but if you do don't leave it running for too long! You may have already noticed that we aren't freeing the previous command buffer before we allocate a new one. If you observe the memory usage of our program after this change you'll see the memory usage start rising alarmingly fast as we rapidly collect thousands of derelict command buffers that are never recycled.
 
-现在你可以运行程序，你会发现程序的运行效果和之前完全一样，但是如果你不停地运行它，就会发现问题了！你可能已经注意到了，在分配新的指令缓冲之前，我们并没有释放之前的指令缓冲。如果你观察这个修改后的程序的内存使用情况，你会发现内存使用量会迅速上升，因为很快就会出现数千个被遗弃的指令缓冲，而这些指令缓冲永远不会被回收。
+现在你可以运行程序，你会发现程序的运行效果和之前完全一样，但是如果你让它多运行一会，就会发现问题了！你可能已经注意到了，在分配新的指令缓冲之前，我们并没有释放之前的指令缓冲。如果你观察这个修改后的程序的内存使用情况，你会发现内存使用量迅速上升，因为很快就会出现数千个被遗弃的指令缓冲，而这些指令缓冲永远不会被回收。
 
 Return the memory used by the previous command buffer to the command pool by freeing it at the beginning of `update_command_buffer`.
 
