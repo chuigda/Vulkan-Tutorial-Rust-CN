@@ -213,7 +213,7 @@ self.device.begin_command_buffer(command_buffer, &info)?;
 
 You might recall we've used this flag before, there should already be a usage of this flag in the `begin_single_time_commands` function. This flag isn't required by Vulkan for correctness if you are only using command buffers once before resetting or freeing them, but this knowledge may allow the Vulkan driver to better optimize its handling of our single-use command buffers.
 
-你可能还记得我们之前使用过这个标志。我们在 `begin_single_time_commands` 函数中已经使用过这个标志了。如果你只在重置或释放指令缓冲之前使用一次指令缓冲，Vulkan 并不要求使用这个标志，但是如果有了这个信息，Vulkan 驱动或许能更好地优化对我们只使用一次的指令缓冲的处理。
+你可能还记得我们之前在 `begin_single_time_commands` 函数中使用过这个标志。Vulkan 并不强制要求使用这个标志，但如果你只在重置或释放指令缓冲之前使用一次指令缓冲，有了这个标志提供的信息，Vulkan 驱动或许能更好地优化对一次性指令缓冲的处理。
 
 ### 2. 重新分配指令缓冲
 
