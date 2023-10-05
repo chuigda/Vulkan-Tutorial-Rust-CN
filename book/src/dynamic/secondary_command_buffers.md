@@ -16,7 +16,7 @@ While our program now submits different commands to be executed every frame, we 
 
 We'll accomplish this using *secondary command buffers*, a Vulkan feature that allows us to build re-usable sequences of commands and then execute those commands from *primary command buffers*. Secondary command buffers aren't at all necessary to implement this change, but our first time rendering multiple things is a good time to introduce them.
 
-我们将通过*次级指令缓冲*来实现这个功能。*次级指令缓冲*是一个 Vulkan 特性，可以用来构建可重用的命令序列，然后从*主指令缓冲*中执行这些命令。次级指令缓冲并不是实现这个功能的必要条件，但是我们第一次渲染多个物体的时候，正好可以介绍一下它。
+我们将运用*次级指令缓冲*来实现这个功能。*次级指令缓冲*是一个 Vulkan 特性，可以用来构建可重用的命令序列，然后我们就可以从*主指令缓冲*中执行这些命令。实现这个功能并不是一定要使用次级指令缓冲，但是这是我们第一次渲染多个物体，正好可以介绍一下它。
 
 ## 主指令缓冲 vs 次级指令缓冲
 
@@ -37,7 +37,7 @@ The usage of secondary command buffers offers two primary advantages:
 
 Both of these points are true for primary command buffers as well, but primary command buffers have a significant limitation that effectively prevents them from fulfilling these use cases. Multiple primary command buffers may not be executed within the same render pass instance meaning that if you wanted to execute multiple primary command buffers for a frame, each primary command buffer would need to start with `cmd_begin_render_pass` and end with `cmd_end_render_pass`.
 
-这两点对主指令缓冲也是成立的，但是主指令缓冲有一个重大的限制，导致它不能利用这些优势。多个主指令缓冲无法在同一个渲染流程中执行，也就是说如果你想在一帧中执行多个主指令缓冲，每个主指令缓冲都需要以 `cmd_begin_render_pass` 开始，以 `cmd_end_render_pass` 结束。
+这两点对主指令缓冲也是成立的，但是主指令缓冲有一个重大的限制，导致它不能利用这些优势。多个主指令缓冲无法在同一个渲染流程中同时执行，也就是说如果你想在一帧中执行多个主指令缓冲，每个主指令缓冲都需要以 `cmd_begin_render_pass` 开始，以 `cmd_end_render_pass` 结束。
 
 This might not sound like a big deal but beginning a render pass instance can be a pretty heavyweight operation and needing to do this many times per frame can destroy performance on some hardware. Secondary command buffers avoid this problem by being able to inherit the render pass instance as well as other state from the primary command buffer it is called from.
 
@@ -47,7 +47,7 @@ This might not sound like a big deal but beginning a render pass instance can be
 
 Let's get started by adding a field to `AppData` that will contain our new secondary command buffers. We will have multiple secondary command buffers per frame, one for each model instance we are rendering, so this will be a list of lists.
 
-我们从给 `AppData` 添加一个字段开始，这个字段将包含我们新的次级指令缓冲。我们每一帧都会有多个次级指令缓冲，每个次级指令缓冲都对应一个我们正在渲染的模型实例，所以这将是一个列表的列表。
+我们从给 `AppData` 添加一个字段开始，这个字段将包含我们新的次级指令缓冲。我们每一帧都会有多个次级指令缓冲，每个次级指令缓冲都对应一个我们正在渲染的模型实例，所以这个字段是一个列表的列表。
 
 ```rust,noplaypen
 struct AppData {
@@ -132,11 +132,11 @@ self.device.begin_command_buffer(command_buffer, &info)?;
 
 As mentioned previously, secondary command buffers can inherit some state from the primary command buffers they are executed from. This inheritance info describes the command buffer state the secondary command buffer will be compatible with and may validly inherit.
 
-正如我们之前所提到的，次级指令缓冲可以从执行它的主指令缓冲那里继承一些状态。这个继承信息描述了次级指令缓冲将与之兼容并且可以合法继承的指令缓冲状态。
+正如我们之前所提到的，次级指令缓冲可以从执行它的主指令缓冲那里继承一些状态。这个继承信息描述了次级指令缓冲将与哪些指令缓冲状态兼容，并合法地继承它们。
 
 The render pass and subpass index are *required* to inherit that state, but the framebuffer is only specified here as a potential performance boost. You may omit it, but Vulkan may be able to better optimize the secondary command buffer to render to the specified framebuffer.
 
-渲染流程和子流程索引是*必填*的，但是帧缓冲只是作为潜在的性能提升在这里指定。你可以省略它，但是 Vulkan 可能能够更好地优化次级指令缓冲以渲染到指定的帧缓冲。
+要继承指令缓冲状态，渲染流程和子流程索引是*必填项目*。而帧缓冲则是可选的，你可以省略它，但提供它的话 Vulkan 或许能够更好地优化次级指令缓冲。
 
 This isn't enough to actually inherit the render pass, we need to also provide `vk::CommandBufferUsageFlags::RENDER_PASS_CONTINUE` to `begin_command_buffer`. This tells Vulkan that this secondary command buffer will be executed entirely inside a render pass.
 
@@ -152,7 +152,7 @@ self.device.begin_command_buffer(command_buffer, &info)?;
 
 With inheritance set up, move the code that calculates the push constant values out of `App::update_command_buffer` and into `App::update_secondary_command_buffer` after the secondary command buffer is allocated. While you're at it, have the opacity of the model instance depend on the model index to add some variety to our scene, ranging from 25% to 100%.
 
-将计算推送常量值的代码从 `App::update_command_buffer` 移动到 `App::update_secondary_command_buffer`，放在次级指令缓冲分配之后。在此之际，让模型实例的不透明度取决于模型索引，以增加我们场景的多样性，范围从 25% 到 100%。
+将计算推送常量值的代码从 `App::update_command_buffer` 移动到 `App::update_secondary_command_buffer` 中分配次级指令缓冲之后。同时，让模型实例的不透明度取决于模型索引，范围从 25% 到 100%，以增加我们场景的多样性。
 
 ```rust,noplaypen
 unsafe fn update_secondary_command_buffer(
@@ -251,7 +251,7 @@ unsafe fn update_command_buffer(&mut self, image_index: usize) -> Result<()> {
 
 This change has invalidated our call to `cmd_begin_render_pass` because we are providing `vk::SubpassContents::INLINE` which indicates we will be recording rendering commands directly into the primary command buffer. Now that we've moved the rendering commands into the secondary command buffer, we need to use `vk::SubpassContents::SECONDARY_COMMAND_BUFFERS`.
 
-这个改变使我们的 `cmd_begin_render_pass` 调用失效了，因为我们提供了 `vk::SubpassContents::INLINE`，这表示我们将直接将渲染命令记录到主指令缓冲中。现在我们已经将渲染命令移动到了次级指令缓冲中，所以我们需要使用 `vk::SubpassContents::SECONDARY_COMMAND_BUFFERS`。
+这个改变使我们的 `cmd_begin_render_pass` 调用失效了，因为我们之前提供了 `vk::SubpassContents::INLINE`，这表示我们将直接将渲染命令记录到主指令缓冲中。现在我们已经将渲染命令移动到了次级指令缓冲中，因此我们需要改用 `vk::SubpassContents::SECONDARY_COMMAND_BUFFERS`。
 
 ```rust,noplaypen
 self.device.cmd_begin_render_pass(
@@ -326,7 +326,7 @@ With a better vantage point secured, run the program and bask in its glory.
 
 Let's knock it up a notch with a blast from our spice weasel by allowing the user to determine how many of these models they want to render. Add a `models` field to the `App` struct and initialize it to 1 in the constructor.
 
-让我们通过允许用户决定他们想要渲染多少个模型来提高一下难度。在构造函数中为 `App` 结构体添加一个 `models` 字段，并将其初始化为 1。
+让我们提高一下难度，允许用户决定他们想要渲染多少个模型。在构造函数中为 `App` 结构体添加一个 `models` 字段，并将其初始化为 1。
 
 ```rust,noplaypen
 struct App {
@@ -347,7 +347,7 @@ let secondary_command_buffers = (0..self.models)
 
 Now that we have all this in place, we just need to increment and decrement the `models` field in response to user input. Start by importing the following `winit` types we'll need to handle keyboard input.
 
-现在我们已经完成了所有的工作，我们只需要根据用户输入来增加和减少 `models` 字段。首先导入以下 `winit` 类型，我们将需要它们来处理键盘输入。
+现在我们只需要再根据用户输入来增加和减少 `models` 字段的值。首先导入以下 `winit` 类型，我们将需要它们来处理键盘输入。
 
 ```rust,noplaypen
 use winit::event::{ElementState, VirtualKeyCode};
@@ -381,4 +381,4 @@ Run the program and observe how the number of secondary command buffers we are a
 
 You should now be familiar with the basic tools you can use to efficiently render dynamic frames using Vulkan. There are many ways you can utilize these tools that each have different performance tradeoffs. Future tutorial chapters may explore this more in depth, but parallelizing the work of recording secondary command buffers using multiple threads is a common technique that usually results in significant performance wins on modern hardware.
 
-现在你应该已经熟悉了使用 Vulkan 高效渲染动态帧的基本工具。你可以使用这些工具的许多方法，每种方法都有不同的性能权衡。未来的教程章节可能会更深入地探讨这个问题，但是使用多个线程并行地记录次级指令缓冲的工作是一种常见的技术，通常可以在现代硬件上获得显著的性能提升。
+现在你应该已经熟悉了使用 Vulkan 高效渲染动态帧的基本工具。你可以通过多种方式使用这些工具，每种方式都有不同的性能权衡。未来的教程章节可能会更深入地探讨这个问题，但是使用多个线程并行地记录次级指令缓冲的工作是一种常见的技术，通常可以在现代硬件上获得显著的性能提升。
