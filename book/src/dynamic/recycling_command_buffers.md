@@ -223,8 +223,6 @@ Next we'll take a look at allocating new command buffers each frame.
 
 Replace the code used to reset the command buffer at the beginning of `update_command_buffer` with code that replaces the previous command buffer with a new command buffer.
 
-将 `update_command_buffer` 开头用来重置指令缓冲的代码替换为用新的指令缓冲替换之前的指令缓冲的代码。
-
 移除我们刚才在 `update_command_buffer` 开头重置指令缓冲的代码。添加以下代码，用新的指令缓冲替换旧的指令缓冲：
 
 ```rust,noplaypen
