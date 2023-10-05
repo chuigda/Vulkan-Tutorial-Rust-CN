@@ -6,7 +6,7 @@
 
 > <span style="display: flex; justify-content: center; margin-bottom: 16px"><img src="../images/i_have_no_idea_what_im_doing.jpg" width="256"></span>前面没有这个声明的章节都是直接从 <https://github.com/Overv/VulkanTutorial> 改编而来。<br/><br/>这一章和后面的章节都是原创，作者并不是 Vulkan 的专家。作者尽力保持了权威的语气，但是这些章节应该被视为一个 Vulkan 初学者的“尽力而为”。<br/><br/>如果你有问题、建议或者修正，请[提交 issue](https://github.com/KyleMayes/vulkanalia/issues)！
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/31_recycling_command_buffers.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/31_recycling_command_buffers.rs)
 
 当你分配指令缓冲并在其中记录指令的时候，Vulkan 会分配一块内存来存储指令缓冲的信息和已经记录到其中的指令。现在我们想要每一帧都记录不同的指令，我们需要回收这块内存，就像在 C 语言中我们需要在不再使用 `malloc` 分配的内存时使用 `free` 一样。
 

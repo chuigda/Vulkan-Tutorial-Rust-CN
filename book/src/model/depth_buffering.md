@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/26_depth_buffering.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/26/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/26/shader.frag)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/26_depth_buffering.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/26/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/26/shader.frag)
 
 我们的几何图形已经被投影到了三维空间中，但到目前为止它还是完全扁平的。在本章中我们会为位置添加一个 Z 坐标，以为 3D 网格做准备。我们将使用这第三个坐标来将一个正方形放在当前正方形上方，以观察当几何图形没有按深度排序时会出现的问题。
 

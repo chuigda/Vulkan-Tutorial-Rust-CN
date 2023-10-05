@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/19_staging_buffer.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/19_staging_buffer.rs)
 
 目前我们的顶点缓冲可以正常工作，但是能直接从 CPU 访问的内存对于从显卡读取而言可能并不是最优的。最优内存具有 `vk::MemoryPropertyFlags::DEVICE_LOCAL` 标志，通常位于独立显卡上，无法由 CPU 访问。在本章中，我们将创建两个顶点缓冲。首先是位于 CPU 可访问内存中的*暂存缓冲*，用于将顶点数组中的数据上传至其中；然后是位于设备本地内存中的最终顶点缓冲。接着，我们将使用缓冲复制指令将数据从暂存缓冲复制到实际的顶点缓冲中。
 

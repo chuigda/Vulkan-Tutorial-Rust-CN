@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/23_texture_image.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/23_texture_image.rs)
 
 我们已经使用了逐顶点颜色来为几何体上色，但这是一种相当受限的方法。在本章教程中，我们将实现纹理映射（texture mapping）来让几何体看上去更有趣。这也使得我们可以在后续的章节中加载并绘制出基础的 3D 模型。
 

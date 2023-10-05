@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/27_model_loading.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/27_model_loading.rs)
 
 现在你的程序已经可以渲染带纹理的 3D 网格了，但当前 `vertices` 和 `indices` 数组中的几何图形有些乏味。在本章中，我们将扩展程序，从一个实际的模型文件中加载顶点和索引，让显卡可以实际地做点事情。
 
@@ -69,7 +69,7 @@ device.cmd_bind_index_buffer(
 );
 ```
 
-你还需要更新 `create_index_buffer` 中索引缓冲区的大小：
+你还需要更新 `create_index_buffer` 中索引缓冲的大小：
 
 ```rust,noplaypen
 let size = (size_of::<u32>() * data.indices.len()) as u64;
@@ -83,7 +83,7 @@ use std::hash::{Hash, Hasher};
 use std::io::BufReader;
 ```
 
-我们现在要编写一个 `load_models` 函数，它将使用 `tobj` 库来从网格中获取顶点数据并填充 `vertices` 和 `indices` 字段。它应该在创建顶点和索引缓冲区之前的某个地方被调用：
+我们现在要编写一个 `load_models` 函数，它将使用 `tobj` 库来从网格中获取顶点数据并填充 `vertices` 和 `indices` 字段。它应该在创建顶点和索引缓冲之前的某个地方被调用：
 
 ```rust,noplaypen
 impl App {
@@ -188,7 +188,7 @@ tex_coord: vec2(
 
 ## 顶点去重
 
-不幸的是，我们还没有真正地从索引缓冲中获益。`vertices` 现在包含了大量重复的顶点数据，因为许多顶点都被多个三角形共用。我们应该只保留唯一一个顶点，并使用索引缓冲区重用它们。要实现这一点，一种直接的方法是使用 `HashMap` 来跟踪唯一的顶点和相应的索引：
+不幸的是，我们还没有真正地从索引缓冲中获益。`vertices` 现在包含了大量重复的顶点数据，因为许多顶点都被多个三角形共用。我们应该只保留唯一一个顶点，并使用索引缓冲重用它们。要实现这一点，一种直接的方法是使用 `HashMap` 来跟踪唯一的顶点和相应的索引：
 
 ```rust,noplaypen
 let mut unique_vertices = HashMap::new();

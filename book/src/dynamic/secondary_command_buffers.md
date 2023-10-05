@@ -6,11 +6,11 @@
 
 > <span style="display: flex; justify-content: center; margin-bottom: 16px"><img src="../images/i_have_no_idea_what_im_doing.jpg" width="256"></span>前面没有这个声明的章节都是直接从 <https://github.com/Overv/VulkanTutorial> 改编而来。<br/><br/>这一章和后面的章节都是原创，作者并不是 Vulkan 的专家。作者尽力保持了权威的语气，但是这些章节应该被视为一个 Vulkan 初学者的“尽力而为”。<br/><br/>如果你有问题、建议或者修正，请[提交 issue](https://github.com/KyleMayes/vulkanalia/issues)！
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/32_secondary_command_buffers.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/32_secondary_command_buffers.rs)
 
-现在我们的程序会在每一帧提交不同的命令，但是我们还没有达到我们的最初目标：动态地改变程序渲染的内容。在这一章中，我们将修改我们的程序，使其能够根据用户输入渲染 1 到 4 个模型实例。
+现在我们的程序会在每一帧提交不同的指令，但是我们还没有达到我们的最初目标：动态地改变程序渲染的内容。在这一章中，我们将修改我们的程序，使其能够根据用户输入渲染 1 到 4 个模型实例。
 
-我们将运用*次级指令缓冲*来实现这个功能。*次级指令缓冲*是一个 Vulkan 特性，可以用来构建可重用的命令序列，然后我们就可以从*主指令缓冲*中执行这些命令。实现这个功能并不是一定要使用次级指令缓冲，但是这是我们第一次渲染多个物体，正好可以介绍一下它。
+我们将运用*次级指令缓冲*来实现这个功能。*次级指令缓冲*是一个 Vulkan 特性，可以用来构建可重用的指令序列，然后我们就可以从*主指令缓冲*中执行这些指令。实现这个功能并不是一定要使用次级指令缓冲，但是这是我们第一次渲染多个物体，正好可以介绍一下它。
 
 ## 主指令缓冲 vs 次级指令缓冲
 
@@ -145,7 +145,7 @@ unsafe fn update_secondary_command_buffer(
 }
 ```
 
-接下来我们将把渲染命令从主指令缓冲移动到次级指令缓冲。主指令缓冲仍然会用于开始和结束渲染流程实例，因为它将被我们的次级指令缓冲继承，但是 `App::update_command_buffer` 中在 `cmd_begin_render_pass` 和 `cmd_end_render_pass` 之间（但不包括这两个命令）的所有命令都应该被移动到 `App::update_secondary_command_buffer`。
+接下来我们将把渲染指令从主指令缓冲移动到次级指令缓冲。主指令缓冲仍然会用于开始和结束渲染流程实例，因为它将被我们的次级指令缓冲继承，但是 `App::update_command_buffer` 中在 `cmd_begin_render_pass` 和 `cmd_end_render_pass` 之间（但不包括这两个指令）的所有指令都应该被移动到 `App::update_secondary_command_buffer`。
 
 ```rust,noplaypen
 unsafe fn update_secondary_command_buffer(
@@ -207,7 +207,7 @@ unsafe fn update_command_buffer(&mut self, image_index: usize) -> Result<()> {
 }
 ```
 
-这个改变使我们的 `cmd_begin_render_pass` 调用失效了，因为我们之前提供了 `vk::SubpassContents::INLINE`，这表示我们将直接将渲染命令记录到主指令缓冲中。现在我们已经将渲染命令移动到了次级指令缓冲中，因此我们需要改用 `vk::SubpassContents::SECONDARY_COMMAND_BUFFERS`。
+这个改变使我们的 `cmd_begin_render_pass` 调用失效了，因为我们之前提供了 `vk::SubpassContents::INLINE`，这表示我们将直接将渲染指令记录到主指令缓冲中。现在我们已经将渲染指令移动到了次级指令缓冲中，因此我们需要改用 `vk::SubpassContents::SECONDARY_COMMAND_BUFFERS`。
 
 ```rust,noplaypen
 self.device.cmd_begin_render_pass(
@@ -217,7 +217,7 @@ self.device.cmd_begin_render_pass(
 );
 ```
 
-注意这是两种互斥的模式，你不能在渲染流程实例中混用次级指令缓冲和内联渲染命令。
+注意这是两种互斥的模式，你不能在渲染流程实例中混用次级指令缓冲和内联渲染指令。
 
 如果你现在运行程序，你应该会看到和之前一样的幽灵模型在旋转。让我们通过创建 4 个次级指令缓冲并从主指令缓冲中执行它们来提高一下难度，渲染 4 个模型实例。
 

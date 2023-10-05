@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/04_logical_device.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/04_logical_device.rs)
 
 选择了要使用的物理设备之后，我们需要创建一个与之交互的逻辑设备。创建逻辑设备的过程与创建实例的过程相似，即描述我们希望使用的功能。既然我们已经查询了可用的队列族，我们还需要指定要创建哪些队列。如果你有不同的需求，甚至可以从同一个物理设备创建多个逻辑设备。
 

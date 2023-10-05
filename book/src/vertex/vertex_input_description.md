@@ -4,13 +4,13 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码：** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/17_vertex_input.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/17/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/17/shader.frag)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/17_vertex_input.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/17/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/17/shader.frag)
 
-在接下来的几章中，我们将用内存中的顶点缓冲替换顶点着色器中硬编码的顶点数据。我们将从最简单的方法开始，即创建一个对 CPU 可见的缓冲，并直接将顶点数据复制到其中。之后，我们将学习如何使用暂存缓冲区将顶点数据复制到高性能内存中。
+在接下来的几章中，我们将用内存中的顶点缓冲替换顶点着色器中硬编码的顶点数据。我们将从最简单的方法开始，即创建一个对 CPU 可见的缓冲，并直接将顶点数据复制到其中。之后，我们将学习如何使用暂存缓冲将顶点数据复制到高性能内存中。
 
 ## 顶点着色器
 
-首先修改顶点着色器，不再在着色器代码本身中包含顶点数据。顶点着色器将使用 `in` 关键字从顶点缓冲区中获取输入。
+首先修改顶点着色器，不再在着色器代码本身中包含顶点数据。顶点着色器将使用 `in` 关键字从顶点缓冲中获取输入。
 
 ```glsl
 #version 450
@@ -26,7 +26,7 @@ void main() {
 }
 ```
 
-`inPosition` 和 `inColor` 变量是*顶点属性*。它们是在顶点缓冲区中为每个顶点指定的属性，就像我们之前手动使用两个数组为每个顶点指定了位置和颜色一样。记得重新编译顶点着色器！
+`inPosition` 和 `inColor` 变量是*顶点属性*。它们是在顶点缓冲中为每个顶点指定的属性，就像我们之前手动使用两个数组为每个顶点指定了位置和颜色一样。记得重新编译顶点着色器！
 
 与 `fragColor` 类似，`layout(location = x)` 注解为输入变量分配了索引，我们稍后可以用索引来引用这些变量。重要的是要知道，某些类型（例如 64 位的 `dvec3` 向量）使用多个*槽位*。这意味着在它之后的索引必须至少 +2：
 
@@ -180,4 +180,4 @@ let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
     .vertex_attribute_descriptions(&attribute_descriptions);
 ```
 
-现在，管线已准备好接受 `vertices` 容器格式的顶点数据，并将其传递给我们的顶点着色器。如果你现在启用了校验层并运行程序，你会看到它抱怨没有顶点缓冲区被绑定到绑定点。接下来的步骤是创建一个顶点缓冲区，并将顶点数据移到其中，以便 GPU 能够访问它。
+现在，管线已准备好接受 `vertices` 容器格式的顶点数据，并将其传递给我们的顶点着色器。如果你现在启用了校验层并运行程序，你会看到它抱怨没有顶点缓冲被绑定到绑定点。接下来的步骤是创建一个顶点缓冲，并将顶点数据移到其中，以便 GPU 能够访问它。

@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/24_sampler.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/24_sampler.rs)
 
 在本章中，我们将会创建两个新的图形管线中采样图像所必须的资源。第一个资源我们在之前使用交换链图像时已经见过了，但是第二个资源是全新的，它与着色器如何从图像中读取像素有关。
 

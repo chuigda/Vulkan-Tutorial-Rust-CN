@@ -6,9 +6,9 @@
 
 **本章代码:**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/02_validation_layers.rs)
 
-Vulkan API 的设计秉持了尽可能降低驱动开销的理念，带来的影响就是 API 默认只提供极少的错误检查。即便是像把枚举设置成了一个非法值这样简单的错误也不会被显式处理，而是会导致程序崩溃或是未定义行为。由于 Vulkan 要求你明确你所做的事，你很容易就会犯下许多小错误，例如在使用一个新的 GPU 特性时忘记在创建逻辑设备时请求这个特性。
+Vulkan API 的设计秉持了尽可能降低驱动开销的理念，带来的影响就是 API 默认只提供极少的错误检查。即便是像把枚举设置成了一个非法值这样简单的错误也不会被显式处理，而是会导致程序崩溃或是未定义行为。由于 Vulkan 要求你明确你所做的事，你很容易就会犯下许多小错误，例如在使用一个 GPU 特性时忘记在创建逻辑设备时请求这个特性。
 
-然而，这并不意味着 Vulkan API 就没法进行错误检查。Vulkan 引入了一个优雅的系统，叫做校验层（Validation Layer）。校验层是可选的，它们能在你调用 Vulkan 函数时插入钩子，执行额外的操作。一些通常的操作包括：
+然而，这并不意味着 Vulkan API 就没法进行错误检查。Vulkan 引入了一个优雅的系统，叫做校验层（Validation Layer）。校验层是可选的，它们能在你调用 Vulkan 函数时插入钩子，执行额外的操作。一些常见的操作包括：
 
 * 对比规范检查参数值，以检测是否有误用
 * 追踪对象的创建和销毁，找出资源泄漏
@@ -51,7 +51,7 @@ use std::os::raw::c_void;
 use vulkanalia::vk::ExtDebugUtilsExtension;
 ```
 
-`HashSet` 会被用在存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的函数封装。其它引入会被用于记录校验层传来的信息。
+`HashSet` 会被用来存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的函数封装。其它引入会被用于记录校验层传来的信息。
 
 ## 使用校验层
 
@@ -207,7 +207,7 @@ unsafe fn create_instance(
 ```
 
 <!-- TODO needs refinement -->
-> **注：**在一组 Vulkan 标志（例如上面的例子中的 `vk::DebugUtilsMessageTypeFlagsEXT::all()`）上调用 `all` 静态方法会返回一系列 `vulkanalia` 可识别的标志。这会导致一个问题，如果应用程序使用的 Vulkan 实现比 `vulkanalia` 支持的最新版本的 Vulkan 旧，那么这个标志集可能包含应用程序使用的 Vulkan 实现不认识的标志。这不会影响应用程序的功能，但是你可能会看到一些验证错误。如果你因为这些调试标志遇到了未知标志的警告，你可以通过升级你的 Vulkan SDK 到最新版本（或者直接指定支持的标志）来避免这些警告。
+> **注：**在一组 Vulkan 标志（例如上面的例子中的 `vk::DebugUtilsMessageTypeFlagsEXT::all()`）上调用 `all` 静态方法会返回一系列 `vulkanalia` 可识别的标志。这会导致一个问题，如果应用程序使用的 Vulkan 实现比 `vulkanalia` 支持的最新版本的 Vulkan 旧，那么这个标志集可能包含应用程序使用的 Vulkan 实现不认识的标志。这不会影响应用程序的功能，但是你可能会看到一些校验层错误。如果你因为这些调试标志遇到了未知标志的警告，你可以通过升级你的 Vulkan SDK 到最新版本（或者直接指定支持的标志）来避免这些警告。
 
 首先，我们从返回表达式中提取出 Vulkan 实例，这样我们就可以用它来添加我们的调试回调函数。
 
