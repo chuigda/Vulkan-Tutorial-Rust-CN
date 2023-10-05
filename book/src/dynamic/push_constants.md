@@ -1,4 +1,4 @@
-# 推式常量
+# 推送常量
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/dynamic/push_constants.html>
 >
@@ -42,11 +42,11 @@ One would be to premultiply our MVP matrices into a single matrix. Another would
 
 Why only the model matrix for the second approach? In the `App::update_uniform_buffer` method, you'll notice that the `model` matrix changes every frame as `time` increases, the `view` matrix is static, and the `proj` matrix only changes when the window is resized. This would allow us to only update the uniform buffer containing the view and projection matrices when the window is resized and use push constants to provide the constantly changing model matrix.
 
-为什么只将推送常量用于模型矩阵呢？在 `App::update_uniform_buffer` 方法中，你可以注意到 `model` 矩阵随着 `time` 的增加，在每一帧中都会有所改变，而`view` 矩阵是静态的，`proj` 矩阵则只会在窗口大小发生变化的时候改变。这就使得我们可以只在窗口大小发生变化时更新包含视图和投影矩阵的 uniform 缓冲，而将推送常量用于不断变化的模型矩阵。
+为什么只将推送常量用于模型矩阵呢？在 `App::update_uniform_buffer` 方法中，你可以注意到 `model` 矩阵随着 `time` 的增加，在每一帧中都会有所改变，而 `view` 矩阵是静态的，`proj` 矩阵则只会在窗口大小发生变化的时候改变。这就使得我们可以只在窗口大小发生变化时更新包含视图和投影矩阵的 uniform 缓冲，而将推送常量用于不断变化的模型矩阵。
 
 Of course, in a more realistic application the view matrix would most likely not be static. For example, if you were building a first-person game, the view matrix would change very frequently as the player moves through the game world. However, the view and projection matrices, even if they change every frame, would be shared between all or at least most of the models you are rendering. This means you could continue updating the uniform buffer once per frame to provide the shared view and projection matrices and use push constants to provide the model matrices for each model in your scene.
 
-当然，在实际的应用程序中，视图矩阵不太可能是静态的。例如，如果你在构建一个第一人称游戏，`view` 矩阵可能会随着玩家在游戏世界中移动而快速变化。然而，即使视图和投影矩阵每一帧都发生改变，至少它们也会在你渲染的所有模型之间共享。也就是说你可以在每一帧中更新 uniform 缓冲，以提供共享的视图和投影矩阵，并为场景中每个模型的模型矩阵使用推送常量。
+当然，在实际的应用程序中，视图矩阵不太可能是静态的。例如，如果你在构建一个第一人称游戏，`view` 矩阵可能会随着玩家在游戏世界中移动而快速变化。然而，即使视图和投影矩阵每一帧都发生改变，至少它们也会在你渲染的所有模型之间共享。也就是说你可以在每一帧中更新 uniform 缓冲，以提供共享的视图和投影矩阵，并使用推送常量来为场景中每个模型提供模型矩阵。
 
 ## 推送模型矩阵
 
