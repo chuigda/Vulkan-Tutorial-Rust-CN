@@ -18,7 +18,7 @@ When you allocate a command buffer and record commands to it, Vulkan allocates b
 
 Vulkan offers [three basic approaches](https://github.com/KhronosGroup/Vulkan-Samples/blob/524cdcd27005e7cd56e6694fa41e685519d7dbca/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.md#recycling-strategies) for recycling the memory occupied by a command buffer:
 
-Vulkan 为重用指令缓冲占用的内存提供了[三种基本的方式](https://github.com/KhronosGroup/Vulkan-Samples/blob/524cdcd27005e7cd56e6694fa41e685519d7dbca/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.md#recycling-strategies)
+Vulkan 为重用指令缓冲的内存提供了[三种基本的方式](https://github.com/KhronosGroup/Vulkan-Samples/blob/524cdcd27005e7cd56e6694fa41e685519d7dbca/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.md#recycling-strategies)
 
 1. Reset the command buffer (which clears the commands recorded to it) and record new commands to the command buffer
 2. Free the command buffer (which returns its memory to the command pool it was allocated from) and allocate a new command buffer
@@ -100,7 +100,7 @@ Once `reset_command_buffer` has returned, the command buffer will be reset to it
 
 Now we can move the command buffer recording code out of `create_command_buffers` and into `update_command_buffer`. The loop over the command buffers is no longer necessary since we are only recording one command buffer per frame. Other than that, only a few mechanical changes are needed to migrate this code to our new method (e.g., replacing references to the loop counter `i` with `image_index`).
 
-现在我们可以将指令缓冲记录代码从 `create_command_buffers` 移动到 `update_command_buffer` 中。我们不需要再循环遍历指令缓冲了，因为我们每一帧只记录一个指令缓冲。除此之外，只需要做一些机械的修改就可以将这段代码迁移到我们的新方法中（例如，将对循环计数器 `i` 的引用替换为 `image_index`）。
+现在我们可以将记录指令缓冲的代码从 `create_command_buffers` 移动到 `update_command_buffer` 中。我们不需要再循环遍历指令缓冲了，因为我们每一帧只记录一个指令缓冲。除此之外，只需要做一些机械的修改就可以将这段代码迁移到我们的新方法中（例如，将对循环计数器 `i` 的引用替换为 `image_index`）。
 
 ```rust,noplaypen
 unsafe fn update_command_buffer(&mut self, image_index: usize) -> Result<()> {
@@ -245,7 +245,7 @@ You could now run the program and see that the program works exactly like it did
 
 Return the memory used by the previous command buffer to the command pool by freeing it at the beginning of `update_command_buffer`.
 
-在 `update_command_buffer` 的开头，将原先指令缓冲使用的内存返还给指令池，然后释放它。
+在 `update_command_buffer` 的开头释放原先的指令缓冲，将其使用的内存返还给指令池。
 
 ```rust,noplaypen
 unsafe fn update_command_buffer(&mut self, image_index: usize) -> Result<()> {
@@ -266,7 +266,7 @@ We no longer need the `vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER` flag fo
 
 We'll replace this flag with `vk::CommandPoolCreateFlags::TRANSIENT` which tells Vulkan that the command buffers we'll be allocating with this command pool will be "transient", i.e. short-lived.
 
-我们把标志换成 `vk::CommandPoolCreateFlags::TRANSIENT`，这会告诉 Vulkan，我们将使用这个指令池分配的指令缓冲是“短暂的”，也就是说，它会非常短命。
+我们把标志换成 `vk::CommandPoolCreateFlags::TRANSIENT`，这会告诉 Vulkan，我们将使用这个指令池分配的指令缓冲是“稍纵即逝的”，也就是说，这些指令缓冲会非常短命。
 
 ```rust,noplaypen
 let info = vk::CommandPoolCreateInfo::builder()
@@ -278,13 +278,13 @@ data.command_pool = device.create_command_pool(&info, None)?;
 
 Like `vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT`, this flag does not affect the correctness of our program but it may allow the Vulkan driver to better optimize the handling of our short-lived command buffers.
 
-和 `vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT` 一样，这个标志不会影响我们程序的正确性，但是它可能会让 Vulkan 驱动更好地优化对我们短命的指令缓冲的处理。
+和 `vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT` 一样，这个标志不会影响我们程序的正确性，但是它可能会让 Vulkan 驱动更好地优化对短命的指令缓冲的处理。
 
 ### 3. 重置指令池
 
 Next we'll look at resetting our entire command pool which will reset all of our active command buffers in one fell swoop.
 
-接着我们来看看重置整个指令池，这会一举重置我们所有的活动指令缓冲。
+接着我们来看看重置整个指令池，这会一举重置所有活动的指令缓冲。
 
 However, we immediately run into a problem with this approach. We can't reset *all* of our command buffers each frame because some of them might still be in use! The `wait_for_fences` call in `App::render` ensures that we are safe to reset the command buffer associated with the current framebuffer, but there might be other command buffers still in use.
 
@@ -292,7 +292,7 @@ However, we immediately run into a problem with this approach. We can't reset *a
 
 We could continue down this path, but it would prevent our program from having multiple frames in-flight concurrently. This ability is important to maintain because, as discussed back in the [`Rendering and presentation` chapter](../drawing/rendering_and_presentation.html#frames-in-flight), it allows us to better leverage our hardware since the CPU will spend less time waiting on the GPU and vice-versa.
 
-我们可以继续沿着这条路走下去，但这样的话我们的程序就不能并行渲染多个帧了。保持这种能力很重要，因为正如在 [`Rendering and presentation` 章节](../drawing/rendering_and_presentation.html#frames-in-flight)中提到的，这可以让我们更好地利用硬件，因为 CPU 会花费更少的时间等待 GPU，反之亦然。
+我们可以继续沿着这条路走下去，但这样的话我们的程序就不能并行渲染多个帧了。保持多帧并行渲染的能力很重要，因为正如在[渲染与呈现](../drawing/rendering_and_presentation.html#frames-in-flight)那一章提到的，这可以让我们更好地利用硬件：CPU 会花费更少的时间等待 GPU，反之亦然。
 
 Instead, we will alter our program to maintain a separate command pool for each framebuffer. This way we can freely reset the command pool associated with the current framebuffer without worrying about breaking any previously submitted frames that are still in-flight.
 
@@ -429,7 +429,7 @@ unsafe fn destroy(&mut self) {
 
 Finally, delete the call to `free_command_buffers` in `App::destroy_swapchain`. This call now incorrectly attempts to return the memory assigned to the per-framebuffer command buffers to the global command pool despite the fact that these command buffers are no longer allocated from this command pool. Leaving this code in will most likely result in our program crashing when resizing the window or otherwise forcing a recreation of the swapchain. We no longer need to manage the deletion of individual command buffers since we are now managing this at the command pool level.
 
-最后，在 `App::destroy_swapchain` 中删除对 `free_command_buffers` 的调用。这个调用现在会错误地尝试将分配给每帧指令缓冲的内存返还给全局指令池，尽管这些指令缓冲不再是从这个指令池分配的。如果保留这段代码，当窗口大小改变或者强制重新创建交换链时，我们的程序很可能会崩溃。我们不再需要管理单个指令缓冲的删除，因为我们现在是在指令池级别管理这个。
+最后，在 `App::destroy_swapchain` 中删除对 `free_command_buffers` 的调用。这个调用会错误地尝试将分配给每帧指令缓冲的内存返还给全局指令池，而现在这些指令缓冲并不是从全局指令池指令池分配的。如果保留这段代码，当窗口大小改变或者强制重新创建交换链时，我们的程序很可能会崩溃。我们不再需要管理单个指令缓冲的删除，因为我们现在是在指令池级别管理这个。
 
 ## 结论
 
