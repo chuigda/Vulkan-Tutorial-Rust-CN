@@ -53,24 +53,24 @@
 
 - [图像](./texture/images.md)
 - [图像视图与采样器](./texture/image_view_and_sampler.md)
-- [Combined image sampler](./texture/combined_image_sampler.md)
+- [组合图像采样器](./texture/combined_image_sampler.md)
 
 # 模型
 
 - [深度缓冲](./model/depth_buffering.md)
-- [Loading models](./model/loading_models.md)
+- [加载模型](./model/loading_models.md)
 
 # 渲染质量
 
-- [Generating mipmaps](./quality/generating_mipmaps.md)
-- [Multisampling](./quality/multisampling.md)
+- [生成多级渐远](./quality/generating_mipmaps.md)
+- [多重采样](./quality/multisampling.md)
 
 # 动态场景
 
-- [Push constants](./dynamic/push_constants.md)
+- [推送常量](./dynamic/push_constants.md)
 - [重用指令缓冲](./dynamic/recycling_command_buffers.md)
-- [Secondary command buffers](./dynamic/secondary_command_buffers.md)
+- [次级指令缓冲](./dynamic/secondary_command_buffers.md)
 
 # 总结
 
-- [Conclusion](./conclusion.md)
+- [总结](./conclusion.md)
