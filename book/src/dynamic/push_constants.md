@@ -12,7 +12,7 @@
 
 The scene that we've created in the tutorial thus far is static. While we can rotate and otherwise move the model around on the screen by manipulating the uniform buffers that provide the model, view, and projection (MVP) matrices, we can't alter *what* is being rendered. This is because the decision of what to render is made during program initialization when our command buffers are allocated and recorded.
 
-目前为止我们在教程中创建的场景都是静态的。虽然我们可以操作提供模型、视图和投影（MVP）矩阵的 uniform 缓冲来旋转和移动模型，但是我们不能改变*渲染什么*。这是因为程序在初始化的过程中、分配和记录指令缓冲d的时候就已经决定了要渲染什么。
+目前为止我们在教程中创建的场景都是静态的。虽然我们可以操作提供模型、视图和投影（MVP）矩阵的 uniform 缓冲来旋转和移动模型，但是我们不能改变*渲染什么*。这是因为程序在初始化的过程中分配和记录指令缓冲的时候就已经决定了要渲染什么。
 
 In the next few chapters we are going to explore various techniques we can use to accomplish the rendering of dynamic scenes. First, however, we are going to look at *push constants*, a Vulkan feature that allows us to easily and efficiently "push" dynamic data to shaders. Push constants alone will not accomplish our goal of a dynamic scene, but their usefulness should become clear over the next few chapters.
 
@@ -22,7 +22,7 @@ In the next few chapters we are going to explore various techniques we can use t
 
 We are already using another Vulkan feature to provide dynamic data to our vertex shader: uniform buffers. Every frame, the `App::update_uniform_buffer` method calculates the updated MVP matrices for the model's current rotation and copies those matrices to a uniform buffer. The vertex shader then reads those matrices from the uniform buffer to figure out where the vertices of the model belong on the screen.
 
-之前我们已经在使用另一种能将动态数据提供给顶点着色器的 Vulkan 特性了：那就是 uniform 缓冲。在渲染每一帧时，`App::update_uniform_buffer` 方法都会为模型的当前旋转角度计算更新之后的 MVP 矩阵，并将这些矩阵复制到 uniform 缓冲中。然后顶点着色器从 uniform 缓冲中读取这些矩阵，以确定模型的顶点在屏幕上的位置。
+之前我们已经在使用另一种能将动态数据提供给顶点着色器的 Vulkan 特性了：那就是 uniform 缓冲。在渲染每一帧时，`App::update_uniform_buffer` 方法都会根据模型当前的旋转角度计算出新的 MVP 矩阵，并将这些矩阵复制到 uniform 缓冲中。然后顶点着色器从 uniform 缓冲中读取这些矩阵，以确定模型的顶点在屏幕上的位置。
 
 This approach works well enough, when would we want to use push constants instead? One advantage of push constants over uniform buffers is speed, updating a push constant will usually be significantly faster than copying new data to a uniform buffer. For a large number of values that need to be updated frequently, this difference can add up quickly.
 
@@ -30,11 +30,11 @@ This approach works well enough, when would we want to use push constants instea
 
 Of course there is a catch: the amount of data that can be provided to a shader using push constants has a *very* limited maximum size. This maximum size varies from device to device and is specified in bytes by the `max_push_constants_size` field of `vk::PhysicalDeviceLimits`. Vulkan requires that this limit be [at least 128 bytes](https://www.khronos.org/registry/vulkan/specs/1.2/html/chap33.html#limits-minmax) (see table 32), but you won't find values much larger than that in the wild. Even high-end hardware like the RTX 3080 only has a limit of 256 bytes.
 
-当然，这里有一个限制：使用推送常量提供给着色器的数据量有一个*非常*有限的最大值。这个最大值因设备而异，由 `vk::PhysicalDeviceLimits` 的 `max_push_constants_size` 字段以字节为单位指定。Vulkan 要求这个限制至少为[128字节](https://www.khronos.org/registry/vulkan/specs/1.2/html/chap33.html#limits-minmax)（见表 32），但是你不会在实际设备中找到比这个大得多的值。即使是 RTX 3080 这样的高端硬件，也只有 256 字节的限制。
+当然，这里有一个限制：使用推送常量提供给着色器的数据量有一个*非常*有限的最大值。这个最大值因设备而异，由 `vk::PhysicalDeviceLimits` 的 `max_push_constants_size` 字段以字节为单位指定。Vulkan 要求这个限制至少为[128字节](https://www.khronos.org/registry/vulkan/specs/1.2/html/chap33.html#limits-minmax)（见表 32），但实际设备上的最大值也不会比 128 高多少。即使是 RTX 3080 这样的高端硬件，这个最大值也只有 256 字节。
 
 If we wanted to, say, use push constants to provide our MVP matrices to our shaders we would immediately run into this limitation. The MVP matrices are too large to reliably fit in push constants, each matrix is 64 bytes (16 × 4 byte floats) leading to a total of 192 bytes. Of course we could maintain two code paths, one for devices that can handle push constants >= 192 bytes and another for devices that can't, but there are simpler approaches we could take.
 
-如果我们想用推送常量来向矩阵提供我们的 MVP 矩阵，那么我们马上就会撞倒这个限制。MVP 矩阵太大了，无法被可靠地放入推送常量中：每个矩阵是 64 字节（16 × 4 字节浮点数），总共 192 字节。当然，我们可以写两套代码，一套用于处理推送常量 >= 192 字节的设备，另一套用于处理无法满足这个需求的设备，但是我们还有更简单的方法。
+如果我们想用推送常量来向矩阵提供我们的 MVP 矩阵，那么我们马上就会撞到这个限制。MVP 矩阵太大了，无法被可靠地放入推送常量中：每个矩阵是 64 字节（16 × 4 字节浮点数），总共 192 字节。当然，我们可以写两套代码，一套用于处理推送常量 >= 192 字节的设备，另一套用于处理无法满足这个需求的设备，但是我们还有更简单的方法。
 
 One would be to premultiply our MVP matrices into a single matrix. Another would be to provide only the model matrix as a push constant and leave the view and projection matrices in the uniform buffer. Both would give us at least 64 bytes of headroom for other push constants even on devices providing only the minimum 128 bytes for push constants. In this chapter we will take the second approach to start exploring push constants.
 
@@ -42,11 +42,11 @@ One would be to premultiply our MVP matrices into a single matrix. Another would
 
 Why only the model matrix for the second approach? In the `App::update_uniform_buffer` method, you'll notice that the `model` matrix changes every frame as `time` increases, the `view` matrix is static, and the `proj` matrix only changes when the window is resized. This would allow us to only update the uniform buffer containing the view and projection matrices when the window is resized and use push constants to provide the constantly changing model matrix.
 
-为什么只用推送常量提供模型矩阵呢？在 `App::update_uniform_buffer` 方法中，你可以注意到 `model` 矩阵随着 `time` 的增加，在每一帧中都会有所改变；`view` 矩阵是静态的；而 `proj` 矩阵只会在窗口大小发生变化的时候改变。这就使得我们可以只在窗口大小发生变化的时候更新包含视图和投影矩阵的 uniform 缓冲，而使用推送常量来提供不断变化的模型矩阵。
+为什么只将推送常量用于模型矩阵呢？在 `App::update_uniform_buffer` 方法中，你可以注意到 `model` 矩阵随着 `time` 的增加，在每一帧中都会有所改变，而`view` 矩阵是静态的，`proj` 矩阵则只会在窗口大小发生变化的时候改变。这就使得我们可以只在窗口大小发生变化时更新包含视图和投影矩阵的 uniform 缓冲，而将推送常量用于不断变化的模型矩阵。
 
 Of course, in a more realistic application the view matrix would most likely not be static. For example, if you were building a first-person game, the view matrix would change very frequently as the player moves through the game world. However, the view and projection matrices, even if they change every frame, would be shared between all or at least most of the models you are rendering. This means you could continue updating the uniform buffer once per frame to provide the shared view and projection matrices and use push constants to provide the model matrices for each model in your scene.
 
-当然，在实际的应用程序中，试图矩阵不太可能是静态的。例如，如果你在构建一个第一人称游戏，`view` 矩阵可能会随着玩家在游戏世界中移动而快速变化。然而，即使视图和投影矩阵每一帧都发生改变，至少它们也会在你渲染的所有模型之间共享。这意味着你可以继续每一帧更新 uniform 缓冲，以提供共享的视图和投影矩阵，并使用推送常量来为场景中的每个模型提供模型矩阵。
+当然，在实际的应用程序中，视图矩阵不太可能是静态的。例如，如果你在构建一个第一人称游戏，`view` 矩阵可能会随着玩家在游戏世界中移动而快速变化。然而，即使视图和投影矩阵每一帧都发生改变，至少它们也会在你渲染的所有模型之间共享。也就是说你可以在每一帧中更新 uniform 缓冲，以提供共享的视图和投影矩阵，并为场景中每个模型的模型矩阵使用推送常量。
 
 ## 推送模型矩阵
 
@@ -80,7 +80,7 @@ Note that the layout is `push_constant` and not something like `push_constant = 
 
 Remove `model` from the `UniformBufferObject` struct since we will be specifying it as a push constant from here on out.
 
-从 `UniformBufferObject` 结构体中移除 `model`，因为我们将从现在开始将模型矩阵指定为推送常量。
+从 `UniformBufferObject` 结构体中移除 `model`，因为从现在开始我们会为模型矩阵使用推送常量。
 
 ```rust,noplaypen
 #[repr(C)]
@@ -123,7 +123,7 @@ let ubo = UniformBufferObject { view, proj };
 
 We need to tell Vulkan about our new push constant by describing it in the layout of our graphics pipeline. In the `create_pipeline` function you'll see that we are already providing our descriptor set layout to `create_pipeline_layout`. This descriptor set layout describes the uniform buffer object and texture sampler used in our shaders and we need to similarly describe any push constants accessed by the shaders in our graphics pipeline using `vk::PushConstantRange`.
 
-我们需要在图形管线的布局中进行描述，将我们的新推送常量告知 Vulkan。在 `create_pipeline` 函数中，你可以看到我们已经将描述符集合布局提供给了 `create_pipeline_layout`。这个描述符集合布局描述了我们着色器中使用的 uniform 缓冲对象和纹理采样器，我们需要使用 `vk::PushConstantRange` 来描述图形管线中着色器将要访问的任何推送常量。
+我们需要更新图形管线的布局，将我们的新推送常量告知 Vulkan。在 `create_pipeline` 函数中，你可以看到我们之前已经将描述符集合布局提供给了 `create_pipeline_layout`。描述符集合布局描述了我们着色器中使用的 uniform 缓冲对象和纹理采样器，而现在我们需要使用推送常量范围 `vk::PushConstantRange` 来描述图形管线中着色器将要访问的推送常量。
 
 ```rust,noplaypen
 let vert_push_constant_range = vk::PushConstantRange::builder()
@@ -142,11 +142,11 @@ data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
 
 The push constant range here specifies that the push constants accessed by the vertex shader can be found at the beginning of the push constants provided to the graphics pipeline and are the size of a `mat4`.
 
-这里的推送常量范围制订了顶点着色器访问的推送常量可以在提供给图形管线的推送常量的开头找到，大小相当于一个 `mat4`。
+这里的推送常量范围说明了顶点着色器访问的推送常量可以在提供给图形管线的推送常量的开头找到，大小相当于一个 `mat4`。
 
 With all that in place, we can actually start pushing the model matrix to the vertex shader. Push constants are recorded directly into the command buffers submitted to the GPU which is both why they are so fast and why their size is so limited.
 
-有了这些，我们就可以开始将模型矩阵推送到顶点着色器了。推送常量会被直接记录到提交给 GPU 的指令缓冲中，这就是为什么它们如此快速，也是为什么它们的大小如此有限的原因。
+有了这些，我们就可以开始将模型矩阵推送到顶点着色器了。推送常量会被直接记录到提交给 GPU 的指令缓冲中，这就是为什么它们如此快速，这也解释了为什么它们的大小如此有限。
 
 In the `create_command_buffers` function, define a model matrix and use `cmd_push_constants` to add it to the command buffers as a push constant right before we record the draw command.
 
@@ -181,7 +181,7 @@ for (i, command_buffer) in data.command_buffers.iter().enumerate() {
 
 If you run the program now you will see the familiar model, but it is no longer rotating! Instead of updating the model matrix in the uniform buffer object every frame we are now encoding it into the command buffers which, as previously discussed, are never updated. This further highlights the need to somehow update our command buffers, a topic that will be covered in the next chapter. For now, let's round out this chapter by adding a push constant to the fragment shader.
 
-如果你现在运行程序，你会看到熟悉的模型，但是它不再旋转了！我们不再在每一帧中更新 uniform 缓冲对象中的模型矩阵，而是将其编码到指令缓冲中，正如之前所讨论的，指令缓冲永远不会被更新。这进一步凸显了我们需要以某种方式更新指令缓冲的需求，这个话题将在下一章中讨论。现在，让我们通过在片元着色器中添加一个推送常量来结束本章。
+如果你现在运行程序，你会看到熟悉的模型，但是它不再旋转了！我们不再在每一帧中更新 uniform 缓冲对象中的模型矩阵，而是将其编码到指令缓冲中，正如之前所讨论的，指令缓冲永远不会被更新。这进一步凸显了以某种方式更新指令缓冲的需求，这个话题将在下一章中讨论。现在，让我们在片元着色器中再添加一个推送常量，然后结束本章。
 
 ## 推送透明度
 
@@ -235,7 +235,7 @@ data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
 
 Lastly, add another call to `cmd_push_constants` in the `create_command_buffers` after the call for the model matrix.
 
-最后，在 `create_command_buffers` 中，在模型矩阵的调用之后，再添加一个 `cmd_push_constants` 的调用。
+最后，在 `create_command_buffers` 中，在为模型矩阵调用 `cmd_push_constants` 之后，再添加一个 `cmd_push_constants` 的调用。
 
 ```rust,noplaypen
 device.cmd_push_constants(
@@ -261,7 +261,7 @@ Here we provide an opacity of `0.25` to the fragment shader by recording it into
 
 Back in the [chapter on fixed function operations](../pipeline/fixed_functions.html#color-blending), we discussed what was necessary to set up alpha blending so that we could render transparent geometries to the framebuffers. However, back then we left alpha blending disabled. Update the `vk::PipelineColorBlendAttachmentState` in the `create_pipeline` function to enable alpha blending as described in that chapter.
 
-回看[固定功能](../pipeline/fixed_functions.html#color-blending)那一章，我们讨论过如果要渲染透明几何体，需要做什么来设置 alpha 混合。然而，那时我们禁用了 alpha 混合。在 `create_pipeline` 函数中，更新 `vk::PipelineColorBlendAttachmentState`，以启用 alpha 混合，就像那一章中描述的那样。
+回看[固定功能](../pipeline/fixed_functions.html#color-blending)那一章，我们讨论过如果要渲染透明几何体，就需要设置阿尔法合成。然而，那时我们禁用了阿尔法合成。所以现在我们要在 `create_pipeline` 函数中，更新 `vk::PipelineColorBlendAttachmentState`，以启用阿尔法合成，就像那一章中描述的那样。
 
 ```rust,noplaypen
 let attachment = vk::PipelineColorBlendAttachmentState::builder()
