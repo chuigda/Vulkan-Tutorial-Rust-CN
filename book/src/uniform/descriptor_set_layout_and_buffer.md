@@ -1,6 +1,6 @@
 # 描述符集合布局与缓冲
 
-> 原文链接：<https://kylemayes.github.io/vulkanalia/uniform/descriptor_layout_and_buffer.html>
+> 原文链接：<https://kylemayes.github.io/vulkanalia/uniform/descriptor_set_layout_and_buffer.html>
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
