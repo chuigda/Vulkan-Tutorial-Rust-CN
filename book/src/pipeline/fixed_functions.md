@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码：** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/10_fixed_functions.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/10_fixed_functions.rs)
 
 旧的图形学 API 在渲染管线中为大部分阶段提供了默认状态。而在 Vulkan 中，你必须显式指定一切 —— 从视口大小到颜色混合函数。在本章中，我们会创建并填充配置这些固定功能操作所需的所有结构体。
 
@@ -53,7 +53,7 @@ let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
 
 ## 视口和裁剪
 
-视口用于描述渲染结果将被输出到的帧缓冲区域。视口几乎总是从 `(0, 0)` 到 `(width, height)`，在本教程中也是如此。
+视口用于描述渲染结果将被输出到的帧缓冲域。视口几乎总是从 `(0, 0)` 到 `(width, height)`，在本教程中也是如此。
 
 ```rust,noplaypen
 let viewport = vk::Viewport::builder()
@@ -74,7 +74,7 @@ let viewport = vk::Viewport::builder()
 
 ![](../images/viewports_scissors.png)
 
-在本教程中，我们只想填充整个帧缓冲区域，所以我们会指定一个覆盖整个帧缓冲区域的裁剪矩形：
+在本教程中，我们只想填充整个帧缓冲域，所以我们会指定一个覆盖整个帧缓冲域的裁剪矩形：
 
 ```rust,noplaypen
 let scissor = vk::Rect2D::builder()

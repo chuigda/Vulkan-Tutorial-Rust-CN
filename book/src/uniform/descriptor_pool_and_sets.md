@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/22_descriptor_sets.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/22_descriptor_sets.rs)
 
 上一章提到的描述符集合布局描述了可以绑定的描述符的类型。在本章中，我们将为每个 `vk::Buffer` 资源创建一个描述符集合，以将其绑定到 uniform 缓冲描述符。
 
@@ -266,12 +266,6 @@ layout(binding = 0) uniform UniformBufferObject {
 重新编译你的着色器和程序并运行它，你会发现五颜六色的正方形消失了！这是因为我们没有考虑到*对齐要求（alignment requirements）*。
 
 Vulkan 希望你的结构中的数据在内存中以特定的方式对齐，例如：
-
-* Scalars have to be aligned by N (= 4 bytes given 32 bit floats).
-* A `vec2` must be aligned by 2N (= 8 bytes)
-* A `vec3` or `vec4` must be aligned by 4N (= 16 bytes)
-* A nested structure must be aligned by the base alignment of its members rounded up to a multiple of 16.
-* A `mat4` matrix must have the same alignment as a `vec4`.
 
 * 标量必须以 N (= 4 字节，给定 32 位浮点数) 对齐。
 * `vec2` 必须以 2N (= 8 字节) 对齐。

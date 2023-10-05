@@ -4,13 +4,13 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-本章会以介绍 Vulkan 和它所解决的问题开始。之后，我们会看到绘制第一个三角形所需的所有组件。这会给你一个总体的蓝图，以便你将每个后续章节放在正确的位置。我们会通过 `vulkanalia` 实现的 Vulkan API 结构来总结。
+本章会以介绍 Vulkan 和它所解决的问题开始。之后，我们会看到绘制第一个三角形所需的所有组件。这会给你一个总体的蓝图，以便你将每个后续章节放在正确的位置。之后我们会讨论 `vulkanalia` 提供的 Vulkan API。
 
 ## Vulkan 的起源
 
-和之前的图形 API 一样，Vulkan 也是为跨平台抽象 [GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit) 而设计的。以往的 API 大都有一个问题，那就是它们都是根据诞生年代的图形硬件特性来设计的，而此时的图形硬件大多都只有一些可配置的功能。程序员必须以标准的格式提供顶点数据，并且在光照和着色选项上受制于 GPU 制造商。
+和之前的图形 API 一样，Vulkan 也是为跨平台抽象 [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) 而设计的。以往的 API 大都有一个问题，那就是它们都是根据诞生年代的图形硬件特性来设计的，而此时的图形硬件大多都只有一些可配置的功能。程序员必须以标准的格式提供顶点数据，并且在光照和着色选项上受制于 GPU 制造商。
 
-在显卡架构成熟之后，它们开始提供更多的可编程特性。所有这些新功能都必须以某种方式与现有的 API 集成。这就导致这些 API 不能提供理想的抽象，而显卡驱动需要猜测程序员的意图，以将其映射到现代图形架构。这就是为什么有这么多驱动更新来提高游戏性能，而且有时候提升幅度很大。由于这些驱动的复杂性，应用程序开发人员还需要处理制造商之间的不一致性 例如 [着色器](https://en.wikipedia.org/wiki/Shader) 接受的语法。除了这些新功能之外，过去十年还涌入了具有强大图形硬件的移动设备。这些移动 GPU 出于空间和能耗上的考虑，采用了不同的架构。其中一个例子是 [tiled rendering](https://en.wikipedia.org/wiki/Tiled_rendering)，它可以给程序员提供对此功能的更多控制，从而提高性能。另一个起源于这些 API 时代的限制是有限的多线程支持，这可能会导致 CPU 成为性能瓶颈。
+在显卡架构成熟之后，它们开始提供更多的可编程特性。所有这些新功能都必须以某种方式与现有的 API 集成。这就导致这些 API 不能提供理想的抽象，而显卡驱动需要猜测程序员的意图，以将其映射到现代图形架构。这就是为什么有这么多驱动更新来提高游戏性能，而且有时候提升幅度很大。由于这些驱动的复杂性，应用程序开发人员还需要处理制造商之间的不一致性，例如[着色器](https://en.wikipedia.org/wiki/Shader)接受的语法。除了这些新功能之外，过去十年还涌入了具有强大图形硬件的移动设备。这些移动 GPU 出于空间和能耗上的考虑采用了与桌面端不同的架构。其中一个例子是 [tiled rendering](https://en.wikipedia.org/wiki/Tiled_rendering)，它可以给程序员提供对此功能的更多控制，从而提高性能。此外受限于诞生的年代，这些 API 对多线程的支持都非常有限，这可能会导致 CPU 成为性能瓶颈。
 
 Vulkan 从头开始、针对现代图形架构而设计，从而解决了上述问题。Vulkan 要求程序员明确地指定他们的意图，从而减少驱动开销，并允许多个线程并行创建和提交指令。Vulkan 使用一种标准的字节码格式和一种编译器来减少着色器编译中的不一致性。最后，它将现代图形卡的通用处理能力纳入到单个 API 中，从而将图形和计算功能统一起来。
 
@@ -28,50 +28,50 @@ Vulkan 从头开始、针对现代图形架构而设计，从而解决了上述�
 
 ### 3. 创建窗口和交换链（swapchain）
 
-除非你只对离屏渲染有兴趣，否则你需要创建一个窗口来呈现渲染图像。窗口可以使用本地平台 API，或类似 [GLFW](http://www.glfw.org/)、[SDL](https://www.libsdl.org/) 或 [`winit`](https://github.com/rust-windowing/winit) crate。在本教程中我们会使用 `winit` crate，下一章会对其进行详细介绍。
+除非你只对离屏渲染有兴趣，否则你需要创建一个窗口来呈现渲染图像。窗口可以使用本地平台 API 创建，也可以使用类似 [GLFW](http://www.glfw.org/)、[SDL](https://www.libsdl.org/) 或 [`winit`](https://github.com/rust-windowing/winit) crate 的库来创建。在本教程中我们会使用 `winit` crate，下一章会对其进行详细介绍。
 
-我们还需要两个组件才能完成窗口渲染：一个窗口表面（`VkSurfaceKHR`）和一个交换链（`VkSwapchainKHR`），可以注意到这两个组件都有一个 `KHR` 后缀，这表示它们都是 Vulkan 扩展。Vulkan 本身完全是平台无关的，这就是为什么我们需要使用标准 WSI（Window System Interface，窗口系统接口）扩展与原生的窗口管理器进行交互。表面（Surface）是一个渲染窗口的跨平台抽象，通常它是由原生窗口系统句柄 —— 例如 Windows 上的 `HWND` —— 作为参数实例化得到的。然而，`vulkanalia` 包含了对 `winit` 可选的集成，这会帮助我们处理创建窗口和与之关联的表面的过程中那些平台特定的细节。
+我们还需要两个组件才能完成窗口渲染：一个窗口表面（`VkSurfaceKHR`）和一个交换链（`VkSwapchainKHR`），可以注意到这两个组件都有一个 `KHR` 后缀，这表示它们都是 Vulkan 扩展。Vulkan 本身完全是平台无关的，这就是为什么我们需要使用标准 WSI（Window System Interface，窗口系统接口）扩展与原生的窗口管理器进行交互。表面（Surface）是一个渲染窗口的跨平台抽象，通常它是由原生窗口系统句柄 —— 例如 Windows 上的 `HWND` —— 作为参数实例化得到的。`vulkanalia` 包含了可选的 `winit` 集成，这会帮助我们处理创建窗口和与之关联的表面的过程中那些平台特定的细节。
 
-交换链是一系列的渲染目标。它可以保证我们正在渲染的图像不是当前屏幕上正在显然的图像，这样可以保证只有完整的图像才会被显示。每次我们想要绘制一帧时，我们都必须要求交换链提供一个图像来进行渲染。当我们完成一帧的绘制后，图像就会被返回到交换链中，以便在某个时刻呈现到屏幕上。渲染目标的数量和呈现图像到屏幕的条件取决于呈现模式（present mode）。常见的呈现模式有双缓冲（垂直同步）和三缓冲。我们将在创建交换链章节讨论这些问题。
+交换链是一系列的渲染目标。它可以保证我们正在渲染的图像不是当前屏幕上正在显然的图像，从而确保只有完整的图像才会被显示。每次我们想要绘制一帧时，我们都必须要求交换链提供一个图像来进行渲染。当我们完成一帧的绘制后，图像就会被返回到交换链中，以便在某个时刻呈现到屏幕上。渲染目标的数量和呈现图像到屏幕的条件取决于呈现模式（present mode）。常见的呈现模式有双缓冲（垂直同步）和三缓冲。我们将在创建交换链章节讨论这些问题。
 
- 有的平台允许你直接渲染到输出，而不通过 `VK_KHR_display` 和 `VK_KHR_display_swapchain` 与窗口管理器进行交互。这就允许你创建一个覆盖整个屏幕的表面，你可以用它来实现你自己的窗口管理器。
+有的平台允许你直接渲染到输出，而不通过 `VK_KHR_display` 和 `VK_KHR_display_swapchain` 与窗口管理器进行交互。这就允许你创建一个覆盖整个屏幕的表面，你可以用它来实现你自己的窗口管理器。
 
 ### 4. 图像视图（image view）和帧缓冲（framebuffer）
 
-从交换链获取图像后，还不能直接在图像上进行绘制，需要将图像先包装进 `VkImageView` 和 `VkFramebuffer`。一个图像试图可以引用图像的一个特定部分，而一个帧缓冲则引用了用于颜色、深度和模板的图像视图。因为交换链中可能有很多不同的图像，所以我们会预先为每个图像创建一个图像视图和帧缓冲，并在绘制时选择正确的那个。
+从交换链获取图像后，还不能直接在图像上进行绘制，需要将图像先包装进 `VkImageView` 和 `VkFramebuffer`。一个图像视图可以引用图像的一个特定部分，而一个帧缓冲则可以引用用于颜色、深度和模板的图像视图。因为交换链中可能有很多不同的图像，所以我们会预先为每个交换链图像创建一个图像视图和帧缓冲，并在绘制时选择正确的那个。
 
 ### 5. 渲染流程（render passes）
 
-Vulkan 中的渲染流程描述了渲染操作中使用的图像类型，图像的使用方式，以及如何处理它们的内容。在我们最初的三角形渲染程序中，我们会告诉 Vulkan 我们会使用一个图像作为颜色目标，并且我们希望在绘制操作之前将其清除为一个纯色。渲染流程只描述图像的类型，`VkFramebuffer` 则会将特定的图像绑定到这些槽中。
+Vulkan 中的渲染流程描述了渲染操作中使用的图像类型、图像的使用方式，以及如何处理它们的内容。在我们最初的三角形渲染程序中，我们会告诉 Vulkan 我们会使用一个图像作为颜色目标，并且我们希望在绘制操作之前将其清除为一个纯色。渲染流程只描述图像的类型，`VkFramebuffer` 则会将特定的图像绑定到这些槽中。
 
 ### 6. 图形管线（graphics pipeline）
 
-Vulkan 的图形管线通过创建 `VkPipeline` 对象建立。它描述了显卡的可配置状态 —— 例如视口（viewport）的大小和深度缓冲操作，以及使用 `VkShaderModule 的可编程状态。`VkShaderModule` 对象是从着色器字节码创建的。驱动还需要知道在管线中将使用哪些渲染目标，我们通过引用渲染流程来指定。
+Vulkan 的图形管线通过创建 `VkPipeline` 对象建立。它描述了显卡的可配置状态 —— 例如视口（viewport）的大小和深度缓冲操作，以及使用 `VkShaderModule` 的可编程状态。`VkShaderModule` 对象是从着色器字节码创建的。驱动还需要知道在管线中将使用哪些渲染目标，我们通过引用渲染流程来指定。
 
-Vulkan 与之前的图形 API 最大的不同是几乎所有图形管线的配置都需要提前完成。这也就意味着当我们想要切换到另一个着色器，或者稍微改变顶点布局，整个图形管线都要被重建。也就是说，我们需要为所有不同的组合创建很多 `VkPipeline` 对象。只有一些基本的配置，例如视口大小和清除颜色，可以动态改变。所有的状态都需要被显式地描述，没有默认的颜色混合状态。
+Vulkan 与之前的图形 API 最大的不同是几乎所有图形管线的配置都需要提前完成。这也就意味着如果我们想要切换到另一个着色器，或者稍微改变顶点布局，那么整个图形管线都要被重建。也就是说，我们需要为所有不同的组合创建很多 `VkPipeline` 对象。只有一些基本的配置 —— 例如视口大小和清除颜色 —— 可以被动态地改变。所有的状态都需要被显式地描述，没有默认的颜色混合状态。
 
 这样做的好处类似于预编译相比于即时编译，驱动程序可以获得更大的优化空间，并且运行时的性能更加可预测，因为像切换到另一个图形管线这样的大的状态改变都是显式的。
 
 ### 7. 指令池和指令缓冲
 
-之前提到，Vulkan 的许多操作 —— 例如绘制操作 —— 需要被提交到队列才能执行。这些操作首先要被记录到一个 `VkCommandBuffer` 中，然后提交给队列。这些指令缓冲由 `VkCommandPool` 分配，它与特定的队列族相关联。为了绘制一个简单的三角形，我们需要记录下列操作到 `VkCommandBuffer` 中：
+之前提到，Vulkan 的许多操作 —— 例如绘制操作 —— 需要被提交到队列才能执行。这些操作首先要被记录到一个 `VkCommandBuffer` 中，然后提交给队列。这些指令缓冲由 `VkCommandPool` 分配，它与特定的队列族相关联。要绘制一个简单的三角形，我们需要记录下列操作到 `VkCommandBuffer` 中：
 
 * 开始渲染
 * 绑定图形管线
 * 绘制三个顶点
 * 结束渲染
 
-由于帧缓冲绑定的图像依赖于交换链给我们的图像，我们可以提前为每个图像创建指令缓冲，然后在绘制时直接选择对应的指令缓冲使用。当然，在每一帧都重新记录指令缓冲也是可以的，但这样做的效率很低。
+帧缓冲绑定的图像依赖于交换链给我们的图像，我们可以提前为每个图像创建指令缓冲，然后在绘制时直接选择对应的指令缓冲使用。当然，每一帧都重新记录指令缓冲也是可以的，但这样做的效率很低。
 
 ### 8. 主循环
 
 将绘制指令包装进指令缓冲之后，主循环就很直截了当了。我们首先使用 `vkAcquireNextImageKHR` 从交换链获取一张图像，接着为图像选择正确的指令缓冲，然后用 `vkQueueSubmit` 执行它。最后，我们使用 `vkQueuePresentKHR` 将图像返回到交换链，从而使其呈现到屏幕上。
 
-提交给队列的操作会被异步执行。我们需要采取诸如信号量一类的同步措施来确保正确的执行顺序。绘制指令的执行必须是在获取图像完成后才能开始，否则可能会出现我们开始渲染到一个仍然在屏幕上显示的图像的情况。`vkQueuePresentKHR` 调用也需要等到渲染完成后才能执行，我们会使用第二个信号量来实现这一点。
+提交给队列的操作会被异步执行。我们需要采取诸如信号量一类的同步措施来确保正确的执行顺序。绘制指令必须在获取图像完成后才能开始执行，否则可能会出现我们渲染到一个仍然在屏幕上显示的图像的情况。`vkQueuePresentKHR` 调用也需要等到渲染完成后才能执行，我们会使用第二个信号量来实现这一点。
 
 ### 总结
 
-这个快速的介绍应该能让你对绘制第一个三角形所需的工作有一个基本的了解。一个真实的程序包含更多的步骤，例如分配顶点缓冲区、创建统一缓冲区和上传纹理图像，这些都会在后续章节中介绍，但我们会从简单的开始，因为 Vulkan 本身的学习曲线就已经非常陡峭了。请注意，我们会通过将顶点坐标嵌入到顶点着色器中来作弊，而不使用顶点缓冲。这是因为管理顶点缓冲需要对指令缓冲有一定的了解。
+这个快速的介绍应该能让你对绘制第一个三角形所需的工作有一个基本的了解。一个真实的程序包含更多的步骤，例如分配顶点缓冲、创建 uniform 缓冲和上传纹理图像，这些都会在后续章节中介绍，但我们会从简单的开始，因为 Vulkan 本身的学习曲线就已经非常陡峭了。请注意，我们会通过将顶点坐标嵌入到顶点着色器中来作弊，而不使用顶点缓冲。这是因为管理顶点缓冲需要对指令缓冲有一定的了解。
 
 所以简单来说，要绘制第一个三角形，我们需要：
 
@@ -86,19 +86,19 @@ Vulkan 与之前的图形 API 最大的不同是几乎所有图形管线的配�
 * 为每个可能的交换链图像分配并记录一个包含绘制指令的指令缓冲
 * 通过获取图像、提交正确的绘制指令缓冲，然后将图像返回到交换链来绘制帧
 
-步骤非常多，但其实每一步都非常简单。这些步骤中的每一个都会在后续章节中详细介绍。如果你对程序中的某一步感到困惑，可以回来参考一下本章节。
+步骤非常多，但其实每一步都非常简单。每一步都会在后续章节中详细介绍。如果你对程序中的某一步感到困惑，可以回来参考一下本章节。
 
 ## API 概念
 
-Vulkan API 是用 C 语言定义的。Vulkan API 的规范 —— Vulkan API 注册表 —— 是用 [一个 XML 文件](https://github.com/KhronosGroup/Vulkan-Docs/blob/main/xml/vk.xml) 来定义的，它提供了机器可读的 Vulkan API 定义。
+Vulkan API 是用 C 语言定义的。Vulkan API 的规范 —— Vulkan API 注册表 —— 是用[一个 XML 文件](https://github.com/KhronosGroup/Vulkan-Docs/blob/main/xml/vk.xml)来定义的，它提供了机器可读的 Vulkan API 定义。
 
-[Vulkan 头文件](https://github.com/KhronosGroup/Vulkan-Headers) 是 Vulkan SDK 的一部分，它们是从 Vulkan API 注册表生成的。在下一章中我们将安装的 Vulkan SDK 包含了这些头文件。然而，我们不会直接或间接地使用这些头文件，因为 `vulkanalia` 包含了一个独立于 Vulkan SDK 提供的 C 接口的 Rust 接口，这个接口也是从 Vulkan API 注册表生成的。
+[Vulkan 头文件](https://github.com/KhronosGroup/Vulkan-Headers) 是 Vulkan SDK 的一部分，它们是从 Vulkan API 注册表生成的。下一章里我们将要安装的 Vulkan SDK 包含了这些头文件。然而，我们不会直接或间接地使用这些头文件，因为 `vulkanalia` 提供的 Rust 接口独立于 Vulkan SDK 提供的 C 接口，这个 Rust 接口也是从 Vulkan API 注册表生成的。
 
 `vulkanalia` 的基础是 [`vulkanalia-sys`](https://docs.rs/vulkanalia-sys) crate，它定义了 Vulkan API 注册表中的原始类型。这些原始类型被 `vulkanalia` crate 在 [`vk`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/index.html) 模块中重新导出，同时还包含了从 Vulkan API 注册表生成的其他一些项目，作为前面介绍中提到的对 Vulkan API 的轻量级包装。
 
 ### 类型名称
 
-因为 Rust 有对名称空间（namespace）的支持而 C 没有，`vulkanalia` 的 API 会略去 Vulkan 类型名称中用于命名空间的部分。更具体地说，Vulkan 类型，例如结构体、联合和枚举，没有 `Vk` 前缀。例如，`VkInstanceCreateInfo` 结构体在 `vulkanalia` 中变成了 [`InstanceCreateInfo`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/struct.InstanceCreateInfo.html) 结构体，并且可以在前面提到的 [`vk`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/index.html) 模块中找到。
+因为 Rust 有对名称空间（namespace）的支持而 C 没有，`vulkanalia` 的 API 会略去 Vulkan 类型名称中用于名称空间的部分。更具体地说，Vulkan 类型，例如结构体、联合和枚举，没有 `Vk` 前缀。例如，`VkInstanceCreateInfo` 结构体在 `vulkanalia` 中变成了 [`InstanceCreateInfo`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/struct.InstanceCreateInfo.html) 结构体，并且可以在前面提到的 [`vk`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/vk/index.html) 模块中找到。
 
 从现在开始，本教程将使用 `vulkanalia` 中的 `vk::` 模块前缀来引用 `vulkanalia` 中定义的 Vulkan 类型，以明确该类型表示的是从 Vulkan API 注册表生成的东西。
 
@@ -112,23 +112,23 @@ Vulkan API 是用 C 语言定义的。Vulkan API 的规范 —— Vulkan API 注
 
 ### 枚举
 
-`vulkanalia` 将 Vulkan 枚举实现为结构体，并将枚举变体实现为这些结构体的关联常量。不使用 Rust 枚举是因为在 FFI 调用中使用 Rust 枚举可能导致 [未定义行为](https://github.com/rust-lang/rust/issues/36927)。
+`vulkanalia` 将 Vulkan 枚举实现为结构体，并将枚举变体实现为这些结构体的关联常量。不使用 Rust 枚举是因为在 FFI 调用中使用 Rust 枚举可能导致[未定义行为](https://github.com/rust-lang/rust/issues/36927)。
 
-因为结构体充当了关联常量的名称空间，我们也就不必担心不同 Vulkan 枚举（或来自其他库的枚举）名称之间的冲突，就像在 C 中那样。所以，就像类型名称一样，`vulkanalia` 会略去 Vulkan 枚举名称中用于名称空间的部分。
+因为结构体充当了关联常量的名称空间，我们也就不必像在 C 语言中那样担心不同 Vulkan 枚举（或来自其他库的枚举）名称之间的冲突。所以和类型名称一样，`vulkanalia` 会略去 Vulkan 枚举名称中用于名称空间的部分。
 
 例如，`VK_OBJECT_TYPE_INSTANCE` 枚举变体是 `VkObjectType` 枚举的 `INSTANCE` 值。在 `vulkanalia` 中，这个变体变成了 `vk::ObjectType::INSTANCE`。
 
 ### 掩码（bitmasks）
 
-`vulkanalia` 将掩码实现为结构体，并将位标志（bitflags）实现为这些结构体的关联常量。这些结构体和关联常量是通过由 [`bitflags`](https://github.com/bitflags/bitflags) crate 提供的 `bitflags!` 宏来生成的。
+`vulkanalia` 将掩码实现为结构体，并将位标志（bitflags）实现为这些结构体的关联常量。这些结构体和关联常量是通过 [`bitflags`](https://github.com/bitflags/bitflags) crate 提供的 `bitflags!` 宏来生成的。
 
 和枚举变体一样，位标志名中用于名称空间的部分会被略去。
 
 例如，`VK_BUFFER_USAGE_TRANSFER_SRC_BIT` 位标志是 `VkBufferUsageFlags` 掩码的 `TRANSFER_SRC` 位标志。在 `vulkanalia` 中，这个位标志变成了 `vk::BufferUsageFlags::TRANSFER_SRC`。
 
-### 指令（Vulkan 函数）
+### 指令（command，即 Vulkan API 函数）
 
-> 尽管 Vulkan specification 会将 Vulkan API 中的函数称作*指令（command）*，但 C++ 版本的教程并没有使用这个术语。此外，将这些函数称作“指令”可能会在后面和另一个概念引起混淆。因此本教程中都不使用这个术语。
+> 尽管 Vulkan specification 会将 Vulkan API 中的函数称作*指令（command）*，但 C++ 版本的教程并没有使用这个术语。此外，将这些函数称作“指令”可能会和另一个概念引起混淆。因此本翻译中都不使用这个术语。
 
 诸如 `vkCreateInstance` 的原始 Vulkan 函数的类型在 `vulkanalia` 中被定义为带有 `PFN_`（pointer to function，函数指针）前缀的函数指针类型别名。所以 `vkCreateInstance` 的 `vulkanalia` 类型别名是 `vk::PFN_vkCreateInstance`。
 
@@ -192,15 +192,15 @@ unsafe fn enumerate_instance_extension_properties(
 ) -> VkResult<Vec<ExtensionProperties>>;
 ```
 
-这个函数封装使得从 Rust 使用 `vkEnumerateInstanceExtensionProperties` 更加容易、更少出错，并且更符合惯用法：
+这个函数封装使得从 Rust 使用 `vkEnumerateInstanceExtensionProperties` 更加容易、更少出错，并且更符合习惯用法：
 
 * `layer_name` 参数的可选性被编码在函数签名中。这个参数是可选的，这一点在 C 函数签名中没有体现，需要查阅 Vulkan 规范才能得到这个信息
-* 函数的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）体现。这使得我们可以利用 Rust 强大的错误处理能力，并且在我们忽略检查可失败函数的结果时，编译器会发出警告
+* 函数的可失败性通过返回一个 `Result`（[`VkResult<T>`](https://docs.rs/vulkanalia/%VERSION%/vulkanalia/type.VkResult.html) 是 `Result<T, vk::ErrorCode>` 的类型别名）体现。这使得我们可以利用 Rust 强大的错误处理能力，并且在我们忘记检查可失败函数的结果时，编译器会发出警告
 * 函数封装在内部处理了上面描述的三个步骤，并返回一个包含扩展属性的 `Vec`
 
-注意，函数封装仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类型的错误（例如给此函数传递一个空的层名称，）但还是有很多可能会出错的事情，导致诸如段错误之类“有趣”的事情发生。你可以随时检查 Vulkan 文档中函数的 `Valid Usage` 部分以了解如何正确地调用函数。
+注意，函数封装仍然是 `unsafe` 的，因为虽然 `vulkanalia` 可以消除某些类型的错误（例如给此函数传递一个空的层名称），但还是有很多可能会出错的事情，导致诸如段错误之类“有趣”的事情发生。你可以随时检查 Vulkan 文档中函数的 `Valid Usage` 部分以了解如何正确地调用函数。
 
-你可能注意到了上面函数封装中的 `&self` 参数。这些函数封装是在 trait 中定义的，而 `vulkanalia` 暴露的类型实现了这些 trait。这些 trait 可以分为两类：版本 trait （version traits）和扩展 trait（extension traits）。版本 trait 为 Vulkan 的标准部分中的函数提供函数封装，而扩展 trait 为 Vulkan 扩展中的函数提供函数封装。
+你可能注意到了上面函数封装中的 `&self` 参数。这些函数封装是在 trait 中定义的，而 `vulkanalia` 暴露的类型实现了这些 trait。这些 trait 可以分为两类：版本 trait（version traits）和扩展 trait（extension traits）。版本 trait 为 Vulkan 的标准部分中的函数提供函数封装，而扩展 trait 为 Vulkan 扩展中的函数提供函数封装。
 
 例如，`enumerate_instance_extension_properties` 是一个非扩展 Vulkan 函数，是 Vulkan 1.0 的一部分，不依赖于 Vulkan 实例或设备，所以它被放在 `vk::EntryV1_0` trait 中。而 `cmd_draw_indirect_count` 函数是在 Vulkan 1.2 中添加的，并且依赖于 Vulkan 设备，所以它被放在 `vk::DeviceV1_2` trait 中。
 
@@ -256,7 +256,7 @@ let instance = entry.create_instance(&info, None).unwrap();
 -->
 然而，上面的 Rust 代码有一定程度的危险。生成器有生存期（lifetime），这要求生成器中存储的引用至少要与生成器本身活得一样久。也就是说，在上面的例子中，Rust 编译器会确保传递给 `enabled_extension_names` 方法的切片至少活得与生成器一样长。然而，一旦我们调用 `.build()` 来获取底层的 `vk::InstanceCreateInfo` 结构体，生成器的生存期就会被丢弃。这意味着 Rust 编译器不再能防止我们 _搬起石头砸自己的脚_，例如解引用一个已经不存在的切片的指针。
 
-下面的代码会崩溃（但愿如此），因为传递给 `enabled_extension_names` 的临时 `Vec` 在我们使用 `vk::InstanceCreateInfo` 结构体调用 `create_instance` 时已经被丢弃了：
+下面的代码会崩溃（但愿如此），因为传递给 `enabled_extension_names` 的临时 `Vec` 在我们使用 `vk::InstanceCreateInfo` 结构体调用 `create_instance` 时已经被销毁了：
 
 ```rust,noplaypen,panics
 let info = vk::InstanceCreateInfo::builder()

@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_set_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_set_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
 
 现在我们可以将任何顶点属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-试图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
 
@@ -390,4 +390,4 @@ self.device.unmap_memory(self.data.uniform_buffers_memory[image_index]);
 
 以这种方式使用 UBO 并不是将频繁变化的值传递给着色器的最有效的方法。要将少量数据传递给着色器，更有效的方法是使用*推送常量（push constants）*。我们会在以后的章节中介绍它们。
 
-如果你现在运行程序，你将会得到来自验证层的未绑定描述符集合的错误，并且什么都不会被渲染。在下一章中我们将会看到这些描述符集合，它们将会将 `vk::Buffer` 绑定到 uniform 缓冲描述符，这样着色器就可以访问这些变换数据，然后我们的程序就可以正常运行了。
+如果你现在运行程序，你将会得到来自校验层的未绑定描述符集合的错误，并且什么都不会被渲染。在下一章中我们将会看到这些描述符集合，它们将会将 `vk::Buffer` 绑定到 uniform 缓冲描述符，这样着色器就可以访问这些变换数据，然后我们的程序就可以正常运行了。

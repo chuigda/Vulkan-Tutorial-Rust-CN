@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/06_swapchain_creation.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/06_swapchain_creation.rs)
 
 Vulkan 没有“默认帧缓冲”（default framebuffer）的概念，因此，Vulkan 需要一个结构来持有我们将要绘制的帧缓冲，这个架构就是*交换链*。在 Vulkan 中，交换链必须被显式创建。交换链本质上就是一个队列，其中充满了等待呈现到屏幕上的图像。我们的应用程序每次会从这个队列中获取一张图像，在上面绘制，然后将它返还到队列中。交换链的设置决定了这个队列如何工作，以及何时呈现队列中的图像，但通常来说，交换链的目的是使图像的呈现与屏幕刷新率同步。
 

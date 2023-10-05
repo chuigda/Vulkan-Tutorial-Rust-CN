@@ -4,9 +4,9 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/01_instance_creation.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/01_instance_creation.rs)
 
-你首先要做的事情就是通过创建一个 *实例* 来初始化 Vulkan 库。实例是你的应用程序和 Vulkan 库之间的连接，创建它涉及到向驱动程序指定一些关于你的应用程序的细节。首先，添加下面的导入：
+你首先要做的事情就是通过创建一个*实例*来初始化 Vulkan 库。实例是你的应用程序和 Vulkan 库之间的连接，创建它涉及到向驱动程序指定一些关于你的应用程序的细节。首先，添加下面的导入：
 
 ```rust,noplaypen
 use anyhow::{anyhow, Result};
@@ -16,13 +16,13 @@ use vulkanalia::window as vk_window;
 use vulkanalia::prelude::v1_0::*;
 ```
 
-这里我们引入 [`anyhow!`](https://docs.rs/anyhow/latest/anyhow/macro.anyhow.html) 宏，这个宏可以让我们轻松地构造 `anyhow` 错误的实例。然后，我们引入 `log::*`，这样我们就可以使用 `log` crate 中的日志宏。接下来，我们引入 `LibloadingLoader`，它是 `vulkanalia` 提供的 `libloading` 集成，我们会用它来从 Vulkan 共享库中加载最初的 Vulkan 函数。你操作系统上 Vulkan 共享库（例如 Windows 上的 `vulkan-1.dll`）将会被导入为 `LIBRARY`。
+这里我们引入 [`anyhow!`](https://docs.rs/anyhow/latest/anyhow/macro.anyhow.html) 宏，这个宏可以让我们轻松地构造 `anyhow` 错误的实例。然后，我们引入 `log::*`，这样我们就可以使用 `log` crate 中的日志宏。接下来，我们引入 `LibloadingLoader`，它是 `vulkanalia` 提供的 `libloading` 集成，我们会用它来从 Vulkan 共享库中加载最初的 Vulkan 函数。你操作系统上的 Vulkan 共享库（例如 Windows 上的 `vulkan-1.dll`）将会被导入为 `LIBRARY`。
 
 接着我们将 `vulkanalia` 对窗口的集成导入为 `vk_window`，我们将在本章中使用它来枚举渲染到窗口所需的全局 Vulkan 扩展。在将来的章节中，我们还将使用 `vk_window` 来将 Vulkan 实例与 `winit` 窗口链接起来。
 
-最后我们从 `vulkanalia` 引入 Vulkan 1.0 的 `prelude`  模块，它将为本章和将来的章节提供我们需要的所有其他 Vulkan 相关的导入。
+最后我们从 `vulkanalia` 引入 Vulkan 1.0 的 `prelude` 模块，它将为本章和将来的章节提供我们需要的所有其他 Vulkan 相关的导入。
 
-要创建一个实例，我们就要用我们的应用程序的一些信息来填充一个 `vk::ApplicationInfo` 结构体。这些数据从技术上来说是可选的，但它可以给驱动程序提供一些有用的信息，以便优化我们的特定应用程序（例如我们的应用程序使用了某个众所周知的图形引擎，这个引擎具有某些特定的行为）。我们将在函数 `create_instance` 中创建 `vk::ApplicationInfo` 结构体，这个函数接受我们的窗口和一个 Vulkan 入口点（entry point）（我们将在后面创建）并返回一个 Vulkan 实例：
+要创建一个实例，我们就要用我们的应用程序的一些信息来填充一个 `vk::ApplicationInfo` 结构体。技术上来说，这些数据是可选的，但它们可以给驱动程序提供一些有用的信息，以便优化我们的特定应用程序（例如我们的应用程序使用了某个众所周知的图形引擎，这个引擎具有某些特定的行为）。我们将在函数 `create_instance` 中创建 `vk::ApplicationInfo` 结构体，`create_instance` 函数接受我们的窗口和一个 Vulkan 入口点（entry point，我们将在后面创建）并返回一个 Vulkan 实例：
 
 ```rust,noplaypen
 unsafe fn create_instance(window: &Window, entry: &Entry) -> Result<Instance> {
@@ -35,7 +35,7 @@ unsafe fn create_instance(window: &Window, entry: &Entry) -> Result<Instance> {
 }
 ```
 
-在 Vulkan 中，许多信息都是通过结构体而非函数参数传递的，所以我们再需要填充一个结构体，来提供创建一个实例所需的信息。下一个结构体是不可选的，它会告诉 Vulkan 驱动程序我们想要使用哪些全局扩展和校验层。这里的“全局”意味着这些扩展和校验层适用于整个程序，而不是特定的设备。“全局”和“设备”的概念将在接下来的几章中逐渐变得清晰。首先我们需要使用 `vulkanalia` 的窗口集成 `vk_window` 来枚举所需的全局扩展，并将它们转换为以空字符结尾的 C 字符串（null-terminated C strings）（`*const c_char`）：
+在 Vulkan 中，许多信息都是通过结构体而非函数参数传递的，所以我们再需要填充一个结构体，来提供创建一个实例所需的信息。下一个结构体不是可选的，它会告诉 Vulkan 驱动程序我们想要使用哪些全局扩展和校验层。这里的“全局”意味着这些扩展和校验层适用于整个程序，而不是特定的设备。“全局”和“设备”的概念将在接下来的几章中逐渐变得清晰。首先我们需要使用 `vulkanalia` 的窗口集成 `vk_window` 来枚举所需的全局扩展，并将它们转换为以空字符结尾的 C 字符串（null-terminated C strings，`*const c_char`）：
 
 ```rust,noplaypen
 let extensions = vk_window::get_required_instance_extensions(window)
@@ -59,7 +59,7 @@ Ok(entry.create_instance(&info, None)?)
 * 包含创建信息的结构体的引用
 * 可选的自定义分配器回调的引用，本教程中始终为 `None`
 
-现在我们有了一个可以通过入口点创建 Vulkan 实例的函数，接下来我们需要创建一个 Vulkan 入口点。这个入口点将加载用于查询实例支持和创建实例的 Vulkan 函数。但在此之前，让我们向我们的 `App` 结构体添加一些字段来存储我们将要创建的 Vulkan 入口点和实例：
+现在我们有了一个可以通过入口点创建 Vulkan 实例的函数，接下来我们需要创建一个 Vulkan 入口点。这个入口点将加载用于查询实例支持和创建实例的 Vulkan 函数。但在此之前，先向我们的 `App` 结构体添加一些字段来存储我们将要创建的 Vulkan 入口点和实例：
 
 ```rust,noplaypen
 struct App {
@@ -105,7 +105,7 @@ unsafe fn destroy(&mut self) {
 
 就如我们在介绍中提到的，Apple 有他们自己的底层图形 API，[Metal](https://en.wikipedia.org/wiki/Metal_(API))。Vulkan SDK 为 macOS 提供的 Vulkan 实现（[MoltenVK](https://moltengl.com/)）是一个位于应用程序和 Metal 之间的中间层，它将应用程序所做的 Vulkan API 调用转换为 Metal API 调用。因为 MoltenVK [不完全符合 Vulkan 规范](https://www.lunarg.com/wp-content/uploads/2022/05/The-State-of-Vulkan-on-Apple-15APR2022.pdf)，所以你需要启用我们在本教程中将要讨论的兼容性 Vulkan 扩展来支持 macOS。
 
-顺带一提，尽管 MoltenVK 不是完全合规的实现，在 macOS 上实践本教程时，应该也是不会有任何问题的。
+顺带一提，尽管 MoltenVK 不是完全合规的实现，但在 macOS 上实践本教程时，应该也是不会有任何问题的。
 
 ## 启用兼容性扩展
 
@@ -150,9 +150,9 @@ let info = vk::InstanceCreateInfo::builder()
     .flags(flags);
 ```
 
-这些代码会在 Vulkan 版本高于我们定义的最小版本，而平台又缺乏完全符合 Vulkan 实现（这里只检查了 macOS）的情况下启用 `KHR_PORTABILITY_ENUMERATION_EXTENSION ` 兼容性扩展。
+这些代码会在 Vulkan 版本高于我们定义的最小版本，而平台又缺乏完全合规的 Vulkan 实现（这里只检查了 macOS）的情况下启用 `KHR_PORTABILITY_ENUMERATION_EXTENSION ` 兼容性扩展。
 
-这段代码还会启用 `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` 扩展。启用前 `KHR_PORTABILITY_SUBSET_EXTENSION` 需要先启用这个扩展。我们在后面的教程中创建逻辑设备时会用到 `KHR_PORTABILITY_SUBSET_EXTENSION` 扩展。
+这段代码还会启用 `KHR_GET_PHYSICAL_DEVICE_PROPERTIES2_EXTENSION` 扩展。启用 `KHR_PORTABILITY_SUBSET_EXTENSION` 需要先启用这个扩展。我们在后面的教程中创建逻辑设备时会用到 `KHR_PORTABILITY_SUBSET_EXTENSION` 扩展。
 
 ## `Instance` 和 `vk::Instance`
 

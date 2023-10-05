@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/09_shader_modules.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.frag)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/09_shader_modules.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.frag)
 
 不同于以往的 API，Vulkan 中的着色器代码不是以 [GLSL](https://en.wikipedia.org/wiki/OpenGL_Shading_Language) 或者 [HLSL](https://en.wikipedia.org/wiki/High-Level_Shading_Language) 这种形式指定的，而是以一种被称为 [SPIR-V](https://www.khronos.org/spir) 的字节码格式指定的。Vulkan 和 OpenCL（都是 Knronos 的 API）都使用这种字节码格式。这种格式既可以用于图形着色器，也可以用于计算着色器，不过本书中我们会关注其中与图形管线有关的部分。
 
@@ -218,7 +218,7 @@ unsafe fn create_shader_module(
 
 创建着色器模块很简单，只要指定字节码切片的长度和字节码切片本身就行。这些信息被包含在 `vk::ShaderModuleCreateInfo` 结构体中。唯一的问题是，字节码的长度是以字节为单位指定的，但是这个结构体中的字节码切片是 `&[u32]` 而不是 `&[u8]`。因此，我们需要先将 `&[u8]` 转换为 `&[u32]`。
 
-`vulkanalia` 提供了一个名为 `Bytecode` 的辅助结构体，我们将会用这个辅助结构体来将着色器代码复制到一个具有 `u32` 对齐的缓冲区中。首先导入这个辅助结构体：
+`vulkanalia` 提供了一个名为 `Bytecode` 的辅助结构体，我们将会用这个辅助结构体来将着色器代码复制到一个具有 `u32` 对齐的缓冲中。首先导入这个辅助结构体：
 
 ```rust,noplaypen
 use vulkanalia::bytecode::Bytecode;

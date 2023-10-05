@@ -4,7 +4,7 @@
 >
 > Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
 
-**本章代码:** [main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/07_image_views.rs)
+**本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/07_image_views.rs)
 
 要在渲染管线中使用任何 `vk::Image` —— 包括交换链中的那些，我们都需要为其创建一个图像视图对象 `vk::ImageView`。图像视图就像它的名字所描述的那样，它描述了如何访问图像，以及访问图像的哪一部分。例如，图像视图可以用来表示“一张图像应该被视为一张没有多级渐远层级（mipmapping levels）的二维纹理”。
 
