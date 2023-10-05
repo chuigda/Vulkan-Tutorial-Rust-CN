@@ -44,7 +44,9 @@ jobs:
         run: bin/mdbook build
         working-directory: ./book
       - name: Copy Google verification file to build directory
-        run: cp googlea55b23224d999983.html ./book/book
+        run: cp ./site/googlea55b23224d999983.html ./book/book
+      - name: Copy site.xml to build directory
+        run: cp ./site/sitemap.xml ./book/book
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
