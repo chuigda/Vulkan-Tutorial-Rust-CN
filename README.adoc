@@ -8,3 +8,4 @@
 
 * link:https://github.com/KyleMayes/vulkanalia[Vulkanalia]
 * link:https://github.com/fangcun010/VulkanTutorialCN[Vulkan 中文教程]
+* 所有参与本教程翻译的贡献者们
