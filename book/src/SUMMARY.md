@@ -69,7 +69,7 @@
 
 - [推送常量](./dynamic/push_constants.md)
 - [Recycling command buffers](./dynamic/recycling_command_buffers.md)
-- [Secondary command buffers](./dynamic/secondary_command_buffers.md)
+- [次级指令缓冲](./dynamic/secondary_command_buffers.md)
 
 # 总结
 
