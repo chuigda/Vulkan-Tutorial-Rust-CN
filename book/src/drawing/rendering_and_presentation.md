@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/drawing/rendering_and_presentation.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/15_hello_triangle.rs)
 
@@ -88,7 +88,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
         .device
         .acquire_next_image_khr(
             self.data.swapchain,
-            u64::max_value(),
+            u64::MAX,
             self.data.image_available_semaphore,
             vk::Fence::null(),
         )?
@@ -310,7 +310,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
         .device
         .acquire_next_image_khr(
             self.data.swapchain,
-            u64::max_value(),
+            u64::MAX,
             self.data.image_available_semaphores[self.frame],
             vk::Fence::null(),
         )?
@@ -409,7 +409,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
     self.device.wait_for_fences(
         &[self.data.in_flight_fences[self.frame]],
         true,
-        u64::max_value(),
+        u64::MAX,
     )?;
 
     self.device.reset_fences(&[self.data.in_flight_fences[self.frame]])?;
@@ -476,7 +476,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
         .device
         .acquire_next_image_khr(
             self.data.swapchain,
-            u64::max_value(),
+            u64::MAX,
             self.data.image_available_semaphores[self.frame],
             vk::Fence::null(),
         )?
@@ -486,7 +486,7 @@ unsafe fn render(&mut self, window: &Window) -> Result<()> {
         self.device.wait_for_fences(
             &[self.data.images_in_flight[image_index as usize]],
             true,
-            u64::max_value(),
+            u64::MAX,
         )?;
     }
 

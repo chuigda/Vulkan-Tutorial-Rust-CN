@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/model/depth_buffering.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/26_depth_buffering.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/26/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/26/shader.frag)
 
@@ -355,6 +355,8 @@ transition_image_layout(
 ```
 
 未定义布局可以被作为初始布局，因为深度图像中没有需要考虑的现有内容。我们需要更新 `transition_image_layout` 中的一些逻辑，以使用正确的子资源 aspect：
+
+> **注意：**第一个 `|` 运算符描述了一个[*模式*](https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html)，它匹配 `match` 分支中指定的任意一个 `vk::Format`。与此同时，第二个 `|` 运算符是[*按位或运算符*](https://doc.rust-lang.org/std/ops/trait.BitOr.html)，它将我们在这段代码中想要启用的 `vk::ImageAspectFlags` 位组合在一起。
 
 ```rust,noplaypen
 let aspect_mask = if new_layout == vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL {

@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/setup/validation_layers.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 **本章代码:**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/02_validation_layers.rs)
 
@@ -222,6 +222,8 @@ unsafe fn create_instance(
 最后，我们调用 `create_debug_utils_messenger_ext` 来把我们的调试回调函数注册到 Vulkan 实例中。
 
 因为 `create_instance` 函数接受一个 `AppData` 的引用，我们还需要更新 `App` 和 `App::create`：
+
+> **注意：**`AppData::default()` 会使用 `AppData` 结构体上的 `#[derive(Default)]` 生成的 [`Default` trait](https://doc.rust-lang.org/std/default/trait.Default.html) 的实现。这会导致像 `Vec` 这样的容器被初始化为空列表，而像 `vk::DebugUtilsMessengerEXT` 这样的 Vulkan 句柄被初始化为空句柄。如果 Vulkan 句柄在使用之前没有被正确初始化，我们在本章中启用的校验层应该会告诉我们遗漏了什么。
 
 ```rust,noplaypen
 struct App {

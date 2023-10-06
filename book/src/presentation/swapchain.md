@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/presentation/swapchain.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/06_swapchain_creation.rs)
 
@@ -243,7 +243,7 @@ fn get_swapchain_extent(
     window: &Window,
     capabilities: vk::SurfaceCapabilitiesKHR,
 ) -> vk::Extent2D {
-    if capabilities.current_extent.width != u32::max_value() {
+    if capabilities.current_extent.width != u32::MAX {
         capabilities.current_extent
     } else {
         let size = window.inner_size();

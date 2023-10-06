@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/quality/generating_mipmaps.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/28_mipmapping.rs)
 
@@ -470,7 +470,7 @@ if !instance
 // 物体越近就越小，可以为负值
 let mut lod = get_lod_level_from_screen_size();
 
-lod = clamp(lod + mip_lod_bias, min_lop, max_lod);
+lod = clamp(lod + mip_lod_bias, min_lod, max_lod);
 
 // 截断到纹理中多级渐远层级的数量
 let level = clamp(floor(lod), 0, texture.mip_levels - 1);

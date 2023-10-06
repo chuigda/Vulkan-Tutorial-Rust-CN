@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/introduction.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 本教程是用 Rust 对 <https://vulkan-tutorial.com> 的改写版本，应当归功于原教程的作者 ([Alexander Overvoorde](https://github.com/Overv)) 及[其他贡献者们](https://github.com/Overv/VulkanTutorial/graphs/contributors)。
 

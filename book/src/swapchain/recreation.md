@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/swapchain/recreation.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/16_swapchain_recreation.rs)
 
@@ -99,7 +99,7 @@ unsafe fn destroy_swapchain(&mut self) {
 ```rust,noplaypen
 let result = self.device.acquire_next_image_khr(
     self.data.swapchain,
-    u64::max_value(),
+    u64::MAX,
     self.data.image_available_semaphores[self.frame],
     vk::Fence::null(),
 );

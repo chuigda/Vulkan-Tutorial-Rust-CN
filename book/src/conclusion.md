@@ -1,5 +1,9 @@
 # 总结
 
+> 原文链接：<https://kylemayes.github.io/vulkanalia/conclusion.html>
+>
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+
 一路千辛万苦，我们终于有了一个基本的 Vulkan 程序。你现在已经掌握了 Vulkan 的基本原理，可以开始探索更多的特性了，比如：
 * 实例化渲染
 * 动态 uniform

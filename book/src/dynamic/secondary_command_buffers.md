@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/dynamic/secondary_command_buffers.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 > <span style="display: flex; justify-content: center; margin-bottom: 16px"><img src="../images/i_have_no_idea_what_im_doing.jpg" width="256"></span>前面没有这个声明的章节都是直接从 <https://github.com/Overv/VulkanTutorial> 改编而来。<br/><br/>这一章和后面的章节都是原创，作者并不是 Vulkan 的专家。作者尽力保持了权威的语气，但是这些章节应该被视为一个 Vulkan 初学者的“尽力而为”。<br/><br/>如果你有问题、建议或者修正，请[提交 issue](https://github.com/KyleMayes/vulkanalia/issues)！
 
@@ -130,7 +130,7 @@ unsafe fn update_secondary_command_buffer(
 
     let model = Mat4::from_axis_angle(
         vec3(0.0, 0.0, 1.0),
-        Deg(0.0) * time
+        Deg(90.0) * time
     );
 
     let model_bytes = &*slice_from_raw_parts(
@@ -225,7 +225,7 @@ self.device.cmd_begin_render_pass(
 unsafe fn update_command_buffer(&mut self, image_index: usize) -> Result<()> {
     // ...
 
-    self.device.cmd_begin_render_pass(command_buffer, &info, vk::SubpassContents::INLINE);
+    self.device.cmd_begin_render_pass(command_buffer, &info, vk::SubpassContents::SECONDARY_COMMAND_BUFFERS);
 
     let secondary_command_buffers = (0..4)
         .map(|i| self.update_secondary_command_buffer(image_index, i))

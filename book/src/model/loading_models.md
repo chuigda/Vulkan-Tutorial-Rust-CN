@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/model/loading_models.html>
 >
-> Commit Hash: 72b9244ea1d53fa0cf40ce9dbf854c43286bf745
+> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/27_model_loading.rs)
 
@@ -165,7 +165,7 @@ let vertex = Vertex {
 };
 ```
 
-不幸的是，`attrib.vertices` 数组是一个 `float` 类型而不是 `cgmath::Vector3<f32>` 类型的数组，所以你需要将索引乘以 `3`。类似地，每个条目有两个纹理坐标分量。偏移量 `0`、`1` 和 `2` 用于访问 X、Y 和 Z 分量，或者在纹理坐标的情况下访问 U 和 V 分量。
+不幸的是，`tobj::load_obj_buf` 返回的 `positions` 是一个扁平的数组，存储的是 `f32` 而不是像 `cgmath::Vector3<f32>` 这样的东西。考虑到每个顶点坐标有三个分量，你需要将索引乘以 `3`。类似地，每个纹理坐标有两个分量。对于顶点坐标，偏移量 `0`、`1` 和 `2` 会被用于访问 X、Y 和 Z 分量；对于纹理坐标，偏移量 `0` 和 `1` 会被用于访问 U 和 V 分量。
 
 你可能想从现在开始在 release 模式下编译你的程序，因为没有优化的情况下加载纹理和模型可能会非常慢。如果你现在运行你的程序，你应该会看到如下所示的东西：
 
