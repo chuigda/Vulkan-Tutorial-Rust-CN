@@ -53,7 +53,7 @@ unsafe fn check_physical_device(
 }
 ```
 
-要评估一个物理设备是否满足我们的需求，我们需要从设备中查询一些详细信息设备的基本信息。名称、类型和支持的 Vulkan 版本等信息可以使用 `get_physical_device_properties` 查询：
+要评估一个物理设备是否满足我们的需求，我们需要从设备中查询一些详细信息。设备的名称、类型和支持的 Vulkan 版本等基本信息可以使用 `get_physical_device_properties` 查询：
 
 ```rust,noplaypen
 let properties = instance
