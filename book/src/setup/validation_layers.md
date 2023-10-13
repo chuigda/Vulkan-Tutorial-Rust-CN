@@ -39,7 +39,7 @@ Vulkan 并不内置任何校验层，但是 LunarG Vulkan SDK 提供了一系列
 
 校验层只能在安装到系统中之后使用。比如 LunarG 校验层只能在安装了 Vulkan SDK 的电脑上使用。
 
-之前，在 Vulkan 中有两种不同类型的校验层：实例（instance）特定的校验层与设备（device）特定的校验特定层。实例特定的校验层会检查与全局 Vulkan 对象 —— 例如 Vulkan 实例 —— 相关的调用，而设备特定的校验层只会检查与某个特定的 GPU 相关的调用。设备特定的校验层现在已经被弃用了，这也就意味着实例特定的校验层会对所有的 Vulkan 调用生效。规范文档依旧建议你出于兼容性考虑启用设备特定的校验层，而在某些实现中它是必须的。我们将简单地在逻辑设备级别指定与实例相同的校验层，稍后我们会看到。
+之前，在 Vulkan 中有两种不同类型的校验层：实例（instance）特定的校验层与设备（device）特定的校验特定层。实例特定的校验层会检查与全局 Vulkan 对象 —— 例如 Vulkan 实例 —— 相关的调用，而设备特定的校验层只会检查与某个特定的 GPU 相关的调用。设备特定的校验层现在已经被弃用了，这也就意味着实例特定的校验层会对所有的 Vulkan 调用生效。规范文档依旧建议你出于兼容性考虑启用设备特定的校验层，而这在某些实现中是必须的。我们将简单地在逻辑设备级别指定与实例相同的校验层，稍后我们会看到。
 
 在开始之前，我们需要为本章节添加一些新的引入：
 
@@ -51,11 +51,11 @@ use std::os::raw::c_void;
 use vulkanalia::vk::ExtDebugUtilsExtension;
 ```
 
-`HashSet` 会被用来存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的函数封装。其它引入会被用于记录校验层传来的信息。
+`HashSet` 会被用来存储与查询支持的校验层，`vk::ExtDebugUtilsExtension` 提供管理调试功能的函数封装。其它引入会被用于记录校验层传来的消息。
 
 ## 使用校验层
 
-在这个章节中，我们会学到如何启用 Vulkan SDK 提供的标准校验层。和扩展一样，校验层需要指定它们的名称以启用。在 SDK 中，所有有用的标准校验都被打包于 `VK_LAYER_KHRONOS_validation` 校验层中。
+在这个章节中，我们将会学习如何启用 Vulkan SDK 提供的标准校验层。和扩展一样，启用校验层需要指定它们的名称。在 SDK 中，所有有用的标准校验都被打包于 `VK_LAYER_KHRONOS_validation` 校验层中。
 
 我们先给我们程序增加两个配置变量，一个用来指定需要启用的校验层，一个用来指定是否启用校验层。我决定根据程序是否使用 Debug 模式编译来选择是否启用校验层。
 
@@ -103,7 +103,7 @@ let info = vk::InstanceCreateInfo::builder()
 
 默认情况下，校验层会将调试消息打印至标准输出，但我们也可以提供显式回调自己处理这些消息。这样我们可以自主决定处理哪些类型的消息，因为并非所有消息都是（致命）错误消息。如果你不想现在做这些事，你可以跳到本章的最后一节。
 
-为了在程序中配置一个处理消息和消息细节的回调，我们需要使用 `VK_EXT_debug_utils` 扩展配置一个带回调的调试信使（debug messenger）。
+要在程序中配置一个处理消息和消息细节的回调，我们需要使用 `VK_EXT_debug_utils` 扩展配置一个带回调的调试信使（debug messenger）。
 
 我们会往 `create_instance` 函数中函数添加更多代码。这次我们需要将 `extensions` 列表改为可变的，然后在校验层启用时将调试实用工具扩展（debug utilities extension）加入这个列表：
 
@@ -120,9 +120,9 @@ if VALIDATION_ENABLED {
 
 `vulkanalia` 为每个 Vulkan 扩展提供了一系列元数据。在这个例子中，我们只需要加载扩展的名称，所以我们将 `vk::EXT_DEBUG_UTILS_EXTENSION` 结构体常量的 `name` 字段的值添加到我们的扩展名称列表中。
 
-运行程序，确保你没有收到 `vk::ErrorCode::EXTENSION_NOT_PRESENT` 错误代码。事实上，我们并不需要检查这个扩展是否存在，因为只要校验层可用，这个扩展应该就是可用的。
+运行程序，确保你没有收到 `vk::ErrorCode::EXTENSION_NOT_PRESENT` 错误代码。事实上，我们并不需要检查这个扩展是否存在，因为只要校验层可用，这个扩展就应该可用。
 
-现在让我们看看一个调试回调函数是什么样的。添加一个新的 `extern "system"` 函数，叫做 `debug_callback`，它的签名与 `vk::PFN_vkDebugUtilsMessengerCallbackEXT` 原型相匹配。`extern "system"` 是必须的，这样 Vulkan 才能正确调用我们的 Rust 函数。
+现在让我们看看调试回调函数是什么样的。添加一个名为 `debug_callback` 的 `extern "system"` 函数，它的签名与 `vk::PFN_vkDebugUtilsMessengerCallbackEXT` 原型相匹配。`extern "system"` 是必须的，这样 Vulkan 才能正确调用我们的 Rust 函数。
 
 ```rust,noplaypen
 extern "system" fn debug_callback(
@@ -157,7 +157,7 @@ extern "system" fn debug_callback(
 
 枚举值被设置为递增的，这样就可以用比较运算符来检查一条消息是否比某个严重程度更严重。我们根据这一点来决定在记录消息时使用哪个 `log` 宏。
 
-`_type` 参数可以有以下取值：
+`type_` 参数可以有以下取值：
 
 * `vk::DebugUtilsMessageTypeFlagsEXT::GENERAL` &ndash; 与规范或性能无关的事件
 * `vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION` &ndash; 违反规范或可能是错误的事件
@@ -169,11 +169,11 @@ extern "system" fn debug_callback(
 * `objects` &ndash; 与消息相关的 Vulkan 对象句柄数组
 * `object_count` &ndash; 数组中对象的数量
 
-最后，最后一个参数，这里被忽略为 `_`，包含了一个指针，它在回调函数设置时被指定，允许你将自己的数据传递给它。
+最后一个参数 —— 这里用 `_` 忽略 —— 包含了一个指针，它在回调函数设置时被指定，允许你将自己的数据传递给它。
 
-回调函数返回一个布尔值，它表示触发校验层消息的 Vulkan 调用是否应该被中止。如果回调函数返回 `true`，那么这个调用就会被中止，并且返回 `vk::ErrorCode::VALIDATION_FAILED_EXT` 错误代码。这通常只用于测试校验层本身，所以你应该总是返回 `vk::FALSE`。
+回调函数返回一个布尔值，它表示触发校验层消息的 Vulkan 调用是否应该被中止。如果回调函数返回 `true`，那么这个调用就会被中止，并且返回错误代码 `vk::ErrorCode::VALIDATION_FAILED_EXT`。这通常只用于测试校验层本身，所以你应该总是返回 `vk::FALSE`。
 
-现在我们需要告诉 Vulkan 关于回调函数的事情。也许有点出乎意料，在 Vulkan 中，即使是调试回调函数也需要显式创建和销毁。这样的回调函数是调试信使（debug messenger）的一部分，你可以有任意多个这样的回调函数。在 `AppData` 结构体中添加一个字段：
+现在我们需要告诉 Vulkan 关于回调函数的事情。也许有点出乎意料，在 Vulkan 中，即使是调试回调函数也需要被显式地创建和销毁。这样的回调函数是调试信使（debug messenger）的一部分，你可以有任意多个这样的回调函数。在 `AppData` 结构体中添加一个字段：
 
 ```rust,noplaypen
 struct AppData {
@@ -207,13 +207,13 @@ unsafe fn create_instance(
 ```
 
 <!-- TODO needs refinement -->
-> **注：**在一组 Vulkan 标志（例如上面的例子中的 `vk::DebugUtilsMessageTypeFlagsEXT::all()`）上调用 `all` 静态方法会返回一系列 `vulkanalia` 可识别的标志。这会导致一个问题，如果应用程序使用的 Vulkan 实现比 `vulkanalia` 支持的最新版本的 Vulkan 旧，那么这个标志集可能包含应用程序使用的 Vulkan 实现不认识的标志。这不会影响应用程序的功能，但是你可能会看到一些校验层错误。如果你因为这些调试标志遇到了未知标志的警告，你可以通过升级你的 Vulkan SDK 到最新版本（或者直接指定支持的标志）来避免这些警告。
+> **注：**在一组 Vulkan 标志（例如上面的例子中的 `vk::DebugUtilsMessageTypeFlagsEXT::all()`）上调用 `all` 静态方法会返回一系列 `vulkanalia` 可识别的标志。这会导致一个问题，如果应用程序使用的 Vulkan 实现版本比 `vulkanalia` 支持的 Vulkan 版本旧，那么这个标志集可能包含应用程序使用的 Vulkan 实现不认识的标志。这不会影响应用程序的功能，但是你可能会看到一些校验层错误。如果你因为这些调试标志遇到了未知标志的警告，你可以通过升级你的 Vulkan SDK 到最新版本（或者直接指定支持的标志）来避免这些警告。
 
 首先，我们从返回表达式中提取出 Vulkan 实例，这样我们就可以用它来添加我们的调试回调函数。
 
 接着，我们构造一个 `vk::DebugUtilsMessengerCreateInfoEXT` 结构体，它提供了和我们的调试回调函数以及如何调用这个函数有关的信息。
 
-`message_severity` 字段允许你指定你想要你的回调函数感兴趣的所有严重程度类型。我请求所有严重程度的消息都被包含。这通常会产生大量的冗长的调试信息，但是我们可以在不感兴趣的时候通过日志级别来过滤掉这些信息。
+`message_severity` 字段允许你指定你的回调函数感兴趣的所有严重程度类型。我请求所有严重程度的消息都被包含。这通常会产生大量的冗长的调试信息，但是我们可以在不感兴趣的时候通过日志级别来过滤掉这些信息。
 
 类似地，`message_type` 字段允许你过滤你的回调函数感兴趣的消息类型。我在这里启用了所有类型。如果某些类型的消息对你没用，你可以禁用它们。
 
@@ -258,7 +258,7 @@ unsafe fn destroy(&mut self) {
 
 尽管我们已经通过校验层添加了调试功能，但活还没完全干完。调用 `create_debug_utils_messenger_ext` 需要一个有效的实例，而 `destroy_debug_utils_messenger_ext` 必须在实例被销毁前调用。这意味着我们现在还不能调试 `create_instance` 和 `destroy_instance` 调用中的任何问题。
 
-不过，如果你仔细阅读过 [扩展文档](https://github.com/KhronosGroup/Vulkan-Docs/blob/77d9f42e075e6a483a37351c14c5e9e3122f9113/appendices/VK_EXT_debug_utils.txt#L84-L91)，你就会看到，还有一种方式可以为这两个函数调用创建一个单独的调试信使。只需在 `vk::InstanceCreateInfo` 的 `next` 扩展字段中传递一个指向 `vk::DebugUtilsMessengerCreateInfoEXT` 结构体的指针即可。在这么做之前，我们先来讨论一下在 Vulkan 中如何扩展结构体。
+不过，如果你仔细阅读过[扩展文档](https://github.com/KhronosGroup/Vulkan-Docs/blob/77d9f42e075e6a483a37351c14c5e9e3122f9113/appendices/VK_EXT_debug_utils.txt#L84-L91)，你就会看到，还有一种方式可以为这两个函数调用创建一个单独的调试信使。只需在 `vk::InstanceCreateInfo` 的 `next` 扩展字段中传递一个指向 `vk::DebugUtilsMessengerCreateInfoEXT` 结构体的指针即可。在这么做之前，我们先来讨论一下在 Vulkan 中如何扩展结构体。
 
 我们在概览章节的[生成器](../overview.html#builders)那一节提到过，许多 Vulkan 结构体中都有一个 `s_type` 字段。它必须设置成正确的 `vk::StructureType` 枚举变体，以指示结构体的类型（例如，`vk::ApplicationInfo` 结构体的 `s_type` 字段必须设置成 `vk::StructureType::APPLICATION_INFO`）。
 
@@ -268,7 +268,7 @@ Vulkan 结构体中的 `next` 字段可以用来指定一个[结构体指针链]
 
 当你将这样的结构体链传递给 Vulkan 函数时，Vulkan 函数将会遍历结构体链以收集链中所有结构体的信息。因此，Vulkan 不知道链中每个结构体的类型，这就需要 `s_type` 字段。
 
-`vulkanalia` 提供的生成器能够轻松地以类型安全的方式构建这样的结构体链。例如，看一下 `vk::InstanceCreateInfoBuilder` 生成器，特别是 `push_next` 方法。这个方法允许将任何实现了 `vk::ExtendsInstanceCreateInfo` 特性的 Vulkan 结构体添加到 `vk::InstanceCreateInfo` 的结构体链中。
+`vulkanalia` 提供的生成器能够轻松地以类型安全的方式构建这样的结构体链。例如，看一下 `vk::InstanceCreateInfoBuilder` 生成器，特别是 `push_next` 方法。这个方法允许将任何实现了 `vk::ExtendsInstanceCreateInfo` trait 的 Vulkan 结构体添加到 `vk::InstanceCreateInfo` 的结构体链中。
 
 `vk::DebugUtilsMessengerCreateInfoEXT` 便是这种结构体之一，我们会用它来扩展 `vk::InstanceCreateInfo` 结构，以设置我们的调试回调函数。为了做到这一点，继续修改 `create_instance` 函数，这一次我们会把 `info` 结构体变成可变的，这样我们就可以修改它的指针链。然后将 `debug_info` 结构体 —— 现在也是可变的 —— 放在 `info` 结构体的下面，这样我们就可以将它推到 `info` 的指针链上：
 
@@ -289,7 +289,7 @@ if VALIDATION_ENABLED {
 }
 ```
 
-`debug_info` 需要在条件语句之外定义，因为它需要一直存活到我们调用完 `create_instance` 之后。幸运的是，我们可以依赖 Rust 编译器来保护我们：因为 `vulkanalia` 生成器定义的生命周期而，我们无法将一个活得不够长的结构体推到指针链上。
+`debug_info` 需要在条件语句之外定义，因为它需要一直存活到我们调用完 `create_instance` 之后。幸运的是，我们可以依赖 Rust 编译器来保护我们：因为 `vulkanalia` 生成器定义的生命周期，我们无法将一个活得不够长的结构体推到指针链上。
 
 现在我们可以运行程序，观察调试回调函数打印的日志了。不过我们要先设置 `RUST_LOG` 环境变量，这样 `pretty_env_logger` 就会启用我们感兴趣的日志级别。我们先把日志级别设置为 `debug`，以确定这些东西工作正常。下面是在 Windows（PowerShell）上的一个例子：
 
