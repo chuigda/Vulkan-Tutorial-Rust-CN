@@ -42,7 +42,7 @@ def apply_patch(patch, target):
     except: pass
     try: os.remove(f"{target}.rej")
     except: pass
-
+    
     if code != 0:
         sys.exit(code)
 

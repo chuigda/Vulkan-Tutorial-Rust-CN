@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/setup/base_code.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/00_base_code.rs)
 
@@ -19,7 +19,7 @@
 use anyhow::Result;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
+use winit::event_loop::, EventLoop;
 use winit::window::{Window, WindowBuilder};
 
 fn main() -> Result<()> {
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
 
     // 创建窗口
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new()?;
     let window = WindowBuilder::new()
         .with_title("Vulkan Tutorial (Rust)")
         .with_inner_size(LogicalSize::new(1024, 768))
@@ -36,22 +36,26 @@ fn main() -> Result<()> {
     // 初始化应用程序
 
     let mut app = unsafe { App::create(&window)? };
-    let mut destroying = false;
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Poll;
+    let mut app = unsafe { App::create(&window)? };
+    event_loop.run(move |event, elwt| {
         match event {
-            // Render a frame if our Vulkan app is not being destroyed.
-            Event::MainEventsCleared if !destroying =>
-                unsafe { app.render(&window) }.unwrap(),
-            // Destroy our Vulkan app.
-            Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
-                destroying = true;
-                *control_flow = ControlFlow::Exit;
-                unsafe { app.destroy(); }
+            // Request a redraw when all events were processed.
+            Event::AboutToWait => window.request_redraw(),
+            Event::WindowEvent { event, .. } => match event {
+                // Render a frame if our Vulkan app is not being destroyed.
+                WindowEvent::RedrawRequested if !elwt.exiting() => unsafe { app.render(&window) }.unwrap(),
+                // Destroy our Vulkan app.
+                WindowEvent::CloseRequested => {
+                    elwt.exit();
+                    unsafe { app.destroy(); }
+                }
+                _ => {}
             }
             _ => {}
         }
-    });
+    })?;
+
+    Ok(())
 }
 
 /// 我们的 Vulkan 应用程序

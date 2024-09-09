@@ -2,9 +2,11 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/faq.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 本页面列举了在开发 Vulkan 应用时可能遇到的常见问题及其解决方案。
+
+* **（MacOS）** 我安装了 Vulkan SDK，但我运行 Vulkan 应用程序的时候遇到了找不到 `libvulkan.dylib` 的错误 —— 参见[MacOS Vulkan SDK 安装说明中的`环境配置`章节](./development_environment.md#setup-environment)。
 
 * **我在核心校验层中遇到了访问冲突（access violation）错误** &ndash; 确保未运行 MSI Afterburner / RivaTuner Statistics Server，因为它们和 Vulkan 之间存在一些兼容性问题。
 

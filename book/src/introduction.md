@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/introduction.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 本教程是用 Rust 对 <https://vulkan-tutorial.com> 的改写版本，应当归功于原教程的作者 ([Alexander Overvoorde](https://github.com/Overv)) 及[其他贡献者们](https://github.com/Overv/VulkanTutorial/graphs/contributors)。
 
@@ -20,7 +20,7 @@
 
 * 一张支持 Vulkan 的显卡和驱动程序（[NVIDIA](https://developer.nvidia.com/vulkan-driver)，[AMD](http://www.amd.com/en-us/innovations/software-technologies/technologies-gaming/vulkan)，[Intel](https://software.intel.com/en-us/blogs/2016/03/14/new-intel-vulkan-beta-1540204404-graphics-driver-for-windows-78110-1540)）
 * 使用 Rust 的经验
-* Rust 1.51 或更高版本
+* Rust 1.70 或更高版本
 * 一些的 3D 计算机图形学知识
 
 本教程不会要求你有 OpenGL 或者 Direct3D 的知识储备，但要求你必须理解 3D 计算机图形学的基础。例如，教程中不会解释透视投影背后的数学原理。[这本在线书籍](https://paroj.github.io/gltut/)是一个很好的计算机图形学入门资源。其他一些很好的计算机图形学资源包括：

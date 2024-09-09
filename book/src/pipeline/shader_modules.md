@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/pipeline/shader_modules.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/09_shader_modules.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/09/shader.frag)
 
@@ -176,6 +176,15 @@ pause
 ```
 
 将 `glslc` 的路径替换为你安装 Vulkan SDK 的路径。使用 `chmod +x compile.sh` 命令将这个脚本变得可执行，然后运行它。
+
+**MacOS**
+
+创建一个包含以下命令的 `compile.sh` 文件：
+
+```bash
+/User/user/VulkanSDK/x.x.x.x/macOS/bin/glslc shaders/shader.vert -o vert.spv
+/User/user/VulkanSDK/x.x.x.x/macOS/bin/glslc shaders/shader.frag -o frag.spv
+```
 
 <div style="color: gray; user-select: none">
 我是一条可爱的分割线，诶嘿诶嘿地爬 _(ÒωÓ๑ゝ∠)_

@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/swapchain/recreation.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/16_swapchain_recreation.rs)
 
@@ -175,24 +175,27 @@ match event {
 
 ```rust,noplaypen
 let mut app = unsafe { App::create(&window)? };
-let mut destroying = false;
 let mut minimized = false;
-event_loop.run(move |event, _, control_flow| {
-    *control_flow = ControlFlow::Poll;
+event_loop.run(move |event,elwt| {
     match event {
-        Event::MainEventsCleared if !destroying && !minimized =>
-            unsafe { app.render(&window) }.unwrap(),
-        Event::WindowEvent { event: WindowEvent::Resized(size), .. } => {
-            if size.width == 0 || size.height == 0 {
-                minimized = true;
-            } else {
-                minimized = false;
-                app.resized = true;
+        // ...
+        Event::WindowEvent { event, .. } => match event {
+            WindowEvent::RedrawRequested if !elwt.exiting() && !minimized => {
+                unsafe { app.render(&window) }.unwrap();
+            },
+            WindowEvent::Resized(size) => {
+                if size.width == 0 || size.height == 0 {
+                    minimized = true;
+                } else {
+                    minimized = false;
+                    app.resized = true;
+                }
             }
+            // ...
         }
         // ...
     }
-});
+})?;
 ```
 
 恭喜你，你已经完成了你的第一个行为良好的 Vulkan 程序！在下一章中，我们会避免在顶点着色器中硬编码顶点，并实际地使用一个顶点缓冲。
