@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/presentation/swapchain.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/06_swapchain_creation.rs)
 
@@ -246,25 +246,21 @@ fn get_swapchain_extent(
     if capabilities.current_extent.width != u32::MAX {
         capabilities.current_extent
     } else {
-        let size = window.inner_size();
-        let clamp = |min: u32, max: u32, v: u32| min.max(max.min(v));
         vk::Extent2D::builder()
-            .width(clamp(
+            .width(window.inner_size().width.clamp(
                 capabilities.min_image_extent.width,
                 capabilities.max_image_extent.width,
-                size.width,
             ))
-            .height(clamp(
+            .height(window.inner_size().height.clamp(
                 capabilities.min_image_extent.height,
                 capabilities.max_image_extent.height,
-                size.height,
             ))
             .build()
     }
 }
 ```
 
-我们使用 `clamp` 函数来限制窗口的实际大小在 Vulkan 设备支持的范围内。
+我们使用 [`clamp`](https://doc.rust-lang.org/std/cmp/trait.Ord.html#method.clamp) 函数来限制窗口的实际大小在 Vulkan 设备支持的范围内。
 
 ## 创建交换链
 
@@ -445,7 +441,7 @@ data.swapchain_images = device.get_swapchain_images_khr(data.swapchain)?;
 还有一件事，我们需要保存交换链中图像的格式和交换范围，因为我们将在后面的章节中用到它们。在 `AppData` 中添加两个字段：
 
 ```rust,noplaypen
-impl AppData {
+struct AppData {
     // ...
     swapchain_format: vk::Format,
     swapchain_extent: vk::Extent2D,

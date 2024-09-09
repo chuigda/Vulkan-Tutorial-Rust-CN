@@ -15,7 +15,7 @@ use std::hash::{Hash, Hasher};
 use std::io::BufReader;
 use std::mem::size_of;
 use std::os::raw::c_void;
-use std::ptr::{copy_nonoverlapping as memcpy, slice_from_raw_parts};
+use std::ptr::copy_nonoverlapping as memcpy;
 use std::time::Instant;
 
 use anyhow::{anyhow, Result};
@@ -28,8 +28,9 @@ use vulkanalia::prelude::v1_0::*;
 use vulkanalia::window as vk_window;
 use vulkanalia::Version;
 use winit::dpi::LogicalSize;
-use winit::event::{ElementState, Event, VirtualKeyCode, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
+use winit::event::{ElementState, Event, WindowEvent};
+use winit::event_loop::EventLoop;
+use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Window, WindowBuilder};
 
 use vulkanalia::vk::ExtDebugUtilsExtension;
@@ -59,7 +60,7 @@ fn main() -> Result<()> {
 
     // Window
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new()?;
     let window = WindowBuilder::new()
         .with_title("Vulkan Tutorial (Rust)")
         .with_inner_size(LogicalSize::new(1024, 768))
@@ -68,41 +69,47 @@ fn main() -> Result<()> {
     // App
 
     let mut app = unsafe { App::create(&window)? };
-    let mut destroying = false;
     let mut minimized = false;
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Poll;
+    event_loop.run(move |event, elwt| {
         match event {
-            // Render a frame if our Vulkan app is not being destroyed.
-            Event::MainEventsCleared if !destroying && !minimized => unsafe { app.render(&window) }.unwrap(),
-            // Mark the window as having been resized.
-            Event::WindowEvent { event: WindowEvent::Resized(size), .. } => {
-                if size.width == 0 || size.height == 0 {
-                    minimized = true;
-                } else {
-                    minimized = false;
-                    app.resized = true;
-                }
-            }
-            // Destroy our Vulkan app.
-            Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
-                destroying = true;
-                *control_flow = ControlFlow::Exit;
-                unsafe { app.destroy(); }
-            }
-            // Handle keyboard events.
-            Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
-                if input.state == ElementState::Pressed {
-                    match input.virtual_keycode {
-                        Some(VirtualKeyCode::Left) if app.models > 1 => app.models -= 1,
-                        Some(VirtualKeyCode::Right) if app.models < 4 => app.models += 1,
-                        _ => { }
+            // Request a redraw when all events were processed.
+            Event::AboutToWait => window.request_redraw(),
+            Event::WindowEvent { event, .. } => match event {
+                // Render a frame if our Vulkan app is not being destroyed.
+                WindowEvent::RedrawRequested if !elwt.exiting() && !minimized => {
+                    unsafe { app.render(&window) }.unwrap();
+                },
+                // Mark the window as having been resized.
+                WindowEvent::Resized(size) => {
+                    if size.width == 0 || size.height == 0 {
+                        minimized = true;
+                    } else {
+                        minimized = false;
+                        app.resized = true;
                     }
                 }
+                // Destroy our Vulkan app.
+                WindowEvent::CloseRequested => {
+                    elwt.exit();
+                    unsafe { app.destroy(); }
+                }
+                // Handle keyboard events.
+                WindowEvent::KeyboardInput { event, .. } => {
+                    if event.state == ElementState::Pressed {
+                        match event.physical_key {
+                            PhysicalKey::Code(KeyCode::ArrowLeft) if app.models > 1 => app.models -= 1,
+                            PhysicalKey::Code(KeyCode::ArrowRight) if app.models < 4 => app.models += 1,
+                            _ => { }
+                        }
+                    }
+                }
+                _ => {}
             }
             _ => {}
         }
-    });
+    })?;
+
+    Ok(())
 }
 
 /// Our Vulkan app.
@@ -164,12 +171,11 @@ impl App {
     unsafe fn render(&mut self, window: &Window) -> Result<()> {
         let in_flight_fence = self.data.in_flight_fences[self.frame];
 
-        self.device
-            .wait_for_fences(&[in_flight_fence], true, u64::max_value())?;
+        self.device.wait_for_fences(&[in_flight_fence], true, u64::MAX)?;
 
         let result = self.device.acquire_next_image_khr(
             self.data.swapchain,
-            u64::max_value(),
+            u64::MAX,
             self.data.image_available_semaphores[self.frame],
             vk::Fence::null(),
         );
@@ -182,8 +188,7 @@ impl App {
 
         let image_in_flight = self.data.images_in_flight[image_index];
         if !image_in_flight.is_null() {
-            self.device
-                .wait_for_fences(&[image_in_flight], true, u64::max_value())?;
+            self.device.wait_for_fences(&[image_in_flight], true, u64::MAX)?;
         }
 
         self.data.images_in_flight[image_index] = in_flight_fence;
@@ -312,10 +317,7 @@ impl App {
             Deg(90.0) * time
         );
 
-        let model_bytes = &*slice_from_raw_parts(
-            &model as *const Mat4 as *const u8,
-            size_of::<Mat4>()
-        );
+        let model_bytes = std::slice::from_raw_parts(&model as *const Mat4 as *const u8, size_of::<Mat4>());
 
         let opacity = (model_index + 1) as f32 * 0.25;
         let opacity_bytes = &opacity.to_ne_bytes()[..];
@@ -609,7 +611,11 @@ unsafe fn create_instance(window: &Window, entry: &Entry, data: &mut AppData) ->
 
     let mut debug_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
         .message_severity(vk::DebugUtilsMessageSeverityFlagsEXT::all())
-        .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
+        .message_type(
+            vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
+                | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
+                | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE,
+        )
         .user_callback(Some(debug_callback));
 
     if VALIDATION_ENABLED {
@@ -863,22 +869,19 @@ fn get_swapchain_present_mode(present_modes: &[vk::PresentModeKHR]) -> vk::Prese
         .unwrap_or(vk::PresentModeKHR::FIFO)
 }
 
+#[rustfmt::skip]
 fn get_swapchain_extent(window: &Window, capabilities: vk::SurfaceCapabilitiesKHR) -> vk::Extent2D {
-    if capabilities.current_extent.width != u32::max_value() {
+    if capabilities.current_extent.width != u32::MAX {
         capabilities.current_extent
     } else {
-        let size = window.inner_size();
-        let clamp = |min: u32, max: u32, v: u32| min.max(max.min(v));
         vk::Extent2D::builder()
-            .width(clamp(
+            .width(window.inner_size().width.clamp(
                 capabilities.min_image_extent.width,
                 capabilities.max_image_extent.width,
-                size.width,
             ))
-            .height(clamp(
+            .height(window.inner_size().height.clamp(
                 capabilities.min_image_extent.height,
                 capabilities.max_image_extent.height,
-                size.height,
             ))
             .build()
     }

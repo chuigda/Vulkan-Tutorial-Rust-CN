@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/presentation/window_surface.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/05_window_surface.rs)
 
@@ -159,6 +159,7 @@ let queue_infos = unique_indices
 let info = vk::DeviceCreateInfo::builder()
     .queue_create_infos(&queue_infos)
     .enabled_layer_names(&layers)
+    .enabled_extension_names(&extensions)
     .enabled_features(&features);
 ```
 

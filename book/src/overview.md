@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/overview.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 本章会以介绍 Vulkan 和它所解决的问题开始。之后，我们会看到绘制第一个三角形所需的所有组件。这会给你一个总体的蓝图，以便你将每个后续章节放在正确的位置。之后我们会讨论 `vulkanalia` 提供的 Vulkan API。
 

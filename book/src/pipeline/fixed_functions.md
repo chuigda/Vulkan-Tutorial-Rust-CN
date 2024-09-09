@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/pipeline/fixed_functions.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/10_fixed_functions.rs)
 
@@ -15,18 +15,17 @@
 * 绑定（Bindings） &ndash; 数据之间的间隔，以及数据是逐顶点（per-vertex）还是逐个实例（per-instance）的（参见[实例化](https://en.wikipedia.org/wiki/Geometry_instancing)）
 * 属性描述（Attribute descriptions） &ndash; 顶点着色器接收的属性的类型，从哪个绑定中加载数据，以及从哪个偏移量开始加载
 
-因为我们已经在顶点着色器中硬编码了数据，我们会将这个结构体的所有字段都保留默认值，表明我们不需要加载数据。我们会在顶点缓冲章节重新审视这个结构体。
+因为我们已经在顶点着色器中硬编码了数据，我们会将这个结构体的所有字段都保留默认值，表明我们不需要加载数据。我们会在顶点缓冲章节重新审视这个结构体。在 `create_pipeline` 函数中 `vk::PipelineShaderStageCreateInfo` 的后面添加以内容：
 
 ```rust,noplaypen
-let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();
+unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
+    // ...
+
+    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();
 ```
 
-在 `create_pipeline` 函数中，我们会在 `vk::PipelineShaderStageCreateInfo` 结构体之后添加这个结构体。
-
-<!--
+<!-- 这里就不翻译了，免得读者误解
 The `vertex_binding_descriptions` and `vertex_attribute_descriptions` fields for this struct that could have been set here would be slices of structs that describe the aforementioned details for loading vertex data.
-
-这一句就不翻译了，免得读者误解。
 -->
 
 ## 输入装配
@@ -231,7 +230,7 @@ let color_blend_state = vk::PipelineColorBlendStateCreateInfo::builder()
 
 如果你想使用第二种混合方式（位运算结合），你应该把 `logic_op_enable` 设为 `true`。位运算操作可由 `logic_op` 字段指定。注意这会自动禁用第一种混合方式，就好像你把所有帧缓冲的 `blend_enable` 都置为了 `false`！`color_write_mask` 在这种模式下也会被用到，以决定哪些通道会被实际地传递到帧缓冲中。你也可以同时禁用这两种模式，就像我们这里做的一样，这样片元颜色就会原封不动地传递到帧缓冲中。
 
-## 动态状态
+## 动态状态（只是示例，不要添加到代码里）
 
 有一部分状态是可以在不重新创建管线的情况下改变的。例如视口的大小、线宽和混合常量。如果你想这么做，那么你需要填充一个 `vk::PipelineDynamicStateCreateInfo` 结构体：
 
@@ -263,9 +262,18 @@ struct AppData {
 然后在 `create_pipeline` 函数中，在调用 `destroy_shader_module` 之前创建这个对象：
 
 ```rust,noplaypen
-let layout_info = vk::PipelineLayoutCreateInfo::builder();
++unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
+    // ...
 
-data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
+    let layout_info = vk::PipelineLayoutCreateInfo::builder();
+
+    data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
+
+    device.destroy_shader_module(vert_shader_module, None);
+    device.destroy_shader_module(frag_shader_module, None);
+
+    Ok(())
+}
 ```
 
 这个结构体也用于指定*推式常量* —— 另一种给着色器传递动态值的方式，我们会在后面的章节中介绍。

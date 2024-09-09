@@ -2,11 +2,13 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/vertex/vertex_buffer_creation.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/18_vertex_buffer.rs)
 
 在 Vulkan 中，缓冲是用于存储可被显卡读取的任意数据的内存区域。我们会在本章中用它们来存储顶点数据，但它们也可以用于许多其他目的，这些将在以后的章节中探讨。与我们到目前为止见过的 Vulkan 对象不同，缓冲不会自动为自己分配内存。前面章节中的工作已经表明，Vulkan API 将几乎所有事物置于程序员的控制下，内存管理就是其中之一。
+
+> 尽管本教程只使用 Vulkan API 管理内存， 但现实世界中的许多 Vulkan 应用程序使用更高级的抽象，例如 [Vulkan 内存分配器](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)（VMA）。VMA 是一个库，它封装了 Vulkan API，并使内存管理变得更加简单和容易。[`vulkanalia-vma` crate](https://docs.rs/vulkanalia-vma)（`vulkanalia` 项目的一部分）提供了 VMA 与 `vulkanalia` 的集成。
 
 ## 创建缓冲
 

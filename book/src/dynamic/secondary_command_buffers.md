@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/dynamic/secondary_command_buffers.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 > <span style="display: flex; justify-content: center; margin-bottom: 16px"><img src="../images/i_have_no_idea_what_im_doing.jpg" width="256"></span>前面没有这个声明的章节都是直接从 <https://github.com/Overv/VulkanTutorial> 改编而来。<br/><br/>这一章和后面的章节都是原创，作者并不是 Vulkan 的专家。作者尽力保持了权威的语气，但是这些章节应该被视为一个 Vulkan 初学者的“尽力而为”。<br/><br/>如果你有问题、建议或者修正，请[提交 issue](https://github.com/KyleMayes/vulkanalia/issues)！
 
@@ -296,12 +296,15 @@ use winit::event::{ElementState, VirtualKeyCode};
 ```rust,noplaypen
 match event {
     // ...
-    Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
-        if input.state == ElementState::Pressed {
-            match input.virtual_keycode {
-                Some(VirtualKeyCode::Left) if app.models > 1 => app.models -= 1,
-                Some(VirtualKeyCode::Right) if app.models < 4 => app.models += 1,
-                _ => { }
+    Event::WindowEvent { event, .. } => match event {
+        // ...
+        WindowEvent::KeyboardInput { event, .. } => {
+            if event.state == ElementState::Pressed {
+                match event.physical_key {
+                    PhysicalKey::Code(KeyCode::ArrowLeft) if app.models > 1 => app.models -= 1,
+                    PhysicalKey::Code(KeyCode::ArrowRight) if app.models < 4 => app.models += 1,
+                    _ => { }
+                }
             }
         }
     }

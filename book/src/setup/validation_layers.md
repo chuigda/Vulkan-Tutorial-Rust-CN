@@ -2,7 +2,7 @@
 
 > 原文链接：<https://kylemayes.github.io/vulkanalia/setup/validation_layers.html>
 >
-> Commit Hash: ceb4a3fc6d8ca565af4f8679c4889bcad7941338
+> Commit Hash: 7becee96b0029bf721f833039c00ea2a417714dd
 
 **本章代码:**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/02_validation_layers.rs)
 
@@ -196,7 +196,11 @@ unsafe fn create_instance(
     if VALIDATION_ENABLED {
         let debug_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
             .message_severity(vk::DebugUtilsMessageSeverityFlagsEXT::all())
-            .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
+            .message_type(
+                vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
+                    | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
+                    | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE,
+            )
             .user_callback(Some(debug_callback));
 
         data.messenger = instance.create_debug_utils_messenger_ext(&debug_info, None)?;
@@ -206,8 +210,11 @@ unsafe fn create_instance(
 }
 ```
 
-<!-- TODO needs refinement -->
-> **注：**在一组 Vulkan 标志（例如上面的例子中的 `vk::DebugUtilsMessageTypeFlagsEXT::all()`）上调用 `all` 静态方法会返回一系列 `vulkanalia` 可识别的标志。这会导致一个问题，如果应用程序使用的 Vulkan 实现版本比 `vulkanalia` 支持的 Vulkan 版本旧，那么这个标志集可能包含应用程序使用的 Vulkan 实现不认识的标志。这不会影响应用程序的功能，但是你可能会看到一些校验层错误。如果你因为这些调试标志遇到了未知标志的警告，你可以通过升级你的 Vulkan SDK 到最新版本（或者直接指定支持的标志）来避免这些警告。
+> **注：** 对 Vulkan 标志类型调用静态方法 `all`（例如以上代码中的 `vk::DebugUtilsMessageSeverityFlagsEXT::all()`）会返回 `vulkanalia` 已知的所有标志。完整的标志集合中可能包括仅当特定扩展启用时才有效的标志，或是在比你所用/所面向的 Vulkan 版本更高的版本中才可用的标志。
+>
+> 在以上代码中，我们明确列出了我们需要使用的 `vk::DebugUtilsMessageTypeFlagsEXT` 标志，因为这个标志集包含了一个标志（`vk::DebugUtilsMessageTypeFlagsEXT::DEVICE_ADDRESS_BINDING`），它只有在[启用了某个特定扩展](https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_device_address_binding_report.html) 时才有效。
+>
+> 多数情况下，使用不支持的标志不会导致任何错误或改变应用程序的行为，但如果你启用了校验层（正如我们在本章中所做的那样），那么它肯定会导致校验错误。
 
 首先，我们从返回表达式中提取出 Vulkan 实例，这样我们就可以用它来添加我们的调试回调函数。
 
@@ -281,13 +288,21 @@ let mut info = vk::InstanceCreateInfo::builder()
 
 let mut debug_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
     .message_severity(vk::DebugUtilsMessageSeverityFlagsEXT::all())
-    .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
+    .message_type(
+        vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
+            | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
+            | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE,
+    )
     .user_callback(Some(debug_callback));
 
 if VALIDATION_ENABLED {
     info = info.push_next(&mut debug_info);
 }
 ```
+
+<!-- TODO: Need refinement -->
+
+> **注：**在这里选择同样的调试信息，包括相同的严重程度、类型和回调函数，既调用 `create_debug_utils_messenger_ext` *又*添加到 `vk::InstanceCreateInfo` 实例的扩展中，可能看起来有些多余。然而，这两种用法有不同的目的。这里的用法（将调试信息添加到 `vk::InstanceCreateInfo`）设置了在创建和销毁实例期间的调试。调用 `create_debug_utils_messenger_ext` 为其他一切设置了持久性调试。请参阅 Vulkan 规范中[相关章节](https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap4.html#VkInstanceCreateInfo)中以 "To capture events that occur while creating or destroying an instance" 开头的段落。
 
 `debug_info` 需要在条件语句之外定义，因为它需要一直存活到我们调用完 `create_instance` 之后。幸运的是，我们可以依赖 Rust 编译器来保护我们：因为 `vulkanalia` 生成器定义的生命周期，我们无法将一个活得不够长的结构体推到指针链上。
 
