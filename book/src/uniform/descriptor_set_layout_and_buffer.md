@@ -6,7 +6,7 @@
 
 **本章代码：**[main.rs](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/src/21_descriptor_set_layout.rs) | [shader.vert](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.vert) | [shader.frag](https://github.com/chuigda/Vulkan-Tutorial-Rust-CN/tree/master/shaders/21/shader.frag)
 
-现在我们可以将任何顶点属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-试图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
+现在我们可以将任何顶点属性上传到顶点着色器了，但是全局变量怎么办呢？从本章开始我们要走向 3D，这就需要一个模型-视图-投影矩阵（model-view-projection matrix）。我们可以将它包含在顶点数据中，但这是一种浪费内存的做法，而且每当变换发生变化时，我们都需要更新顶点缓冲。而变换很可能每一帧都会发生变化。
 
 在 Vulkan 中，正确的解决方式是使用*资源描述符（resource descriptor）*。描述符是一种能够让着色器自由访问缓冲和图像等资源的方法。我们将设置一个包含变换矩阵的缓冲，并让顶点着色器通过描述符访问它们。描述符的使用包括三个部分：
 
